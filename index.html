@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Block Clash Duel - Multiplayer Block Puzzle</title>
+  
+  <!-- Web App Manifest settings for seamless mobile full-screen experience -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#020617">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PeerJS for direct WebRTC peer-to-peer multiplayer across devices -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- Canvas Confetti for celebratory victory fireworks -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- Phosphor Icons for high-contrast, scalable iconography -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+    
+    * {
+      font-family: 'Fredoka', cursive, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    /* Grid cell animations */
+    .grid-cell {
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .cell-cleared {
+      animation: popEffect 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popEffect {
+      0% { transform: scale(1); filter: brightness(1.8); }
+      50% { transform: scale(1.25); filter: brightness(2.2); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    /* Floating drag ghost that sits above user's thumb */
+    #drag-ghost {
+      pointer-events: none;
+      position: fixed;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      display: none;
+      filter: drop-shadow(0 12px 24px rgba(0,0,0,0.55));
+    }
+
+    /* Ambient glow for the player's active arena */
+    .active-board-glow {
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+    }
+
+    /* Smooth scroll prevent for mobile devices */
+    body {
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white pb-safe">
+
+  <!-- TOP APP BAR -->
+  <header class="w-full bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-2.5 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-2.5">
+      <div class="bg-gradient-to-tr from-amber-500 to-rose-500 p-2 rounded-xl shadow-lg shadow-rose-500/20">
+        <i class="ph-bold ph-squares-four text-white text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-base sm:text-lg font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 leading-tight">
+          BLOCK CLASH
+        </h1>
+        <p class="text-[10px] text-slate-400 leading-none">Family Head-to-Head Duel</p>
+      </div>
+    </div>
+
+    <!-- Match Status / Header Actions -->
+    <div class="flex items-center gap-2">
+      <div id="connection-pill" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="connection-text">Connected</span>
+      </div>
+
+      <button id="sound-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Toggle Sound">
+        <i class="ph-bold ph-speaker-high text-lg" id="sound-icon"></i>
+      </button>
+
+      <button id="lobby-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Lobby Menu">
+        <i class="ph-bold ph-gear text-lg"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="w-full max-w-4xl mx-auto flex-1 p-2 sm:p-4 flex flex-col justify-center items-center">
+
+    <!-- GAME OVER / VICTORY OVERLAY -->
+    <div id="game-over-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+        <div id="outcome-icon-container" class="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4 bg-amber-500/20 text-amber-400 border border-amber-500/30">
+          <i class="ph-bold ph-trophy text-4xl" id="outcome-icon"></i>
+        </div>
+        <h2 id="outcome-title" class="text-2xl font-bold mb-1">Victory!</h2>
+        <p id="outcome-desc" class="text-sm text-slate-400 mb-6">You out-blasted your opponent!</p>
+
+        <div class="grid grid-cols-2 gap-3 mb-6 bg-slate-950/60 p-3 rounded-2xl border border-slate-800">
+          <div class="text-center">
+            <span class="text-xs text-slate-400 block">Your Score</span>
+            <span id="final-player-score" class="text-xl font-bold text-amber-400">0</span>
+          </div>
+          <div class="text-center">
+            <span class="text-xs text-slate-400 block">Rival Score</span>
+            <span id="final-rival-score" class="text-xl font-bold text-rose-400">0</span>
+          </div>
+        </div>
+
+        <button id="rematch-btn" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+          <i class="ph-bold ph-arrow-counter-clockwise text-lg"></i> Play Again
+        </button>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-800/95 text-slate-100 text-xs font-semibold shadow-lg border border-slate-700 flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none -translate-y-2">
+      <i class="ph-bold ph-info" id="toast-icon"></i>
+      <span id="toast-message">Notification</span>
+    </div>
+
+    <!-- MAIN DUEL CONTAINER -->
+    <div id="duel-arena" class="w-full flex flex-col lg:flex-row items-center justify-center gap-3 sm:gap-6">
+      
+      <!-- PLAYER 1 (YOU / LOCAL) -->
+      <div class="flex flex-col items-center w-full max-w-[340px] sm:max-w-[370px]">
+        <!-- Player Badge & Stats -->
+        <div class="w-full flex items-center justify-between px-3 py-2 bg-slate-900/80 rounded-2xl border border-slate-800 mb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-xs text-white shadow">
+              P1
+            </div>
+            <div>
+              <div id="p1-name" class="text-xs font-bold truncate max-w-[100px]">You</div>
+              <div class="text-[10px] text-emerald-400 font-semibold" id="p1-streak">Combo x1</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold">Lines Sent</span>
+              <span id="p1-garbage-sent" class="text-xs font-bold text-rose-400">+0</span>
+            </div>
+            <div class="text-right pl-2 border-l border-slate-800">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold">Score</span>
+              <span id="p1-score" class="text-lg font-bold text-amber-400">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8x8 Board Container -->
+        <div class="relative p-2 rounded-3xl bg-slate-900/90 border-2 border-slate-800 active-board-glow transition-all duration-300 aspect-square w-full">
+          <div id="player-grid" class="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full p-1 bg-slate-950 rounded-2xl overflow-hidden touch-none">
+            <!-- 64 cells generated by JS -->
+          </div>
+        </div>
+
+        <!-- Block Piece Tray (3 Slots) -->
+        <div class="w-full mt-2.5 p-2 bg-slate-900/60 rounded-2xl border border-slate-800 flex items-center justify-around min-h-[96px]" id="piece-tray">
+          <div id="slot-0" class="slot flex items-center justify-center w-24 h-24 relative touch-none"></div>
+          <div id="slot-1" class="slot flex items-center justify-center w-24 h-24 relative touch-none"></div>
+          <div id="slot-2" class="slot flex items-center justify-center w-24 h-24 relative touch-none"></div>
+        </div>
+      </div>
+
+      <!-- VERSUS DIVIDER / STATUS -->
+      <div class="flex lg:flex-col items-center justify-center gap-2 py-0.5 text-slate-500">
+        <span class="h-px lg:h-12 w-8 lg:w-px bg-slate-800"></span>
+        <div class="px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-[10px] font-black uppercase tracking-widest text-slate-300">
+          VS
+        </div>
+        <span class="h-px lg:h-12 w-8 lg:w-px bg-slate-800"></span>
+      </div>
+
+      <!-- PLAYER 2 (OPPONENT / REMOTE / BOT) -->
+      <div class="flex flex-col items-center w-full max-w-[270px] sm:max-w-[300px] opacity-90">
+        <!-- Opponent Badge & Stats -->
+        <div class="w-full flex items-center justify-between px-3 py-2 bg-slate-900/80 rounded-2xl border border-slate-800 mb-2">
+          <div class="flex items-center gap-2">
+            <div id="p2-avatar" class="w-7 h-7 rounded-lg bg-rose-500 flex items-center justify-center font-bold text-xs text-white shadow">
+              P2
+            </div>
+            <div>
+              <div id="p2-name" class="text-xs font-bold truncate max-w-[100px]">Opponent</div>
+              <div class="text-[10px] text-slate-400" id="p2-status">Live Board</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold">Score</span>
+            <span id="p2-score" class="text-lg font-bold text-rose-400">0</span>
+          </div>
+        </div>
+
+        <!-- 8x8 Rival Board (Spectator Mini / Mirror) -->
+        <div class="relative p-2 rounded-3xl bg-slate-900/70 border border-slate-800 aspect-square w-full">
+          <div id="rival-grid" class="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full p-1 bg-slate-950 rounded-2xl overflow-hidden pointer-events-none">
+            <!-- 64 cells generated by JS -->
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-500 mt-2 text-center flex items-center justify-center gap-1.5">
+          <i class="ph-bold ph-broadcast text-rose-400 animate-pulse"></i>
+          Clear 2+ lines together to send penalty rows!
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- LOBBY & MULTIPLAYER SETUP MODAL -->
+  <div id="lobby-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 max-w-md w-full shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
+          <i class="ph-bold ph-game-controller text-indigo-400"></i> Game Mode
+        </h2>
+        <button id="close-lobby-modal" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-2xl mb-5 text-xs font-semibold">
+        <button id="tab-p2p" class="py-2 rounded-xl bg-indigo-600 text-white transition">Online P2P</button>
+        <button id="tab-local" class="py-2 rounded-xl text-slate-400 hover:text-white transition">Pass & Play</button>
+        <button id="tab-bot" class="py-2 rounded-xl text-slate-400 hover:text-white transition">vs Bot</button>
+      </div>
+
+      <!-- SECTION: ONLINE PEER-TO-PEER -->
+      <div id="section-p2p" class="space-y-4">
+        <div class="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
+          <p class="font-semibold text-amber-300 mb-1 flex items-center gap-1">
+            <i class="ph-bold ph-wifi-high"></i> Cross-Platform iPhone & Android
+          </p>
+          Send an invite link via iMessage, WhatsApp, or text. When your family member taps it, they will join your duel immediately!
+        </div>
+
+        <!-- Host Option -->
+        <div class="p-4 bg-slate-800/40 rounded-2xl border border-slate-700">
+          <span class="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-1">Your Duel Code</span>
+          <div class="flex items-center gap-2 mb-2">
+            <div id="my-peer-code" class="flex-1 bg-slate-950 py-2.5 px-3 rounded-xl border border-slate-700 font-mono text-center text-lg font-bold tracking-widest text-emerald-400">
+              Generating...
+            </div>
+            <button id="copy-code-btn" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-white transition active:scale-95" title="Copy Code">
+              <i class="ph-bold ph-copy text-lg"></i>
+            </button>
+          </div>
+          
+          <button id="share-link-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg">
+            <i class="ph-bold ph-share-network text-base"></i> Copy Direct Invite Link
+          </button>
+        </div>
+
+        <!-- Join Option -->
+        <div class="p-4 bg-slate-800/40 rounded-2xl border border-slate-700">
+          <span class="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-1">Or Enter Code Manually</span>
+          <div class="flex gap-2">
+            <input id="join-peer-code-input" type="text" maxlength="6" placeholder="ENTER CODE" class="flex-1 bg-slate-950 py-2 px-3 rounded-xl border border-slate-700 font-mono uppercase text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500" />
+            <button id="join-peer-btn" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-xl text-xs transition">
+              Join Duel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION: PASS & PLAY -->
+      <div id="section-local" class="hidden space-y-4">
+        <p class="text-xs text-slate-300">Play together on the same iPad, phone, or computer by taking turns placing blocks.</p>
+        <button id="start-local-btn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl transition">
+          Start Local Turn-Based Match
+        </button>
+      </div>
+
+      <!-- SECTION: BOT PRACTICE -->
+      <div id="section-bot" class="hidden space-y-4">
+        <p class="text-xs text-slate-300">Warm up solo against an intelligent AI bot that clears blocks simultaneously.</p>
+        <div class="space-y-2">
+          <label class="text-xs text-slate-400 block font-semibold">Bot Difficulty</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button id="bot-diff-easy" class="py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold">Relaxed</button>
+            <button id="bot-diff-hard" class="py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/30 text-indigo-300 font-semibold">Fast & Aggressive</button>
+          </div>
+        </div>
+        <button id="start-bot-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition">
+          Fight Bot
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DRAGGING GHOST CANVAS/ELEMENT -->
+  <div id="drag-ghost"></div>
+
+  <!-- FOOTER -->
+  <footer class="w-full py-2 px-4 text-center text-[11px] text-slate-500 border-t border-slate-900">
+    Clear 2 or more lines simultaneously to drop penalty rows onto your rival!
+  </footer>
+
+  <!-- SOUND SYNTHESIS & CORE GAME SCRIPT -->
+  <script>
+    /* ========================================================================
+       1. AUDIO ENGINE (Web Audio API Synthesizer - Zero External Files)
+       ======================================================================== */
+    const SoundEngine = {
+      ctx: null,
+      enabled: true,
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+
+      toggle() {
+        this.enabled = !this.enabled;
+        return this.enabled;
+      },
+
+      playPickup() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(540, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      },
+
+      playPlace() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      },
+
+      playClear(linesCount) {
+        if (!this.enabled) return;
+        this.init();
+        const notes = [440, 554.37, 659.25, 880, 1108.73];
+        const count = Math.min(linesCount, 4);
+        for (let i = 0; i <= count; i++) {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          const freq = notes[i % notes.length];
+          const startTime = this.ctx.currentTime + i * 0.06;
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.18, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.25);
+        }
+      },
+
+      playGarbageSent() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(600, this.ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+      },
+
+      playGameOver() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.45);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.45);
+      }
+    };
+
+    /* ========================================================================
+       2. PIECE SHAPES & COLOR PALETTES
+       ======================================================================== */
+    const SHAPES = [
+      // 1x1
+      { shape: [[1]], color: 'bg-amber-400' },
+      // 2x1 & 1x2
+      { shape: [[1, 1]], color: 'bg-emerald-400' },
+      { shape: [[1], [1]], color: 'bg-emerald-400' },
+      // 3x1 & 1x3
+      { shape: [[1, 1, 1]], color: 'bg-cyan-400' },
+      { shape: [[1], [1], [1]], color: 'bg-cyan-400' },
+      // 4x1 & 1x4
+      { shape: [[1, 1, 1, 1]], color: 'bg-blue-500' },
+      { shape: [[1], [1], [1], [1]], color: 'bg-blue-500' },
+      // 5x1
+      { shape: [[1, 1, 1, 1, 1]], color: 'bg-indigo-500' },
+      // 2x2 Square
+      { shape: [[1, 1], [1, 1]], color: 'bg-yellow-400' },
+      // 3x3 Square
+      { shape: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: 'bg-orange-500' },
+      // L Shapes
+      { shape: [[1, 0], [1, 0], [1, 1]], color: 'bg-pink-500' },
+      { shape: [[0, 1], [0, 1], [1, 1]], color: 'bg-pink-500' },
+      { shape: [[1, 1, 1], [1, 0, 0]], color: 'bg-pink-500' },
+      { shape: [[1, 1, 1], [0, 0, 1]], color: 'bg-pink-500' },
+      // T Shapes
+      { shape: [[1, 1, 1], [0, 1, 0]], color: 'bg-purple-500' },
+      { shape: [[0, 1, 0], [1, 1, 1]], color: 'bg-purple-500' },
+      // Corner small 2x2
+      { shape: [[1, 1], [1, 0]], color: 'bg-teal-400' },
+      { shape: [[1, 1], [0, 1]], color: 'bg-teal-400' }
+    ];
+
+    const GARBAGE_COLOR = 'bg-slate-600 border border-slate-400/50';
+
+    /* ========================================================================
+       3. GAME STATE MANAGEMENT
+       ======================================================================== */
+    const GRID_SIZE = 8;
+    
+    const Game = {
+      playerGrid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
+      rivalGrid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
+      playerScore: 0,
+      rivalScore: 0,
+      currentPieces: [null, null, null],
+      combo: 0,
+      linesSent: 0,
+      isGameOver: false,
+      mode: 'p2p', // 'p2p', 'local', 'bot'
+      botDifficulty: 'hard',
+
+      init() {
+        this.resetPlayerGrid();
+        this.resetRivalGrid();
+        this.playerScore = 0;
+        this.rivalScore = 0;
+        this.combo = 0;
+        this.linesSent = 0;
+        this.isGameOver = false;
+        this.renderGrids();
+        this.updateScoreboards();
+        this.refillTray();
+      },
+
+      resetPlayerGrid() {
+        this.playerGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+      },
+
+      resetRivalGrid() {
+        this.rivalGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+      },
+
+      updateScoreboards() {
+        document.getElementById('p1-score').innerText = this.playerScore;
+        document.getElementById('p2-score').innerText = this.rivalScore;
+        document.getElementById('p1-garbage-sent').innerText = `+${this.linesSent}`;
+        document.getElementById('p1-streak').innerText = this.combo > 1 ? `Combo x${this.combo} 🔥` : `Combo x1`;
+      },
+
+      renderGrids() {
+        // Player Grid
+        const pGridEl = document.getElementById('player-grid');
+        pGridEl.innerHTML = '';
+        for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+            const cell = document.createElement('div');
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            cell.className = `grid-cell rounded-lg transition duration-75 flex items-center justify-center ${
+              this.playerGrid[r][c] 
+                ? (this.playerGrid[r][c] === 'garbage' ? GARBAGE_COLOR : this.playerGrid[r][c]) 
+                : 'bg-slate-900 border border-slate-800/80'
+            }`;
+            pGridEl.appendChild(cell);
+          }
+        }
+
+        // Rival Grid
+        const rGridEl = document.getElementById('rival-grid');
+        rGridEl.innerHTML = '';
+        for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+            const cell = document.createElement('div');
+            cell.className = `rounded-md transition-colors duration-150 ${
+              this.rivalGrid[r][c] 
+                ? (this.rivalGrid[r][c] === 'garbage' ? 'bg-slate-600' : this.rivalGrid[r][c]) 
+                : 'bg-slate-900/60 border border-slate-900'
+            }`;
+            rGridEl.appendChild(cell);
+          }
+        }
+      },
+
+      refillTray() {
+        for (let i = 0; i < 3; i++) {
+          const rand = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+          this.currentPieces[i] = JSON.parse(JSON.stringify(rand));
+        }
+        this.renderTray();
+        this.checkAvailableMoves();
+      },
+
+      renderTray() {
+        for (let i = 0; i < 3; i++) {
+          const slot = document.getElementById(`slot-${i}`);
+          slot.innerHTML = '';
+          const piece = this.currentPieces[i];
+          if (piece) {
+            const container = document.createElement('div');
+            container.className = 'cursor-grab active:cursor-grabbing p-1 inline-block transition-transform duration-100 hover:scale-105';
+            container.dataset.slotIndex = i;
+
+            const rows = piece.shape.length;
+            const cols = piece.shape[0].length;
+            container.style.display = 'grid';
+            container.style.gridTemplateRows = `repeat(${rows}, 22px)`;
+            container.style.gridTemplateColumns = `repeat(${cols}, 22px)`;
+            container.style.gap = '3px';
+
+            for (let r = 0; r < rows; r++) {
+              for (let c = 0; c < cols; c++) {
+                const block = document.createElement('div');
+                if (piece.shape[r][c] === 1) {
+                  block.className = `w-[22px] h-[22px] rounded-md ${piece.color} shadow-sm`;
+                } else {
+                  block.className = 'w-[22px] h-[22px] opacity-0';
+                }
+                container.appendChild(block);
+              }
+            }
+            slot.appendChild(container);
+          }
+        }
+      },
+
+      canPlacePiece(shape, startRow, startCol) {
+        const rows = shape.length;
+        const cols = shape[0].length;
+
+        if (startRow + rows > GRID_SIZE || startCol + cols > GRID_SIZE) return false;
+        if (startRow < 0 || startCol < 0) return false;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (shape[r][c] === 1) {
+              if (this.playerGrid[startRow + r][startCol + c] !== 0) {
+                return false;
+              }
+            }
+          }
+        }
+        return true;
+      },
+
+      placePiece(slotIndex, startRow, startCol) {
+        const piece = this.currentPieces[slotIndex];
+        if (!piece || !this.canPlacePiece(piece.shape, startRow, startCol)) return false;
+
+        const rows = piece.shape.length;
+        const cols = piece.shape[0].length;
+        let placedBlocks = 0;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (piece.shape[r][c] === 1) {
+              this.playerGrid[startRow + r][startCol + c] = piece.color;
+              placedBlocks++;
+            }
+          }
+        }
+
+        this.currentPieces[slotIndex] = null;
+        SoundEngine.playPlace();
+        this.playerScore += placedBlocks * 10;
+
+        this.processLineClears();
+
+        if (this.currentPieces.every(p => p === null)) {
+          this.refillTray();
+        } else {
+          this.renderTray();
+          this.checkAvailableMoves();
+        }
+
+        this.renderGrids();
+        this.updateScoreboards();
+
+        Network.sendBoardUpdate();
+
+        return true;
+      },
+
+      processLineClears() {
+        const rowsToClear = [];
+        const colsToClear = [];
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+          if (this.playerGrid[r].every(cell => cell !== 0)) {
+            rowsToClear.push(r);
+          }
+        }
+
+        for (let c = 0; c < GRID_SIZE; c++) {
+          let full = true;
+          for (let r = 0; r < GRID_SIZE; r++) {
+            if (this.playerGrid[r][c] === 0) {
+              full = false;
+              break;
+            }
+          }
+          if (full) colsToClear.push(c);
+        }
+
+        const totalLines = rowsToClear.length + colsToClear.length;
+
+        if (totalLines > 0) {
+          this.combo++;
+          const bonus = (totalLines * 100) * this.combo;
+          this.playerScore += bonus;
+          SoundEngine.playClear(totalLines);
+
+          rowsToClear.forEach(r => {
+            for (let c = 0; c < GRID_SIZE; c++) {
+              this.triggerCellPop(r, c);
+              this.playerGrid[r][c] = 0;
+            }
+          });
+
+          colsToClear.forEach(c => {
+            for (let r = 0; r < GRID_SIZE; r++) {
+              this.triggerCellPop(r, c);
+              this.playerGrid[r][c] = 0;
+            }
+          });
+
+          // ATTACK: Sending garbage penalty lines to rival
+          if (totalLines >= 2) {
+            const attackLines = totalLines - 1;
+            this.linesSent += attackLines;
+            Network.sendGarbage(attackLines);
+            showToast(`Sent +${attackLines} garbage row(s) to rival! 🔥`, 'ph-fire');
+            SoundEngine.playGarbageSent();
+          }
+        } else {
+          this.combo = 0;
+        }
+      },
+
+      triggerCellPop(r, c) {
+        const cell = document.querySelector(`#player-grid [data-row="${r}"][data-col="${c}"]`);
+        if (cell) {
+          cell.classList.add('cell-cleared');
+          setTimeout(() => {
+            cell.classList.remove('cell-cleared');
+          }, 350);
+        }
+      },
+
+      receiveGarbage(count) {
+        for (let k = 0; k < count; k++) {
+          if (this.playerGrid[0].some(cell => cell !== 0)) {
+            this.triggerGameOver(false);
+            return;
+          }
+
+          for (let r = 0; r < GRID_SIZE - 1; r++) {
+            this.playerGrid[r] = [...this.playerGrid[r + 1]];
+          }
+
+          const holeIndex = Math.floor(Math.random() * GRID_SIZE);
+          const newRow = Array(GRID_SIZE).fill('garbage');
+          newRow[holeIndex] = 0;
+          this.playerGrid[GRID_SIZE - 1] = newRow;
+        }
+
+        showToast(`Warning! Received ${count} penalty row(s)!`, 'ph-warning');
+        this.renderGrids();
+        this.checkAvailableMoves();
+      },
+
+      checkAvailableMoves() {
+        const remaining = this.currentPieces.filter(p => p !== null);
+        if (remaining.length === 0) return;
+
+        let hasMove = false;
+        for (const piece of remaining) {
+          for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+              if (this.canPlacePiece(piece.shape, r, c)) {
+                hasMove = true;
+                break;
+              }
+            }
+            if (hasMove) break;
+          }
+          if (hasMove) break;
+        }
+
+        if (!hasMove) {
+          this.triggerGameOver(false);
+        }
+      },
+
+      triggerGameOver(isWinner) {
+        if (this.isGameOver) return;
+        this.isGameOver = true;
+        SoundEngine.playGameOver();
+
+        Network.sendGameOver(isWinner);
+
+        const modal = document.getElementById('game-over-modal');
+        const title = document.getElementById('outcome-title');
+        const desc = document.getElementById('outcome-desc');
+        const icon = document.getElementById('outcome-icon');
+        const p1ScoreEl = document.getElementById('final-player-score');
+        const p2ScoreEl = document.getElementById('final-rival-score');
+
+        p1ScoreEl.innerText = this.playerScore;
+        p2ScoreEl.innerText = this.rivalScore;
+
+        if (isWinner) {
+          title.innerText = 'VICTORY!';
+          title.className = 'text-2xl font-bold text-amber-400 mb-1';
+          desc.innerText = 'You cleared blocks faster and defeated your opponent!';
+          icon.className = 'ph-bold ph-trophy text-4xl text-amber-400';
+          if (typeof confetti === 'function') {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          }
+        } else {
+          title.innerText = 'BOARD FULL!';
+          title.className = 'text-2xl font-bold text-rose-400 mb-1';
+          desc.innerText = 'No more block positions available!';
+          icon.className = 'ph-bold ph-skull text-4xl text-rose-400';
+        }
+
+        modal.classList.remove('hidden');
+      }
+    };
+
+    /* ========================================================================
+       4. TOUCH & MOUSE CONTROLLER (Universal Mobile Touch + Desktop)
+       ======================================================================== */
+    const DragController = {
+      draggedSlotIndex: null,
+      activePiece: null,
+      ghostEl: document.getElementById('drag-ghost'),
+      hoveredRow: null,
+      hoveredCol: null,
+
+      init() {
+        const tray = document.getElementById('piece-tray');
+
+        tray.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+        window.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+        window.addEventListener('touchend', (e) => this.onTouchEnd(e));
+
+        tray.addEventListener('mousedown', (e) => this.onMouseDown(e));
+        window.addEventListener('mousemove', (e) => this.onMouseMove(e));
+        window.addEventListener('mouseup', (e) => this.onMouseUp(e));
+      },
+
+      startDrag(slotIndex, clientX, clientY) {
+        if (Game.isGameOver) return;
+        const piece = Game.currentPieces[slotIndex];
+        if (!piece) return;
+
+        this.draggedSlotIndex = slotIndex;
+        this.activePiece = piece;
+        SoundEngine.playPickup();
+
+        this.ghostEl.innerHTML = '';
+        const rows = piece.shape.length;
+        const cols = piece.shape[0].length;
+        const container = document.createElement('div');
+        container.style.display = 'grid';
+        container.style.gridTemplateRows = `repeat(${rows}, 34px)`;
+        container.style.gridTemplateColumns = `repeat(${cols}, 34px)`;
+        container.style.gap = '4px';
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const block = document.createElement('div');
+            if (piece.shape[r][c] === 1) {
+              block.className = `w-[34px] h-[34px] rounded-lg ${piece.color} border border-white/40 shadow-lg`;
+            } else {
+              block.className = 'w-[34px] h-[34px] opacity-0';
+            }
+            container.appendChild(block);
+          }
+        }
+
+        this.ghostEl.appendChild(container);
+        this.ghostEl.style.display = 'block';
+        this.updateGhostPosition(clientX, clientY);
+      },
+
+      updateGhostPosition(clientX, clientY) {
+        const isTouch = ('ontouchstart' in window);
+        const yOffset = isTouch ? -65 : 0;
+        this.ghostEl.style.left = `${clientX}px`;
+        this.ghostEl.style.top = `${clientY + yOffset}px`;
+
+        this.highlightGridTarget(clientX, clientY + yOffset);
+      },
+
+      highlightGridTarget(clientX, clientY) {
+        const gridEl = document.getElementById('player-grid');
+        const rect = gridEl.getBoundingClientRect();
+
+        document.querySelectorAll('#player-grid .grid-cell').forEach(c => {
+          c.classList.remove('bg-indigo-500/40', 'bg-rose-500/40');
+        });
+
+        if (
+          clientX >= rect.left &&
+          clientX <= rect.right &&
+          clientY >= rect.top &&
+          clientY <= rect.bottom
+        ) {
+          const cellSize = rect.width / GRID_SIZE;
+          const col = Math.floor((clientX - rect.left) / cellSize);
+          const row = Math.floor((clientY - rect.top) / cellSize);
+
+          this.hoveredRow = row;
+          this.hoveredCol = col;
+
+          if (this.activePiece) {
+            const isValid = Game.canPlacePiece(this.activePiece.shape, row, col);
+            const rows = this.activePiece.shape.length;
+            const cols = this.activePiece.shape[0].length;
+
+            for (let r = 0; r < rows; r++) {
+              for (let c = 0; c < cols; c++) {
+                if (this.activePiece.shape[r][c] === 1) {
+                  const targetRow = row + r;
+                  const targetCol = col + c;
+                  if (targetRow < GRID_SIZE && targetCol < GRID_SIZE) {
+                    const cell = document.querySelector(`#player-grid [data-row="${targetRow}"][data-col="${targetCol}"]`);
+                    if (cell) {
+                      cell.classList.add(isValid ? 'bg-indigo-500/40' : 'bg-rose-500/40');
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          this.hoveredRow = null;
+          this.hoveredCol = null;
+        }
+      },
+
+      endDrag() {
+        if (this.draggedSlotIndex === null) return;
+
+        if (this.hoveredRow !== null && this.hoveredCol !== null && this.activePiece) {
+          Game.placePiece(this.draggedSlotIndex, this.hoveredRow, this.hoveredCol);
+        }
+
+        this.ghostEl.style.display = 'none';
+        this.ghostEl.innerHTML = '';
+        this.draggedSlotIndex = null;
+        this.activePiece = null;
+        this.hoveredRow = null;
+        this.hoveredCol = null;
+
+        document.querySelectorAll('#player-grid .grid-cell').forEach(c => {
+          c.classList.remove('bg-indigo-500/40', 'bg-rose-500/40');
+        });
+      },
+
+      onTouchStart(e) {
+        const touch = e.touches[0];
+        const container = e.target.closest('[data-slot-index]');
+        if (container) {
+          e.preventDefault();
+          const slot = parseInt(container.dataset.slotIndex, 10);
+          this.startDrag(slot, touch.clientX, touch.clientY);
+        }
+      },
+
+      onTouchMove(e) {
+        if (this.draggedSlotIndex !== null) {
+          e.preventDefault();
+          const touch = e.touches[0];
+          this.updateGhostPosition(touch.clientX, touch.clientY);
+        }
+      },
+
+      onTouchEnd() {
+        this.endDrag();
+      },
+
+      onMouseDown(e) {
+        const container = e.target.closest('[data-slot-index]');
+        if (container) {
+          const slot = parseInt(container.dataset.slotIndex, 10);
+          this.startDrag(slot, e.clientX, e.clientY);
+        }
+      },
+
+      onMouseMove(e) {
+        if (this.draggedSlotIndex !== null) {
+          this.updateGhostPosition(e.clientX, e.clientY);
+        }
+      },
+
+      onMouseUp() {
+        this.endDrag();
+      }
+    };
+
+    /* ========================================================================
+       5. PEERJS NETWORKING & URL INVITES
+       ======================================================================== */
+    const Network = {
+      peer: null,
+      conn: null,
+      myPeerId: null,
+
+      init() {
+        const cleanId = 'bc-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        
+        try {
+          this.peer = new Peer(cleanId);
+          
+          this.peer.on('open', (id) => {
+            this.myPeerId = id;
+            const displayCode = id.replace('bc-', '');
+            document.getElementById('my-peer-code').innerText = displayCode;
+
+            // Auto-join if user loaded via direct invite link with ?join=CODE
+            const urlParams = new URLSearchParams(window.location.search);
+            const autoJoinCode = urlParams.get('join');
+            if (autoJoinCode && autoJoinCode.trim() !== '') {
+              showToast(`Connecting to room ${autoJoinCode.toUpperCase()}...`, 'ph-wifi-high');
+              setTimeout(() => {
+                this.join(autoJoinCode.trim());
+              }, 400);
+            }
+          });
+
+          this.peer.on('connection', (c) => {
+            this.conn = c;
+            this.setupConnectionHandlers();
+            this.setConnectedUI(c.peer.replace('bc-', ''));
+            showToast(`Rival connected! Duel Started!`, 'ph-check-circle');
+            Game.init();
+            document.getElementById('lobby-modal').classList.add('hidden');
+          });
+
+          this.peer.on('error', (err) => {
+            console.warn('Peer error:', err);
+            document.getElementById('my-peer-code').innerText = 'OFFLINE';
+          });
+        } catch (e) {
+          console.warn('PeerJS init failure', e);
+        }
+      },
+
+      join(roomCode) {
+        if (!this.peer) return;
+        const targetId = 'bc-' + roomCode.trim().toUpperCase();
+        const c = this.peer.connect(targetId);
+        this.conn = c;
+
+        c.on('open', () => {
+          this.setupConnectionHandlers();
+          this.setConnectedUI(roomCode.toUpperCase());
+          showToast(`Connected to Room ${roomCode}!`, 'ph-check-circle');
+          Game.init();
+          document.getElementById('lobby-modal').classList.add('hidden');
+        });
+      },
+
+      setupConnectionHandlers() {
+        if (!this.conn) return;
+
+        this.conn.on('data', (data) => {
+          if (data.type === 'BOARD_UPDATE') {
+            Game.rivalGrid = data.grid;
+            Game.rivalScore = data.score;
+            Game.renderGrids();
+            Game.updateScoreboards();
+          } else if (data.type === 'GARBAGE_ATTACK') {
+            Game.receiveGarbage(data.count);
+          } else if (data.type === 'GAME_OVER') {
+            Game.triggerGameOver(true);
+          } else if (data.type === 'RESTART_MATCH') {
+            Game.init();
+            document.getElementById('game-over-modal').classList.add('hidden');
+            showToast('New match started!', 'ph-arrows-clockwise');
+          }
+        });
+
+        this.conn.on('close', () => {
+          showToast('Opponent disconnected', 'ph-plugs');
+          document.getElementById('connection-pill').classList.add('hidden');
+        });
+      },
+
+      setConnectedUI(code) {
+        const pill = document.getElementById('connection-pill');
+        pill.classList.remove('hidden');
+        pill.classList.add('flex');
+        document.getElementById('connection-text').innerText = `Room: ${code}`;
+        document.getElementById('p2-name').innerText = `Rival (${code})`;
+      },
+
+      sendBoardUpdate() {
+        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
+          this.conn.send({
+            type: 'BOARD_UPDATE',
+            grid: Game.playerGrid,
+            score: Game.playerScore
+          });
+        } else if (Game.mode === 'bot') {
+          BotAI.onPlayerMove();
+        }
+      },
+
+      sendGarbage(count) {
+        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
+          this.conn.send({
+            type: 'GARBAGE_ATTACK',
+            count: count
+          });
+        } else if (Game.mode === 'bot') {
+          BotAI.receiveGarbage(count);
+        }
+      },
+
+      sendGameOver(isWinner) {
+        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
+          this.conn.send({
+            type: 'GAME_OVER',
+            senderWon: isWinner
+          });
+        }
+      },
+
+      requestRematch() {
+        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
+          this.conn.send({ type: 'RESTART_MATCH' });
+        }
+        Game.init();
+        document.getElementById('game-over-modal').classList.add('hidden');
+      }
+    };
+
+    /* ========================================================================
+       6. BOT SIMULATION ENGINE (Solo Practice)
+       ======================================================================== */
+    const BotAI = {
+      timer: null,
+      botGrid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
+      botScore: 0,
+
+      start() {
+        this.botGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+        this.botScore = 0;
+        document.getElementById('p2-name').innerText = `RoboDuel (${Game.botDifficulty.toUpperCase()})`;
+        
+        clearInterval(this.timer);
+        const interval = Game.botDifficulty === 'hard' ? 1400 : 2200;
+        this.timer = setInterval(() => this.step(), interval);
+      },
+
+      stop() {
+        clearInterval(this.timer);
+      },
+
+      step() {
+        if (Game.isGameOver) return;
+        const randomShapeObj = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        const shape = randomShapeObj.shape;
+        const color = randomShapeObj.color;
+
+        let placed = false;
+        const coords = [];
+        for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+            coords.push({ r, c });
+          }
+        }
+        coords.sort(() => Math.random() - 0.5);
+
+        for (const pt of coords) {
+          if (this.canPlace(shape, pt.r, pt.c)) {
+            for (let r = 0; r < shape.length; r++) {
+              for (let c = 0; c < shape[0].length; c++) {
+                if (shape[r][c] === 1) {
+                  this.botGrid[pt.r + r][pt.c + c] = color;
+                }
+              }
+            }
+            this.botScore += 30;
+            placed = true;
+            break;
+          }
+        }
+
+        if (placed) {
+          this.checkClears();
+          Game.rivalGrid = this.botGrid;
+          Game.rivalScore = this.botScore;
+          Game.renderGrids();
+          Game.updateScoreboards();
+        } else {
+          this.stop();
+          Game.triggerGameOver(true);
+        }
+      },
+
+      canPlace(shape, sr, sc) {
+        if (sr + shape.length > GRID_SIZE || sc + shape[0].length > GRID_SIZE) return false;
+        for (let r = 0; r < shape.length; r++) {
+          for (let c = 0; c < shape[0].length; c++) {
+            if (shape[r][c] === 1 && this.botGrid[sr + r][sc + c] !== 0) return false;
+          }
+        }
+        return true;
+      },
+
+      checkClears() {
+        const rows = [];
+        const cols = [];
+        for (let r = 0; r < GRID_SIZE; r++) {
+          if (this.botGrid[r].every(c => c !== 0)) rows.push(r);
+        }
+        for (let c = 0; c < GRID_SIZE; c++) {
+          let full = true;
+          for (let r = 0; r < GRID_SIZE; r++) {
+            if (this.botGrid[r][c] === 0) { full = false; break; }
+          }
+          if (full) cols.push(c);
+        }
+
+        const clears = rows.length + cols.length;
+        if (clears > 0) {
+          this.botScore += clears * 120;
+          rows.forEach(r => { for (let c = 0; c < GRID_SIZE; c++) this.botGrid[r][c] = 0; });
+          cols.forEach(c => { for (let r = 0; r < GRID_SIZE; r++) this.botGrid[r][c] = 0; });
+          
+          if (clears >= 2) {
+            Game.receiveGarbage(clears - 1);
+          }
+        }
+      },
+
+      receiveGarbage(count) {
+        for (let k = 0; k < count; k++) {
+          for (let r = 0; r < GRID_SIZE - 1; r++) {
+            this.botGrid[r] = [...this.botGrid[r + 1]];
+          }
+          const hole = Math.floor(Math.random() * GRID_SIZE);
+          const row = Array(GRID_SIZE).fill('garbage');
+          row[hole] = 0;
+          this.botGrid[GRID_SIZE - 1] = row;
+        }
+      },
+
+      onPlayerMove() {}
+    };
+
+    /* ========================================================================
+       7. UI INTERACTION HELPERS & MODALS
+       ======================================================================== */
+    function showToast(msg, icon = 'ph-info') {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-message');
+      const iconEl = document.getElementById('toast-icon');
+
+      text.innerText = msg;
+      iconEl.className = `ph-bold ${icon}`;
+      toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-2');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2400);
+    }
+
+    document.getElementById('lobby-btn').addEventListener('click', () => {
+      document.getElementById('lobby-modal').classList.remove('hidden');
+    });
+
+    document.getElementById('close-lobby-modal').addEventListener('click', () => {
+      document.getElementById('lobby-modal').classList.add('hidden');
+    });
+
+    document.getElementById('sound-btn').addEventListener('click', () => {
+      const enabled = SoundEngine.toggle();
+      const icon = document.getElementById('sound-icon');
+      icon.className = enabled ? 'ph-bold ph-speaker-high text-lg text-slate-300' : 'ph-bold ph-speaker-slash text-lg text-rose-400';
+      showToast(enabled ? 'Sound Effects Enabled' : 'Sound Muted');
+    });
+
+    const tabP2P = document.getElementById('tab-p2p');
+    const tabLocal = document.getElementById('tab-local');
+    const tabBot = document.getElementById('tab-bot');
+    const secP2P = document.getElementById('section-p2p');
+    const secLocal = document.getElementById('section-local');
+    const secBot = document.getElementById('section-bot');
+
+    function selectTab(activeTab, activeSec) {
+      [tabP2P, tabLocal, tabBot].forEach(t => t.className = 'py-2 rounded-xl text-slate-400 hover:text-white transition');
+      [secP2P, secLocal, secBot].forEach(s => s.classList.add('hidden'));
+
+      activeTab.className = 'py-2 rounded-xl bg-indigo-600 text-white transition';
+      activeSec.classList.remove('hidden');
+    }
+
+    tabP2P.addEventListener('click', () => selectTab(tabP2P, secP2P));
+    tabLocal.addEventListener('click', () => selectTab(tabLocal, secLocal));
+    tabBot.addEventListener('click', () => selectTab(tabBot, secBot));
+
+    // Copy room code to clipboard
+    document.getElementById('copy-code-btn').addEventListener('click', () => {
+      const code = document.getElementById('my-peer-code').innerText;
+      if (code && code !== 'Generating...' && code !== 'OFFLINE') {
+        const input = document.createElement('textarea');
+        input.value = code;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast(`Copied room code: ${code}! Send to family`, 'ph-check');
+      }
+    });
+
+    // Share full direct invite link (e.g., https://user.github.io/repo/?join=ABCD)
+    document.getElementById('share-link-btn').addEventListener('click', () => {
+      const code = document.getElementById('my-peer-code').innerText;
+      if (code && code !== 'Generating...' && code !== 'OFFLINE') {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const inviteUrl = `${baseUrl}?join=${code}`;
+
+        const input = document.createElement('textarea');
+        input.value = inviteUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+
+        showToast('Invite link copied! Paste into iMessage/WhatsApp', 'ph-link');
+      }
+    });
+
+    // Join room manually
+    document.getElementById('join-peer-btn').addEventListener('click', () => {
+      const input = document.getElementById('join-peer-code-input');
+      const val = input.value.trim();
+      if (val.length >= 3) {
+        Network.join(val);
+      } else {
+        showToast('Please enter a valid room code', 'ph-warning');
+      }
+    });
+
+    // Local Pass & Play
+    document.getElementById('start-local-btn').addEventListener('click', () => {
+      Game.mode = 'local';
+      BotAI.stop();
+      document.getElementById('p2-name').innerText = 'Local Rival';
+      document.getElementById('lobby-modal').classList.add('hidden');
+      Game.init();
+      showToast('Pass & Play Mode active!', 'ph-users');
+    });
+
+    // Bot difficulty & start
+    const easyBtn = document.getElementById('bot-diff-easy');
+    const hardBtn = document.getElementById('bot-diff-hard');
+
+    easyBtn.addEventListener('click', () => {
+      Game.botDifficulty = 'easy';
+      easyBtn.className = 'py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/30 text-indigo-300 font-semibold';
+      hardBtn.className = 'py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold';
+    });
+
+    hardBtn.addEventListener('click', () => {
+      Game.botDifficulty = 'hard';
+      hardBtn.className = 'py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/30 text-indigo-300 font-semibold';
+      easyBtn.className = 'py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold';
+    });
+
+    document.getElementById('start-bot-btn').addEventListener('click', () => {
+      Game.mode = 'bot';
+      document.getElementById('lobby-modal').classList.add('hidden');
+      Game.init();
+      BotAI.start();
+      showToast('Bot duel started! Clear lines to attack', 'ph-robot');
+    });
+
+    // Rematch button
+    document.getElementById('rematch-btn').addEventListener('click', () => {
+      if (Game.mode === 'bot') {
+        Game.init();
+        BotAI.start();
+        document.getElementById('game-over-modal').classList.add('hidden');
+      } else {
+        Network.requestRematch();
+      }
+    });
+
+    /* ========================================================================
+       8. INITIALIZATION ON WINDOW LOAD
+       ======================================================================== */
+    window.onload = function () {
+      Game.init();
+      DragController.init();
+      Network.init();
+    };
+  </script>
+</body>
+</html>
