@@ -27,11 +27,12 @@
       -webkit-user-select: none;
       -webkit-touch-callout: none;
       touch-action: manipulation;
+      box-sizing: border-box;
     }
 
     /* Grid cell animations */
     .grid-cell {
-      transition: background-color 0.15s ease, transform 0.1s ease;
+      transition: background-color 0.12s ease, transform 0.12s ease;
     }
 
     .cell-cleared {
@@ -39,8 +40,8 @@
     }
 
     @keyframes popEffect {
-      0% { transform: scale(1); filter: brightness(1.8); }
-      50% { transform: scale(1.25); filter: brightness(2.2); }
+      0% { transform: scale(1); filter: brightness(2); }
+      50% { transform: scale(1.22); filter: brightness(2.5); }
       100% { transform: scale(0); opacity: 0; }
     }
 
@@ -51,271 +52,267 @@
       z-index: 9999;
       transform: translate(-50%, -50%);
       display: none;
-      filter: drop-shadow(0 12px 24px rgba(0,0,0,0.55));
+      filter: drop-shadow(0 14px 24px rgba(0,0,0,0.6));
     }
 
-    /* Ambient glow for the player's active arena */
-    .active-board-glow {
-      box-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+    /* Turn glow indicators */
+    .turn-glow-blue {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+      border-color: rgba(96, 165, 250, 0.8) !important;
     }
 
-    /* Smooth scroll prevent for mobile devices */
-    body {
-      overflow-x: hidden;
-      overscroll-behavior-y: contain;
+    .turn-glow-pink {
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
+      border-color: rgba(244, 114, 182, 0.8) !important;
+    }
+
+    /* Selected slot glow */
+    .slot-selected {
+      border: 2px solid #38bdf8 !important;
+      background: rgba(56, 189, 248, 0.15) !important;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+      transform: scale(1.04);
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white pb-safe">
+<body class="bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white pb-20 sm:pb-4">
 
   <!-- TOP APP BAR -->
-  <header class="w-full bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-2.5 flex items-center justify-between sticky top-0 z-40">
-    <div class="flex items-center gap-2.5">
-      <div class="bg-gradient-to-tr from-amber-500 to-rose-500 p-2 rounded-xl shadow-lg shadow-rose-500/20">
-        <i class="ph-bold ph-squares-four text-white text-xl"></i>
+  <header class="w-full bg-slate-900/90 backdrop-blur border-b border-slate-800 px-3 py-1.5 flex items-center justify-between z-40 shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="bg-gradient-to-tr from-cyan-500 to-pink-500 p-1.5 rounded-xl shadow-md">
+        <i class="ph-bold ph-squares-four text-white text-base"></i>
       </div>
       <div>
-        <h1 class="text-base sm:text-lg font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 leading-tight">
+        <h1 class="text-sm font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 leading-tight">
           BLOCK CLASH
         </h1>
-        <p class="text-[10px] text-slate-400 leading-none">Family Head-to-Head Duel</p>
+        <p class="text-[9px] text-slate-400 leading-none">Shared 1-Board Duel</p>
       </div>
     </div>
 
-    <!-- Match Status / Header Actions -->
-    <div class="flex items-center gap-2">
-      <div id="connection-pill" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="connection-text">Connected</span>
-      </div>
-
-      <button id="sound-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Toggle Sound">
-        <i class="ph-bold ph-speaker-high text-lg" id="sound-icon"></i>
+    <!-- Actions -->
+    <div class="flex items-center gap-1.5">
+      <button id="how-to-play-btn" class="px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1 transition" title="How to play">
+        <i class="ph-bold ph-question text-xs"></i>
+        <span>Rules</span>
       </button>
 
-      <button id="lobby-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Lobby Menu">
-        <i class="ph-bold ph-gear text-lg"></i>
+      <button id="sound-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Toggle Sound">
+        <i class="ph-bold ph-speaker-high text-base" id="sound-icon"></i>
+      </button>
+
+      <button id="lobby-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Game Mode">
+        <i class="ph-bold ph-gear text-base"></i>
       </button>
     </div>
   </header>
 
   <!-- MAIN VIEWPORT -->
-  <main class="w-full max-w-4xl mx-auto flex-1 p-2 sm:p-4 flex flex-col justify-center items-center">
+  <main class="w-full max-w-sm mx-auto flex-1 px-3 py-1.5 flex flex-col justify-between items-center overflow-hidden">
 
-    <!-- GAME OVER / VICTORY OVERLAY -->
-    <div id="game-over-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
-        <div id="outcome-icon-container" class="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4 bg-amber-500/20 text-amber-400 border border-amber-500/30">
-          <i class="ph-bold ph-trophy text-4xl" id="outcome-icon"></i>
-        </div>
-        <h2 id="outcome-title" class="text-2xl font-bold mb-1">Victory!</h2>
-        <p id="outcome-desc" class="text-sm text-slate-400 mb-6">You out-blasted your opponent!</p>
-
-        <div class="grid grid-cols-2 gap-3 mb-6 bg-slate-950/60 p-3 rounded-2xl border border-slate-800">
-          <div class="text-center">
-            <span class="text-xs text-slate-400 block">Your Score</span>
-            <span id="final-player-score" class="text-xl font-bold text-amber-400">0</span>
+    <!-- TWO-PLAYER SCOREBOARD -->
+    <div class="w-full grid grid-cols-2 gap-2 shrink-0">
+      <!-- Player 1 / Blue Card -->
+      <div id="card-p1" class="relative px-2.5 py-1.5 rounded-xl bg-slate-900 border-2 border-cyan-500 shadow-md transition-all duration-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span id="label-p1" class="text-xs font-bold text-cyan-400">P1 (You)</span>
           </div>
-          <div class="text-center">
-            <span class="text-xs text-slate-400 block">Rival Score</span>
-            <span id="final-rival-score" class="text-xl font-bold text-rose-400">0</span>
-          </div>
+          <span id="score-p1" class="text-base font-black text-white">0</span>
         </div>
+        <div id="tag-p1" class="text-[9px] text-cyan-300 font-semibold leading-none mt-0.5">YOUR TURN!</div>
+      </div>
 
-        <button id="rematch-btn" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
-          <i class="ph-bold ph-arrow-counter-clockwise text-lg"></i> Play Again
-        </button>
+      <!-- Player 2 / Pink Card -->
+      <div id="card-p2" class="relative px-2.5 py-1.5 rounded-xl bg-slate-900/60 border-2 border-slate-800 transition-all duration-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span id="p2-dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+            <span id="label-p2" class="text-xs font-bold text-slate-400">P2 (Rival)</span>
+          </div>
+          <span id="score-p2" class="text-base font-black text-slate-400">0</span>
+        </div>
+        <div id="tag-p2" class="text-[9px] text-slate-500 font-semibold leading-none mt-0.5">Waiting...</div>
       </div>
     </div>
 
-    <!-- NOTIFICATION TOAST -->
-    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-800/95 text-slate-100 text-xs font-semibold shadow-lg border border-slate-700 flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none -translate-y-2">
-      <i class="ph-bold ph-info" id="toast-icon"></i>
-      <span id="toast-message">Notification</span>
+    <!-- PROMPT / STATUS BANNER -->
+    <div id="turn-banner" class="w-full py-1 px-2 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-center text-[11px] font-semibold text-cyan-300 flex items-center justify-center gap-1.5 shrink-0 my-0.5">
+      <i class="ph-bold ph-hand-pointing text-xs animate-bounce" id="banner-icon"></i>
+      <span id="turn-banner-text">Drag piece or tap piece then tap board</span>
     </div>
 
-    <!-- MAIN DUEL CONTAINER -->
-    <div id="duel-arena" class="w-full flex flex-col lg:flex-row items-center justify-center gap-3 sm:gap-6">
-      
-      <!-- PLAYER 1 (YOU / LOCAL) -->
-      <div class="flex flex-col items-center w-full max-w-[340px] sm:max-w-[370px]">
-        <!-- Player Badge & Stats -->
-        <div class="w-full flex items-center justify-between px-3 py-2 bg-slate-900/80 rounded-2xl border border-slate-800 mb-2">
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-xs text-white shadow">
-              P1
-            </div>
-            <div>
-              <div id="p1-name" class="text-xs font-bold truncate max-w-[100px]">You</div>
-              <div class="text-[10px] text-emerald-400 font-semibold" id="p1-streak">Combo x1</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="text-right">
-              <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold">Lines Sent</span>
-              <span id="p1-garbage-sent" class="text-xs font-bold text-rose-400">+0</span>
-            </div>
-            <div class="text-right pl-2 border-l border-slate-800">
-              <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold">Score</span>
-              <span id="p1-score" class="text-lg font-bold text-amber-400">0</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 8x8 Board Container -->
-        <div class="relative p-2 rounded-3xl bg-slate-900/90 border-2 border-slate-800 active-board-glow transition-all duration-300 aspect-square w-full">
-          <div id="player-grid" class="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full p-1 bg-slate-950 rounded-2xl overflow-hidden touch-none">
-            <!-- 64 cells generated by JS -->
-          </div>
-        </div>
-
-        <!-- Block Piece Tray (3 Slots) -->
-        <div class="w-full mt-2.5 p-2 bg-slate-900/60 rounded-2xl border border-slate-800 flex items-center justify-around min-h-[96px]" id="piece-tray">
-          <div id="slot-0" class="slot flex items-center justify-center w-24 h-24 relative touch-none"></div>
-          <div id="slot-1" class="slot flex items-center justify-center w-24 h-24 relative touch-none"></div>
-          <div id="slot-2" class="slot flex items-center justify-center w-24 h-24 relative touch-none"></div>
+    <!-- THE SINGLE SHARED 8x8 BOARD (FULL SIZED & FLUID) -->
+    <div class="w-full flex-1 flex items-center justify-center min-h-[260px] my-1">
+      <div id="board-container" class="relative p-2 rounded-2xl bg-slate-900 border-2 border-cyan-500/60 turn-glow-blue transition-all duration-300 w-[90vw] max-w-[340px] aspect-square shadow-2xl">
+        <div id="shared-grid" class="grid grid-cols-8 grid-rows-8 gap-1.5 w-full h-full p-1.5 bg-slate-950 rounded-xl overflow-hidden touch-none">
+          <!-- 64 cells generated by JS -->
         </div>
       </div>
-
-      <!-- VERSUS DIVIDER / STATUS -->
-      <div class="flex lg:flex-col items-center justify-center gap-2 py-0.5 text-slate-500">
-        <span class="h-px lg:h-12 w-8 lg:w-px bg-slate-800"></span>
-        <div class="px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-[10px] font-black uppercase tracking-widest text-slate-300">
-          VS
-        </div>
-        <span class="h-px lg:h-12 w-8 lg:w-px bg-slate-800"></span>
-      </div>
-
-      <!-- PLAYER 2 (OPPONENT / REMOTE / BOT) -->
-      <div class="flex flex-col items-center w-full max-w-[270px] sm:max-w-[300px] opacity-90">
-        <!-- Opponent Badge & Stats -->
-        <div class="w-full flex items-center justify-between px-3 py-2 bg-slate-900/80 rounded-2xl border border-slate-800 mb-2">
-          <div class="flex items-center gap-2">
-            <div id="p2-avatar" class="w-7 h-7 rounded-lg bg-rose-500 flex items-center justify-center font-bold text-xs text-white shadow">
-              P2
-            </div>
-            <div>
-              <div id="p2-name" class="text-xs font-bold truncate max-w-[100px]">Opponent</div>
-              <div class="text-[10px] text-slate-400" id="p2-status">Live Board</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-semibold">Score</span>
-            <span id="p2-score" class="text-lg font-bold text-rose-400">0</span>
-          </div>
-        </div>
-
-        <!-- 8x8 Rival Board (Spectator Mini / Mirror) -->
-        <div class="relative p-2 rounded-3xl bg-slate-900/70 border border-slate-800 aspect-square w-full">
-          <div id="rival-grid" class="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full p-1 bg-slate-950 rounded-2xl overflow-hidden pointer-events-none">
-            <!-- 64 cells generated by JS -->
-          </div>
-        </div>
-        <div class="text-[11px] text-slate-500 mt-2 text-center flex items-center justify-center gap-1.5">
-          <i class="ph-bold ph-broadcast text-rose-400 animate-pulse"></i>
-          Clear 2+ lines together to send penalty rows!
-        </div>
-      </div>
-
     </div>
+
+    <!-- CURRENT PLAYER'S 3 PIECE CHOICES TRAY (ELEVATED WELL ABOVE BOTTOM BUTTONS) -->
+    <div class="w-full shrink-0 mb-4 sm:mb-2">
+      <div class="flex items-center justify-between px-1 mb-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400" id="tray-instruction">Tap or Drag a Piece:</span>
+        <span id="mode-badge" class="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">Pass & Play</span>
+      </div>
+      <div class="w-full px-2 py-2.5 bg-slate-900/95 rounded-2xl border border-slate-800 flex items-center justify-around min-h-[82px] shadow-lg" id="piece-tray">
+        <div id="slot-0" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative touch-none"></div>
+        <div id="slot-1" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative touch-none"></div>
+        <div id="slot-2" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative touch-none"></div>
+      </div>
+    </div>
+
   </main>
 
-  <!-- LOBBY & MULTIPLAYER SETUP MODAL -->
-  <div id="lobby-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 max-w-md w-full shadow-2xl relative max-h-[92vh] overflow-y-auto">
-      
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold flex items-center gap-2 text-slate-100">
-          <i class="ph-bold ph-game-controller text-indigo-400"></i> Game Mode
+  <!-- HOW TO PLAY RULES MODAL -->
+  <div id="rules-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 max-w-sm w-full shadow-2xl relative text-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+        <h2 class="text-base font-bold text-amber-300 flex items-center gap-2">
+          <i class="ph-bold ph-book-open"></i> How To Play
         </h2>
-        <button id="close-lobby-modal" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
-          <i class="ph-bold ph-x text-lg"></i>
+        <button id="close-rules-btn" class="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800">
+          <i class="ph-bold ph-x text-base"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2.5 text-xs leading-relaxed">
+        <div class="flex items-start gap-2.5">
+          <div class="w-5 h-5 rounded-md bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold shrink-0 text-xs">1</div>
+          <p><b class="text-white">One Shared Board:</b> Both players take turns placing shapes onto the exact same 8×8 grid.</p>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+          <div class="w-5 h-5 rounded-md bg-pink-500/20 text-pink-400 flex items-center justify-center font-bold shrink-0 text-xs">2</div>
+          <p><b class="text-white">Clear Lines for Points:</b> Fill any full row or column to clear it and bank 100 points!</p>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+          <div class="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold shrink-0 text-xs">3</div>
+          <p><b class="text-white">Trap to Win:</b> If your opponent cannot fit any of their pieces on their turn, <b class="text-amber-300">they lose and you win!</b></p>
+        </div>
+
+        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-400 mt-2">
+          💡 <span class="text-slate-200 font-semibold">Two Ways to Place:</span> Drag the piece onto the board, OR tap a piece once to highlight it and then tap any square on the board!
+        </div>
+      </div>
+
+      <button id="start-rules-btn" class="mt-4 w-full py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 text-white font-bold rounded-xl transition text-xs shadow-md">
+        Got it, Let's Play!
+      </button>
+    </div>
+  </div>
+
+  <!-- GAME OVER / VICTORY OVERLAY -->
+  <div id="game-over-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+      <div id="outcome-icon-container" class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-2 bg-amber-500/20 text-amber-400 border border-amber-500/30">
+        <i class="ph-bold ph-trophy text-2xl" id="outcome-icon"></i>
+      </div>
+      <h2 id="outcome-title" class="text-lg font-bold mb-0.5">Victory!</h2>
+      <p id="outcome-desc" class="text-xs text-slate-400 mb-4">Player 1 trapped Player 2!</p>
+
+      <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+        <div class="text-center">
+          <span class="text-[11px] text-cyan-400 block font-semibold" id="final-p1-label">Player 1</span>
+          <span id="final-p1-score" class="text-lg font-bold text-white">0</span>
+        </div>
+        <div class="text-center">
+          <span class="text-[11px] text-pink-400 block font-semibold" id="final-p2-label">Player 2</span>
+          <span id="final-p2-score" class="text-lg font-bold text-white">0</span>
+        </div>
+      </div>
+
+      <button id="rematch-btn" class="w-full py-2.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-pink-500 hover:opacity-90 text-white font-bold rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-xs">
+        <i class="ph-bold ph-arrow-counter-clockwise text-sm"></i> Play Again
+      </button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION TOAST -->
+  <div id="toast" class="fixed top-12 left-1/2 -translate-x-1/2 z-50 px-3.5 py-1.5 rounded-full bg-slate-800/95 text-slate-100 text-xs font-semibold shadow-lg border border-slate-700 flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none -translate-y-2">
+    <i class="ph-bold ph-info" id="toast-icon"></i>
+    <span id="toast-message">Notification</span>
+  </div>
+
+  <!-- LOBBY & MULTIPLAYER SETUP MODAL -->
+  <div id="lobby-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-5 max-w-sm w-full shadow-2xl relative">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-bold flex items-center gap-2 text-slate-100">
+          <i class="ph-bold ph-game-controller text-cyan-400"></i> Change Game Mode
+        </h2>
+        <button id="close-lobby-modal" class="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800">
+          <i class="ph-bold ph-x text-base"></i>
         </button>
       </div>
 
       <!-- Mode Tabs -->
-      <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-2xl mb-5 text-xs font-semibold">
-        <button id="tab-p2p" class="py-2 rounded-xl bg-indigo-600 text-white transition">Online P2P</button>
-        <button id="tab-local" class="py-2 rounded-xl text-slate-400 hover:text-white transition">Pass & Play</button>
-        <button id="tab-bot" class="py-2 rounded-xl text-slate-400 hover:text-white transition">vs Bot</button>
+      <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl mb-3 text-xs font-semibold">
+        <button id="tab-local" class="py-1.5 rounded-lg bg-cyan-600 text-white transition">Pass & Play</button>
+        <button id="tab-bot" class="py-1.5 rounded-lg text-slate-400 hover:text-white transition">vs Bot</button>
+        <button id="tab-p2p" class="py-1.5 rounded-lg text-slate-400 hover:text-white transition">2 Phones</button>
       </div>
 
-      <!-- SECTION: ONLINE PEER-TO-PEER -->
-      <div id="section-p2p" class="space-y-4">
-        <div class="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
-          <p class="font-semibold text-amber-300 mb-1 flex items-center gap-1">
-            <i class="ph-bold ph-wifi-high"></i> Cross-Platform iPhone & Android
-          </p>
-          Send an invite link via iMessage, WhatsApp, or text. When your family member taps it, they will join your duel immediately!
-        </div>
-
-        <!-- Host Option -->
-        <div class="p-4 bg-slate-800/40 rounded-2xl border border-slate-700">
-          <span class="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-1">Your Duel Code</span>
-          <div class="flex items-center gap-2 mb-2">
-            <div id="my-peer-code" class="flex-1 bg-slate-950 py-2.5 px-3 rounded-xl border border-slate-700 font-mono text-center text-lg font-bold tracking-widest text-emerald-400">
-              Generating...
-            </div>
-            <button id="copy-code-btn" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-white transition active:scale-95" title="Copy Code">
-              <i class="ph-bold ph-copy text-lg"></i>
-            </button>
-          </div>
-          
-          <button id="share-link-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg">
-            <i class="ph-bold ph-share-network text-base"></i> Copy Direct Invite Link
-          </button>
-        </div>
-
-        <!-- Join Option -->
-        <div class="p-4 bg-slate-800/40 rounded-2xl border border-slate-700">
-          <span class="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-1">Or Enter Code Manually</span>
-          <div class="flex gap-2">
-            <input id="join-peer-code-input" type="text" maxlength="6" placeholder="ENTER CODE" class="flex-1 bg-slate-950 py-2 px-3 rounded-xl border border-slate-700 font-mono uppercase text-center font-bold text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500" />
-            <button id="join-peer-btn" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-xl text-xs transition">
-              Join Duel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION: PASS & PLAY -->
-      <div id="section-local" class="hidden space-y-4">
-        <p class="text-xs text-slate-300">Play together on the same iPad, phone, or computer by taking turns placing blocks.</p>
-        <button id="start-local-btn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl transition">
-          Start Local Turn-Based Match
+      <!-- LOCAL PASS & PLAY -->
+      <div id="section-local" class="space-y-3">
+        <p class="text-xs text-slate-300">Play together on this same phone screen (take turns placing blocks).</p>
+        <button id="start-local-btn" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition">
+          Start Pass & Play
         </button>
       </div>
 
-      <!-- SECTION: BOT PRACTICE -->
-      <div id="section-bot" class="hidden space-y-4">
-        <p class="text-xs text-slate-300">Warm up solo against an intelligent AI bot that clears blocks simultaneously.</p>
-        <div class="space-y-2">
-          <label class="text-xs text-slate-400 block font-semibold">Bot Difficulty</label>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <button id="bot-diff-easy" class="py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold">Relaxed</button>
-            <button id="bot-diff-hard" class="py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/30 text-indigo-300 font-semibold">Fast & Aggressive</button>
-          </div>
-        </div>
-        <button id="start-bot-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition">
+      <!-- VS BOT -->
+      <div id="section-bot" class="hidden space-y-3">
+        <p class="text-xs text-slate-300">Practice solo against an AI on the shared board.</p>
+        <button id="start-bot-btn" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">
           Fight Bot
         </button>
       </div>
 
+      <!-- ONLINE 2 PHONES -->
+      <div id="section-p2p" class="hidden space-y-3">
+        <p class="text-xs text-slate-300">Play across 2 separate phones on the exact same board live over WebRTC.</p>
+        <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
+          <span class="text-[9px] uppercase font-bold text-slate-400 block mb-1">Your Duel Code</span>
+          <div class="flex items-center gap-2 mb-2">
+            <div id="my-peer-code" class="flex-1 bg-slate-900 py-1.5 px-2 rounded-lg font-mono text-center text-sm font-bold text-emerald-400">
+              Generating...
+            </div>
+            <button id="copy-code-btn" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-white text-xs">Copy</button>
+          </div>
+          <button id="share-link-btn" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5">
+            <i class="ph-bold ph-share-network"></i> Copy Invite Link
+          </button>
+        </div>
+
+        <div class="flex gap-2">
+          <input id="join-peer-code-input" type="text" maxlength="6" placeholder="CODE" class="flex-1 bg-slate-950 py-1 px-2 rounded-lg border border-slate-800 font-mono uppercase text-center font-bold text-white text-xs focus:outline-none focus:border-cyan-500" />
+          <button id="join-peer-btn" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs">
+            Join
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- DRAGGING GHOST CANVAS/ELEMENT -->
   <div id="drag-ghost"></div>
 
-  <!-- FOOTER -->
-  <footer class="w-full py-2 px-4 text-center text-[11px] text-slate-500 border-t border-slate-900">
-    Clear 2 or more lines simultaneously to drop penalty rows onto your rival!
-  </footer>
-
-  <!-- SOUND SYNTHESIS & CORE GAME SCRIPT -->
+  <!-- GAME LOGIC -->
   <script>
     /* ========================================================================
-       1. AUDIO ENGINE (Web Audio API Synthesizer - Zero External Files)
+       1. WEB AUDIO SYNTHESIZER
        ======================================================================== */
     const SoundEngine = {
       ctx: null,
@@ -342,8 +339,8 @@
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(540, this.ctx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(340, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(560, this.ctx.currentTime + 0.08);
         gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
         osc.connect(gain);
@@ -358,8 +355,8 @@
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(190, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, this.ctx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
         osc.connect(gain);
@@ -368,41 +365,23 @@
         osc.stop(this.ctx.currentTime + 0.1);
       },
 
-      playClear(linesCount) {
+      playClear(lines) {
         if (!this.enabled) return;
         this.init();
-        const notes = [440, 554.37, 659.25, 880, 1108.73];
-        const count = Math.min(linesCount, 4);
-        for (let i = 0; i <= count; i++) {
+        const notes = [440, 554.37, 659.25, 880];
+        for (let i = 0; i < Math.min(lines, 4); i++) {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sine';
-          const freq = notes[i % notes.length];
-          const startTime = this.ctx.currentTime + i * 0.06;
-          osc.frequency.setValueAtTime(freq, startTime);
-          gain.gain.setValueAtTime(0.18, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+          const t = this.ctx.currentTime + i * 0.07;
+          osc.frequency.setValueAtTime(notes[i % notes.length], t);
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + 0.25);
+          osc.start(t);
+          osc.stop(t + 0.28);
         }
-      },
-
-      playGarbageSent() {
-        if (!this.enabled) return;
-        this.init();
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(600, this.ctx.currentTime + 0.18);
-        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.2);
       },
 
       playGameOver() {
@@ -411,8 +390,8 @@
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.45);
+        osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.45);
         gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
         osc.connect(gain);
@@ -423,117 +402,213 @@
     };
 
     /* ========================================================================
-       2. PIECE SHAPES & COLOR PALETTES
+       2. PIECE SHAPES
        ======================================================================== */
     const SHAPES = [
-      // 1x1
-      { shape: [[1]], color: 'bg-amber-400' },
-      // 2x1 & 1x2
-      { shape: [[1, 1]], color: 'bg-emerald-400' },
-      { shape: [[1], [1]], color: 'bg-emerald-400' },
-      // 3x1 & 1x3
-      { shape: [[1, 1, 1]], color: 'bg-cyan-400' },
-      { shape: [[1], [1], [1]], color: 'bg-cyan-400' },
-      // 4x1 & 1x4
-      { shape: [[1, 1, 1, 1]], color: 'bg-blue-500' },
-      { shape: [[1], [1], [1], [1]], color: 'bg-blue-500' },
-      // 5x1
-      { shape: [[1, 1, 1, 1, 1]], color: 'bg-indigo-500' },
-      // 2x2 Square
-      { shape: [[1, 1], [1, 1]], color: 'bg-yellow-400' },
-      // 3x3 Square
-      { shape: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: 'bg-orange-500' },
-      // L Shapes
-      { shape: [[1, 0], [1, 0], [1, 1]], color: 'bg-pink-500' },
-      { shape: [[0, 1], [0, 1], [1, 1]], color: 'bg-pink-500' },
-      { shape: [[1, 1, 1], [1, 0, 0]], color: 'bg-pink-500' },
-      { shape: [[1, 1, 1], [0, 0, 1]], color: 'bg-pink-500' },
-      // T Shapes
-      { shape: [[1, 1, 1], [0, 1, 0]], color: 'bg-purple-500' },
-      { shape: [[0, 1, 0], [1, 1, 1]], color: 'bg-purple-500' },
-      // Corner small 2x2
-      { shape: [[1, 1], [1, 0]], color: 'bg-teal-400' },
-      { shape: [[1, 1], [0, 1]], color: 'bg-teal-400' }
+      { shape: [[1]] },
+      { shape: [[1, 1]] },
+      { shape: [[1], [1]] },
+      { shape: [[1, 1, 1]] },
+      { shape: [[1], [1], [1]] },
+      { shape: [[1, 1, 1, 1]] },
+      { shape: [[1], [1], [1], [1]] },
+      { shape: [[1, 1], [1, 1]] },
+      { shape: [[1, 1, 1], [1, 1, 1], [1, 1, 1]] },
+      { shape: [[1, 0], [1, 0], [1, 1]] },
+      { shape: [[0, 1], [0, 1], [1, 1]] },
+      { shape: [[1, 1, 1], [1, 0, 0]] },
+      { shape: [[1, 1, 1], [0, 0, 1]] },
+      { shape: [[1, 1, 1], [0, 1, 0]] },
+      { shape: [[0, 1, 0], [1, 1, 1]] },
+      { shape: [[1, 1], [1, 0]] },
+      { shape: [[1, 1], [0, 1]] }
     ];
 
-    const GARBAGE_COLOR = 'bg-slate-600 border border-slate-400/50';
+    const P1_COLOR = 'bg-cyan-400 border border-cyan-200/50 shadow-sm';
+    const P2_COLOR = 'bg-pink-500 border border-pink-300/50 shadow-sm';
 
     /* ========================================================================
-       3. GAME STATE MANAGEMENT
+       3. SINGLE SHARED-BOARD GAME ENGINE
        ======================================================================== */
     const GRID_SIZE = 8;
-    
+
     const Game = {
-      playerGrid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
-      rivalGrid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
-      playerScore: 0,
-      rivalScore: 0,
+      grid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
+      activePlayer: 1,
+      scores: { 1: 0, 2: 0 },
       currentPieces: [null, null, null],
-      combo: 0,
-      linesSent: 0,
+      selectedSlotIndex: null, // For tap-to-place support!
+      mode: 'local',
+      myPlayerNumber: 1,
       isGameOver: false,
-      mode: 'p2p', // 'p2p', 'local', 'bot'
-      botDifficulty: 'hard',
 
       init() {
-        this.resetPlayerGrid();
-        this.resetRivalGrid();
-        this.playerScore = 0;
-        this.rivalScore = 0;
-        this.combo = 0;
-        this.linesSent = 0;
+        this.grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+        this.activePlayer = 1;
+        this.scores = { 1: 0, 2: 0 };
+        this.selectedSlotIndex = null;
         this.isGameOver = false;
-        this.renderGrids();
-        this.updateScoreboards();
+
+        this.renderBoard();
+        this.updateTurnUI();
         this.refillTray();
       },
 
-      resetPlayerGrid() {
-        this.playerGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
-      },
-
-      resetRivalGrid() {
-        this.rivalGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
-      },
-
-      updateScoreboards() {
-        document.getElementById('p1-score').innerText = this.playerScore;
-        document.getElementById('p2-score').innerText = this.rivalScore;
-        document.getElementById('p1-garbage-sent').innerText = `+${this.linesSent}`;
-        document.getElementById('p1-streak').innerText = this.combo > 1 ? `Combo x${this.combo} 🔥` : `Combo x1`;
-      },
-
-      renderGrids() {
-        // Player Grid
-        const pGridEl = document.getElementById('player-grid');
-        pGridEl.innerHTML = '';
+      renderBoard() {
+        const gridEl = document.getElementById('shared-grid');
+        gridEl.innerHTML = '';
         for (let r = 0; r < GRID_SIZE; r++) {
           for (let c = 0; c < GRID_SIZE; c++) {
             const cell = document.createElement('div');
             cell.dataset.row = r;
             cell.dataset.col = c;
-            cell.className = `grid-cell rounded-lg transition duration-75 flex items-center justify-center ${
-              this.playerGrid[r][c] 
-                ? (this.playerGrid[r][c] === 'garbage' ? GARBAGE_COLOR : this.playerGrid[r][c]) 
-                : 'bg-slate-900 border border-slate-800/80'
-            }`;
-            pGridEl.appendChild(cell);
+            const val = this.grid[r][c];
+            let colorCls = 'bg-slate-900 border border-slate-800/80';
+            if (val === 1) colorCls = P1_COLOR;
+            if (val === 2) colorCls = P2_COLOR;
+
+            cell.className = `grid-cell rounded-md flex items-center justify-center cursor-pointer ${colorCls}`;
+            
+            // Add tap-to-place click handler on each cell
+            cell.addEventListener('click', () => this.handleCellClick(r, c));
+            gridEl.appendChild(cell);
+          }
+        }
+      },
+
+      handleCellClick(r, c) {
+        if (this.selectedSlotIndex === null) return;
+        const placed = this.trySmartPlace(this.selectedSlotIndex, r, c);
+        if (placed) {
+          this.setSelectedSlot(null);
+          this.clearBoardHover();
+        } else {
+          showToast("Piece doesn't fit around there! Try another square", "ph-warning");
+        }
+      },
+
+      // Tries exact top-left placement first; if that's blocked or out-of-bounds,
+      // it searches neighboring offsets so tapping anywhere inside the desired target works
+      trySmartPlace(slotIndex, targetRow, targetCol) {
+        const piece = this.currentPieces[slotIndex];
+        if (!piece) return false;
+
+        const rows = piece.shape.length;
+        const cols = piece.shape[0].length;
+
+        // 1. Direct top-left match
+        if (this.canPlacePiece(piece.shape, targetRow, targetCol)) {
+          return this.placePiece(slotIndex, targetRow, targetCol);
+        }
+
+        // 2. Center/offset search: if user tapped in the middle or bottom of where they want it
+        const candidates = [];
+        for (let dr = -(rows - 1); dr <= 0; dr++) {
+          for (let dc = -(cols - 1); dc <= 0; dc++) {
+            const tr = targetRow + dr;
+            const tc = targetCol + dc;
+            if (this.canPlacePiece(piece.shape, tr, tc)) {
+              // Priority: closest to the tapped cell
+              const dist = Math.abs(dr) + Math.abs(dc);
+              candidates.push({ tr, tc, dist });
+            }
           }
         }
 
-        // Rival Grid
-        const rGridEl = document.getElementById('rival-grid');
-        rGridEl.innerHTML = '';
-        for (let r = 0; r < GRID_SIZE; r++) {
-          for (let c = 0; c < GRID_SIZE; c++) {
-            const cell = document.createElement('div');
-            cell.className = `rounded-md transition-colors duration-150 ${
-              this.rivalGrid[r][c] 
-                ? (this.rivalGrid[r][c] === 'garbage' ? 'bg-slate-600' : this.rivalGrid[r][c]) 
-                : 'bg-slate-900/60 border border-slate-900'
-            }`;
-            rGridEl.appendChild(cell);
+        if (candidates.length > 0) {
+          candidates.sort((a, b) => a.dist - b.dist);
+          return this.placePiece(slotIndex, candidates[0].tr, candidates[0].tc);
+        }
+
+        return false;
+      },
+
+      clearBoardHover() {
+        document.querySelectorAll('#shared-grid .grid-cell').forEach(c => {
+          c.classList.remove('bg-indigo-500/60', 'bg-rose-500/50', 'ring-2', 'ring-white/80');
+        });
+      },
+
+      previewSelectedPiece(r, c) {
+        this.clearBoardHover();
+        if (this.selectedSlotIndex === null) return;
+        const piece = this.currentPieces[this.selectedSlotIndex];
+        if (!piece) return;
+
+        const rows = piece.shape.length;
+        const cols = piece.shape[0].length;
+        const canFit = this.canPlacePiece(piece.shape, r, c);
+
+        for (let pr = 0; pr < rows; pr++) {
+          for (let pc = 0; pc < cols; pc++) {
+            if (piece.shape[pr][pc] === 1) {
+              const tr = r + pr;
+              const tc = c + pc;
+              if (tr < GRID_SIZE && tc < GRID_SIZE) {
+                const cell = document.querySelector(`#shared-grid [data-row="${tr}"][data-col="${tc}"]`);
+                if (cell) {
+                  cell.classList.add(canFit ? 'bg-indigo-500/60' : 'bg-rose-500/50');
+                  if (canFit) cell.classList.add('ring-2', 'ring-white/80');
+                }
+              }
+            }
           }
+        }
+      },
+
+      setSelectedSlot(idx) {
+        this.selectedSlotIndex = idx;
+        for (let i = 0; i < 3; i++) {
+          const slot = document.getElementById(`slot-${i}`);
+          if (i === idx) {
+            slot.classList.add('slot-selected');
+          } else {
+            slot.classList.remove('slot-selected');
+          }
+        }
+
+        const bannerText = document.getElementById('turn-banner-text');
+        if (idx !== null) {
+          bannerText.innerText = "Tap any square on the board to drop your piece!";
+        } else {
+          bannerText.innerText = "Drag piece or tap piece then tap board";
+        }
+      },
+
+      updateTurnUI() {
+        document.getElementById('score-p1').innerText = this.scores[1];
+        document.getElementById('score-p2').innerText = this.scores[2];
+
+        const cardP1 = document.getElementById('card-p1');
+        const cardP2 = document.getElementById('card-p2');
+        const tagP1 = document.getElementById('tag-p1');
+        const tagP2 = document.getElementById('tag-p2');
+        const banner = document.getElementById('turn-banner');
+        const bannerText = document.getElementById('turn-banner-text');
+        const boardContainer = document.getElementById('board-container');
+
+        if (this.activePlayer === 1) {
+          cardP1.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900 border-2 border-cyan-500 shadow-md transition-all duration-200';
+          cardP2.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900/40 border-2 border-slate-800 transition-all duration-200 opacity-60';
+          tagP1.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 1) ? 'THEIR TURN' : 'YOUR TURN!';
+          tagP2.innerText = 'Waiting...';
+
+          boardContainer.classList.remove('turn-glow-pink');
+          boardContainer.classList.add('turn-glow-blue');
+
+          banner.className = 'w-full py-1 px-2 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-center text-[11px] font-semibold text-cyan-300 flex items-center justify-center gap-1.5 shrink-0 my-0.5';
+          bannerText.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 1) ? 'Opponent (P1) is placing...' : 'Player 1 (Blue): Place a piece!';
+        } else {
+          cardP1.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900/40 border-2 border-slate-800 transition-all duration-200 opacity-60';
+          cardP2.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900 border-2 border-pink-500 shadow-md transition-all duration-200';
+          tagP1.innerText = 'Waiting...';
+          tagP2.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 2) ? 'THEIR TURN' : 'YOUR TURN!';
+
+          boardContainer.classList.remove('turn-glow-blue');
+          boardContainer.classList.add('turn-glow-pink');
+
+          banner.className = 'w-full py-1 px-2 rounded-lg bg-pink-950/40 border border-pink-800/50 text-center text-[11px] font-semibold text-pink-300 flex items-center justify-center gap-1.5 shrink-0 my-0.5';
+          bannerText.innerText = (this.mode === 'bot') ? 'Bot is thinking...' : ((this.mode === 'p2p' && this.myPlayerNumber !== 2) ? 'Opponent (P2) is placing...' : 'Player 2 (Pink): Place a piece!');
         }
       },
 
@@ -542,39 +617,55 @@
           const rand = SHAPES[Math.floor(Math.random() * SHAPES.length)];
           this.currentPieces[i] = JSON.parse(JSON.stringify(rand));
         }
+        this.setSelectedSlot(null);
         this.renderTray();
-        this.checkAvailableMoves();
+        this.checkIfActivePlayerCanMove();
       },
 
       renderTray() {
+        const isMyTurn = (this.mode === 'local') || (this.mode === 'p2p' && this.activePlayer === this.myPlayerNumber) || (this.mode === 'bot' && this.activePlayer === 1);
+        const currentColor = this.activePlayer === 1 ? 'bg-cyan-400' : 'bg-pink-500';
+
         for (let i = 0; i < 3; i++) {
           const slot = document.getElementById(`slot-${i}`);
           slot.innerHTML = '';
           const piece = this.currentPieces[i];
           if (piece) {
             const container = document.createElement('div');
-            container.className = 'cursor-grab active:cursor-grabbing p-1 inline-block transition-transform duration-100 hover:scale-105';
-            container.dataset.slotIndex = i;
+            container.className = isMyTurn 
+              ? 'cursor-pointer p-1 inline-block transition-transform duration-100' 
+              : 'p-1 inline-block opacity-40 cursor-not-allowed';
+            
+            if (isMyTurn) {
+              container.dataset.slotIndex = i;
+              container.addEventListener('click', (e) => {
+                if (Game.selectedSlotIndex === i) {
+                  Game.setSelectedSlot(null);
+                } else {
+                  Game.setSelectedSlot(i);
+                }
+              });
+            }
 
             const rows = piece.shape.length;
             const cols = piece.shape[0].length;
             container.style.display = 'grid';
-            container.style.gridTemplateRows = `repeat(${rows}, 22px)`;
-            container.style.gridTemplateColumns = `repeat(${cols}, 22px)`;
-            container.style.gap = '3px';
+            container.style.gridTemplateRows = `repeat(${rows}, 16px)`;
+            container.style.gridTemplateColumns = `repeat(${cols}, 16px)`;
+            container.style.gap = '2px';
 
             for (let r = 0; r < rows; r++) {
               for (let c = 0; c < cols; c++) {
                 const block = document.createElement('div');
                 if (piece.shape[r][c] === 1) {
-                  block.className = `w-[22px] h-[22px] rounded-md ${piece.color} shadow-sm`;
+                  block.className = `w-[16px] h-[16px] rounded-sm ${currentColor} shadow-sm`;
                 } else {
-                  block.className = 'w-[22px] h-[22px] opacity-0';
-                }
-                container.appendChild(block);
-              }
-            }
-            slot.appendChild(container);
+            cell.className = `grid-cell rounded-md flex items-center justify-center cursor-pointer ${colorCls}`;
+            
+            // Add tap-to-place and hover preview handlers
+            cell.addEventListener('click', () => this.handleCellClick(r, c));
+            cell.addEventListener('pointerenter', () => this.previewSelectedPiece(r, c));
+            gridEl.appendChild(cell);
           }
         }
       },
@@ -582,16 +673,13 @@
       canPlacePiece(shape, startRow, startCol) {
         const rows = shape.length;
         const cols = shape[0].length;
-
         if (startRow + rows > GRID_SIZE || startCol + cols > GRID_SIZE) return false;
         if (startRow < 0 || startCol < 0) return false;
 
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
-            if (shape[r][c] === 1) {
-              if (this.playerGrid[startRow + r][startCol + c] !== 0) {
-                return false;
-              }
+            if (shape[r][c] === 1 && this.grid[startRow + r][startCol + c] !== 0) {
+              return false;
             }
           }
         }
@@ -604,34 +692,43 @@
 
         const rows = piece.shape.length;
         const cols = piece.shape[0].length;
-        let placedBlocks = 0;
+        let placedCount = 0;
 
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             if (piece.shape[r][c] === 1) {
-              this.playerGrid[startRow + r][startCol + c] = piece.color;
-              placedBlocks++;
+              this.grid[startRow + r][startCol + c] = this.activePlayer;
+              placedCount++;
             }
           }
         }
 
         this.currentPieces[slotIndex] = null;
         SoundEngine.playPlace();
-        this.playerScore += placedBlocks * 10;
+        this.scores[this.activePlayer] += placedCount * 10;
 
         this.processLineClears();
+        this.renderBoard();
 
         if (this.currentPieces.every(p => p === null)) {
           this.refillTray();
-        } else {
-          this.renderTray();
-          this.checkAvailableMoves();
         }
 
-        this.renderGrids();
-        this.updateScoreboards();
+        // Switch Turn
+        this.activePlayer = this.activePlayer === 1 ? 2 : 1;
+        this.setSelectedSlot(null);
+        this.updateTurnUI();
+        this.renderTray();
 
-        Network.sendBoardUpdate();
+        if (this.mode === 'p2p') {
+          Network.sendMove(slotIndex, startRow, startCol, this.grid, this.scores, this.activePlayer, this.currentPieces);
+        }
+
+        if (this.checkIfActivePlayerCanMove()) {
+          if (this.mode === 'bot' && this.activePlayer === 2) {
+            setTimeout(() => BotAI.makeMove(), 700);
+          }
+        }
 
         return true;
       },
@@ -641,142 +738,97 @@
         const colsToClear = [];
 
         for (let r = 0; r < GRID_SIZE; r++) {
-          if (this.playerGrid[r].every(cell => cell !== 0)) {
-            rowsToClear.push(r);
-          }
+          if (this.grid[r].every(cell => cell !== 0)) rowsToClear.push(r);
         }
 
         for (let c = 0; c < GRID_SIZE; c++) {
           let full = true;
           for (let r = 0; r < GRID_SIZE; r++) {
-            if (this.playerGrid[r][c] === 0) {
-              full = false;
-              break;
-            }
+            if (this.grid[r][c] === 0) { full = false; break; }
           }
           if (full) colsToClear.push(c);
         }
 
-        const totalLines = rowsToClear.length + colsToClear.length;
-
-        if (totalLines > 0) {
-          this.combo++;
-          const bonus = (totalLines * 100) * this.combo;
-          this.playerScore += bonus;
-          SoundEngine.playClear(totalLines);
+        const totalClears = rowsToClear.length + colsToClear.length;
+        if (totalClears > 0) {
+          this.scores[this.activePlayer] += totalClears * 100;
+          SoundEngine.playClear(totalClears);
 
           rowsToClear.forEach(r => {
             for (let c = 0; c < GRID_SIZE; c++) {
               this.triggerCellPop(r, c);
-              this.playerGrid[r][c] = 0;
+              this.grid[r][c] = 0;
             }
           });
 
           colsToClear.forEach(c => {
             for (let r = 0; r < GRID_SIZE; r++) {
               this.triggerCellPop(r, c);
-              this.playerGrid[r][c] = 0;
+              this.grid[r][c] = 0;
             }
           });
 
-          // ATTACK: Sending garbage penalty lines to rival
-          if (totalLines >= 2) {
-            const attackLines = totalLines - 1;
-            this.linesSent += attackLines;
-            Network.sendGarbage(attackLines);
-            showToast(`Sent +${attackLines} garbage row(s) to rival! 🔥`, 'ph-fire');
-            SoundEngine.playGarbageSent();
-          }
-        } else {
-          this.combo = 0;
+          showToast(`Player ${this.activePlayer} cleared ${totalClears} line(s)! 🔥`, 'ph-sparkle');
         }
       },
 
       triggerCellPop(r, c) {
-        const cell = document.querySelector(`#player-grid [data-row="${r}"][data-col="${c}"]`);
+        const cell = document.querySelector(`#shared-grid [data-row="${r}"][data-col="${c}"]`);
         if (cell) {
           cell.classList.add('cell-cleared');
-          setTimeout(() => {
-            cell.classList.remove('cell-cleared');
-          }, 350);
+          setTimeout(() => cell.classList.remove('cell-cleared'), 350);
         }
       },
 
-      receiveGarbage(count) {
-        for (let k = 0; k < count; k++) {
-          if (this.playerGrid[0].some(cell => cell !== 0)) {
-            this.triggerGameOver(false);
-            return;
-          }
-
-          for (let r = 0; r < GRID_SIZE - 1; r++) {
-            this.playerGrid[r] = [...this.playerGrid[r + 1]];
-          }
-
-          const holeIndex = Math.floor(Math.random() * GRID_SIZE);
-          const newRow = Array(GRID_SIZE).fill('garbage');
-          newRow[holeIndex] = 0;
-          this.playerGrid[GRID_SIZE - 1] = newRow;
-        }
-
-        showToast(`Warning! Received ${count} penalty row(s)!`, 'ph-warning');
-        this.renderGrids();
-        this.checkAvailableMoves();
-      },
-
-      checkAvailableMoves() {
+      checkIfActivePlayerCanMove() {
         const remaining = this.currentPieces.filter(p => p !== null);
-        if (remaining.length === 0) return;
+        if (remaining.length === 0) return true;
 
-        let hasMove = false;
+        let hasValidMove = false;
         for (const piece of remaining) {
           for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
               if (this.canPlacePiece(piece.shape, r, c)) {
-                hasMove = true;
+                hasValidMove = true;
                 break;
               }
             }
-            if (hasMove) break;
+            if (hasValidMove) break;
           }
-          if (hasMove) break;
+          if (hasValidMove) break;
         }
 
-        if (!hasMove) {
-          this.triggerGameOver(false);
+        if (!hasValidMove) {
+          const winner = this.activePlayer === 1 ? 2 : 1;
+          this.triggerGameOver(winner);
+          return false;
         }
+        return true;
       },
 
-      triggerGameOver(isWinner) {
+      triggerGameOver(winner) {
         if (this.isGameOver) return;
         this.isGameOver = true;
         SoundEngine.playGameOver();
-
-        Network.sendGameOver(isWinner);
 
         const modal = document.getElementById('game-over-modal');
         const title = document.getElementById('outcome-title');
         const desc = document.getElementById('outcome-desc');
         const icon = document.getElementById('outcome-icon');
-        const p1ScoreEl = document.getElementById('final-player-score');
-        const p2ScoreEl = document.getElementById('final-rival-score');
 
-        p1ScoreEl.innerText = this.playerScore;
-        p2ScoreEl.innerText = this.rivalScore;
+        document.getElementById('final-p1-score').innerText = this.scores[1];
+        document.getElementById('final-p2-score').innerText = this.scores[2];
 
-        if (isWinner) {
-          title.innerText = 'VICTORY!';
-          title.className = 'text-2xl font-bold text-amber-400 mb-1';
-          desc.innerText = 'You cleared blocks faster and defeated your opponent!';
-          icon.className = 'ph-bold ph-trophy text-4xl text-amber-400';
-          if (typeof confetti === 'function') {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-          }
-        } else {
-          title.innerText = 'BOARD FULL!';
-          title.className = 'text-2xl font-bold text-rose-400 mb-1';
-          desc.innerText = 'No more block positions available!';
-          icon.className = 'ph-bold ph-skull text-4xl text-rose-400';
+        const winnerName = winner === 1 ? 'Player 1 (Blue)' : (this.mode === 'bot' ? 'RoboBot' : 'Player 2 (Pink)');
+        const loserName = winner === 1 ? (this.mode === 'bot' ? 'RoboBot' : 'Player 2') : 'Player 1';
+
+        title.innerText = `${winnerName} WINS!`;
+        title.className = `text-lg font-bold mb-0.5 ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
+        desc.innerText = `${loserName} was trapped and had no valid moves left!`;
+        icon.className = `ph-bold ph-trophy text-2xl ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
+
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 80, spread: 55, origin: { y: 0.6 } });
         }
 
         modal.classList.remove('hidden');
@@ -784,7 +836,7 @@
     };
 
     /* ========================================================================
-       4. TOUCH & MOUSE CONTROLLER (Universal Mobile Touch + Desktop)
+       4. TOUCH & MOUSE CONTROLLER (Fluid Drag Above Finger + Tap Selection)
        ======================================================================== */
     const DragController = {
       draggedSlotIndex: null,
@@ -792,10 +844,12 @@
       ghostEl: document.getElementById('drag-ghost'),
       hoveredRow: null,
       hoveredCol: null,
+      touchStartY: 0,
+      touchStartX: 0,
+      hasMoved: false,
 
       init() {
         const tray = document.getElementById('piece-tray');
-
         tray.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
         window.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
         window.addEventListener('touchend', (e) => this.onTouchEnd(e));
@@ -805,13 +859,22 @@
         window.addEventListener('mouseup', (e) => this.onMouseUp(e));
       },
 
+      canCurrentPlayerDrag() {
+        if (Game.isGameOver) return false;
+        if (Game.mode === 'local') return true;
+        if (Game.mode === 'bot') return Game.activePlayer === 1;
+        if (Game.mode === 'p2p') return Game.activePlayer === Game.myPlayerNumber;
+        return false;
+      },
+
       startDrag(slotIndex, clientX, clientY) {
-        if (Game.isGameOver) return;
+        if (!this.canCurrentPlayerDrag()) return;
         const piece = Game.currentPieces[slotIndex];
         if (!piece) return;
 
         this.draggedSlotIndex = slotIndex;
         this.activePiece = piece;
+        this.hasMoved = false;
         SoundEngine.playPickup();
 
         this.ghostEl.innerHTML = '';
@@ -819,17 +882,19 @@
         const cols = piece.shape[0].length;
         const container = document.createElement('div');
         container.style.display = 'grid';
-        container.style.gridTemplateRows = `repeat(${rows}, 34px)`;
-        container.style.gridTemplateColumns = `repeat(${cols}, 34px)`;
-        container.style.gap = '4px';
+        container.style.gridTemplateRows = `repeat(${rows}, 28px)`;
+        container.style.gridTemplateColumns = `repeat(${cols}, 28px)`;
+        container.style.gap = '3px';
+
+        const color = Game.activePlayer === 1 ? 'bg-cyan-400' : 'bg-pink-500';
 
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             const block = document.createElement('div');
             if (piece.shape[r][c] === 1) {
-              block.className = `w-[34px] h-[34px] rounded-lg ${piece.color} border border-white/40 shadow-lg`;
+              block.className = `w-[28px] h-[28px] rounded-lg ${color} border border-white/60 shadow-lg`;
             } else {
-              block.className = 'w-[34px] h-[34px] opacity-0';
+              block.className = 'w-[28px] h-[28px] opacity-0';
             }
             container.appendChild(block);
           }
@@ -842,7 +907,8 @@
 
       updateGhostPosition(clientX, clientY) {
         const isTouch = ('ontouchstart' in window);
-        const yOffset = isTouch ? -65 : 0;
+        // Elevate higher on touch so user's thumb does not block view of drop cells
+        const yOffset = isTouch ? -85 : 0;
         this.ghostEl.style.left = `${clientX}px`;
         this.ghostEl.style.top = `${clientY + yOffset}px`;
 
@@ -850,11 +916,76 @@
       },
 
       highlightGridTarget(clientX, clientY) {
-        const gridEl = document.getElementById('player-grid');
+        const gridEl = document.getElementById('shared-grid');
         const rect = gridEl.getBoundingClientRect();
 
-        document.querySelectorAll('#player-grid .grid-cell').forEach(c => {
-          c.classList.remove('bg-indigo-500/40', 'bg-rose-500/40');
+        Game.clearBoardHover();
+
+        if (
+          clientX >= rect.left &&
+          clientX <= rect.right &&
+          clientY >= rect.top &&
+          clientY <= rect.bottom
+        ) {
+          const cellSize = rect.width / GRID_SIZE;
+          // Calculate origin cell with tolerance
+          const col = Math.floor((clientX - rect.left) / cellSize);
+          const row = Math.floor((clientY - rect.top) / cellSize);
+
+          this.hoveredRow = row;
+          this.hoveredCol = col;
+
+          if (this.activePiece) {
+            const isValid = Game.canPlacePiece(this.activePiece.shape, row, col);
+            const rows = this.activePiece.shape.length;
+            const cols = this.activePiece.shape[0].length;
+
+            for (let r = 0; r < rows; r++) {
+              for (let c = 0; c < cols; c++) {
+                if (this.activePiece.shape[r][c] === 1) {
+                  const tr = row + r;
+                  const tc = col + c;
+                  if (tr < GRID_SIZE && tc < GRID_SIZE) {
+                    const cell = document.querySelector(`#shared-grid [data-row="${tr}"][data-col="${tc}"]`);
+                    if (cell) {
+                      cell.classList.add(isValid ? 'bg-indigo-500/60' : 'bg-rose-500/50');
+                      if (isValid) cell.classList.add('ring-2', 'ring-white/80');
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          this.hoveredRow = null;
+          this.hoveredCol = null;
+        }
+      },
+
+      endDrag() {
+        if (this.draggedSlotIndex === null) return;
+
+        if (this.hoveredRow !== null && this.hoveredCol !== null && this.activePiece) {
+          // Use trySmartPlace so if dropped near the edge or offset, it snaps into the valid cells
+          Game.trySmartPlace(this.draggedSlotIndex, this.hoveredRow, this.hoveredCol);
+        }
+
+        this.ghostEl.style.display = 'none';
+        this.ghostEl.innerHTML = '';
+        this.draggedSlotIndex = null;
+        this.activePiece = null;
+        this.hoveredRow = null;
+        this.hoveredCol = null;
+
+        Game.clearBoardHover();
+      },
+
+      highlightGridTarget(clientX, clientY) {
+        const gridEl = document.getElementById('shared-grid');
+        const rect = gridEl.getBoundingClientRect();
+
+        document.querySelectorAll('#shared-grid .grid-cell').forEach(c => {
+          c.classList.remove('bg-indigo-500/50', 'bg-rose-500/50');
         });
 
         if (
@@ -878,12 +1009,12 @@
             for (let r = 0; r < rows; r++) {
               for (let c = 0; c < cols; c++) {
                 if (this.activePiece.shape[r][c] === 1) {
-                  const targetRow = row + r;
-                  const targetCol = col + c;
-                  if (targetRow < GRID_SIZE && targetCol < GRID_SIZE) {
-                    const cell = document.querySelector(`#player-grid [data-row="${targetRow}"][data-col="${targetCol}"]`);
+                  const tr = row + r;
+                  const tc = col + c;
+                  if (tr < GRID_SIZE && tc < GRID_SIZE) {
+                    const cell = document.querySelector(`#shared-grid [data-row="${tr}"][data-col="${tc}"]`);
                     if (cell) {
-                      cell.classList.add(isValid ? 'bg-indigo-500/40' : 'bg-rose-500/40');
+                      cell.classList.add(isValid ? 'bg-indigo-500/50' : 'bg-rose-500/50');
                     }
                   }
                 }
@@ -910,26 +1041,31 @@
         this.hoveredRow = null;
         this.hoveredCol = null;
 
-        document.querySelectorAll('#player-grid .grid-cell').forEach(c => {
-          c.classList.remove('bg-indigo-500/40', 'bg-rose-500/40');
+        document.querySelectorAll('#shared-grid .grid-cell').forEach(c => {
+          c.classList.remove('bg-indigo-500/50', 'bg-rose-500/50');
         });
       },
 
       onTouchStart(e) {
-        const touch = e.touches[0];
         const container = e.target.closest('[data-slot-index]');
         if (container) {
-          e.preventDefault();
           const slot = parseInt(container.dataset.slotIndex, 10);
+          const touch = e.touches[0];
+          this.touchStartX = touch.clientX;
+          this.touchStartY = touch.clientY;
           this.startDrag(slot, touch.clientX, touch.clientY);
         }
       },
 
       onTouchMove(e) {
         if (this.draggedSlotIndex !== null) {
-          e.preventDefault();
           const touch = e.touches[0];
-          this.updateGhostPosition(touch.clientX, touch.clientY);
+          const dist = Math.hypot(touch.clientX - this.touchStartX, touch.clientY - this.touchStartY);
+          if (dist > 8) {
+            e.preventDefault();
+            this.hasMoved = true;
+            this.updateGhostPosition(touch.clientX, touch.clientY);
+          }
         }
       },
 
@@ -957,50 +1093,69 @@
     };
 
     /* ========================================================================
-       5. PEERJS NETWORKING & URL INVITES
+       5. BOT ENGINE (Solo Opponent)
+       ======================================================================== */
+    const BotAI = {
+      makeMove() {
+        if (Game.isGameOver || Game.activePlayer !== 2) return;
+
+        const availableSlots = [];
+        Game.currentPieces.forEach((p, idx) => {
+          if (p !== null) availableSlots.push(idx);
+        });
+
+        for (const slotIdx of availableSlots) {
+          const piece = Game.currentPieces[slotIdx];
+          for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+              if (Game.canPlacePiece(piece.shape, r, c)) {
+                Game.placePiece(slotIdx, r, c);
+                return;
+              }
+            }
+          }
+        }
+
+        Game.triggerGameOver(1);
+      }
+    };
+
+    /* ========================================================================
+       6. PEERJS 2-PHONE REALTIME NETWORKING
        ======================================================================== */
     const Network = {
       peer: null,
       conn: null,
-      myPeerId: null,
 
       init() {
-        const cleanId = 'bc-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-        
+        const randomCode = 'bc-' + Math.random().toString(36).substring(2, 6).toUpperCase();
         try {
-          this.peer = new Peer(cleanId);
-          
+          this.peer = new Peer(randomCode);
+
           this.peer.on('open', (id) => {
-            this.myPeerId = id;
             const displayCode = id.replace('bc-', '');
             document.getElementById('my-peer-code').innerText = displayCode;
 
-            // Auto-join if user loaded via direct invite link with ?join=CODE
             const urlParams = new URLSearchParams(window.location.search);
             const autoJoinCode = urlParams.get('join');
-            if (autoJoinCode && autoJoinCode.trim() !== '') {
-              showToast(`Connecting to room ${autoJoinCode.toUpperCase()}...`, 'ph-wifi-high');
-              setTimeout(() => {
-                this.join(autoJoinCode.trim());
-              }, 400);
+            if (autoJoinCode) {
+              showToast(`Connecting to ${autoJoinCode.toUpperCase()}...`, 'ph-wifi-high');
+              setTimeout(() => this.join(autoJoinCode.trim()), 400);
             }
           });
 
           this.peer.on('connection', (c) => {
             this.conn = c;
-            this.setupConnectionHandlers();
-            this.setConnectedUI(c.peer.replace('bc-', ''));
-            showToast(`Rival connected! Duel Started!`, 'ph-check-circle');
-            Game.init();
+            Game.mode = 'p2p';
+            Game.myPlayerNumber = 1;
+            this.setupListeners();
+            document.getElementById('mode-badge').innerText = 'Online Duel (You: P1)';
             document.getElementById('lobby-modal').classList.add('hidden');
-          });
-
-          this.peer.on('error', (err) => {
-            console.warn('Peer error:', err);
-            document.getElementById('my-peer-code').innerText = 'OFFLINE';
+            showToast('Rival joined! You are Player 1 (Blue)', 'ph-check-circle');
+            Game.init();
           });
         } catch (e) {
-          console.warn('PeerJS init failure', e);
+          console.warn('Peer error', e);
         }
       },
 
@@ -1011,83 +1166,53 @@
         this.conn = c;
 
         c.on('open', () => {
-          this.setupConnectionHandlers();
-          this.setConnectedUI(roomCode.toUpperCase());
-          showToast(`Connected to Room ${roomCode}!`, 'ph-check-circle');
-          Game.init();
+          Game.mode = 'p2p';
+          Game.myPlayerNumber = 2;
+          this.setupListeners();
+          document.getElementById('mode-badge').innerText = 'Online Duel (You: P2)';
           document.getElementById('lobby-modal').classList.add('hidden');
+          showToast('Connected! You are Player 2 (Pink)', 'ph-check-circle');
         });
       },
 
-      setupConnectionHandlers() {
+      setupListeners() {
         if (!this.conn) return;
 
         this.conn.on('data', (data) => {
-          if (data.type === 'BOARD_UPDATE') {
-            Game.rivalGrid = data.grid;
-            Game.rivalScore = data.score;
-            Game.renderGrids();
-            Game.updateScoreboards();
-          } else if (data.type === 'GARBAGE_ATTACK') {
-            Game.receiveGarbage(data.count);
-          } else if (data.type === 'GAME_OVER') {
-            Game.triggerGameOver(true);
-          } else if (data.type === 'RESTART_MATCH') {
+          if (data.type === 'MOVE') {
+            Game.grid = data.grid;
+            Game.scores = data.scores;
+            Game.activePlayer = data.activePlayer;
+            Game.currentPieces = data.pieces;
+            SoundEngine.playPlace();
+            Game.renderBoard();
+            Game.updateTurnUI();
+            Game.renderTray();
+            Game.checkIfActivePlayerCanMove();
+          } else if (data.type === 'RESTART') {
             Game.init();
             document.getElementById('game-over-modal').classList.add('hidden');
-            showToast('New match started!', 'ph-arrows-clockwise');
+            showToast('Match restarted!', 'ph-arrows-clockwise');
           }
         });
 
         this.conn.on('close', () => {
-          showToast('Opponent disconnected', 'ph-plugs');
-          document.getElementById('connection-pill').classList.add('hidden');
+          showToast('Rival disconnected', 'ph-plugs');
         });
       },
 
-      setConnectedUI(code) {
-        const pill = document.getElementById('connection-pill');
-        pill.classList.remove('hidden');
-        pill.classList.add('flex');
-        document.getElementById('connection-text').innerText = `Room: ${code}`;
-        document.getElementById('p2-name').innerText = `Rival (${code})`;
-      },
-
-      sendBoardUpdate() {
-        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
+      sendMove(slotIndex, r, c, grid, scores, activePlayer, pieces) {
+        if (this.conn && this.conn.open) {
           this.conn.send({
-            type: 'BOARD_UPDATE',
-            grid: Game.playerGrid,
-            score: Game.playerScore
-          });
-        } else if (Game.mode === 'bot') {
-          BotAI.onPlayerMove();
-        }
-      },
-
-      sendGarbage(count) {
-        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
-          this.conn.send({
-            type: 'GARBAGE_ATTACK',
-            count: count
-          });
-        } else if (Game.mode === 'bot') {
-          BotAI.receiveGarbage(count);
-        }
-      },
-
-      sendGameOver(isWinner) {
-        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
-          this.conn.send({
-            type: 'GAME_OVER',
-            senderWon: isWinner
+            type: 'MOVE',
+            slotIndex, r, c, grid, scores, activePlayer, pieces
           });
         }
       },
 
-      requestRematch() {
-        if (Game.mode === 'p2p' && this.conn && this.conn.open) {
-          this.conn.send({ type: 'RESTART_MATCH' });
+      restart() {
+        if (this.conn && this.conn.open) {
+          this.conn.send({ type: 'RESTART' });
         }
         Game.init();
         document.getElementById('game-over-modal').classList.add('hidden');
@@ -1095,122 +1220,7 @@
     };
 
     /* ========================================================================
-       6. BOT SIMULATION ENGINE (Solo Practice)
-       ======================================================================== */
-    const BotAI = {
-      timer: null,
-      botGrid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
-      botScore: 0,
-
-      start() {
-        this.botGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
-        this.botScore = 0;
-        document.getElementById('p2-name').innerText = `RoboDuel (${Game.botDifficulty.toUpperCase()})`;
-        
-        clearInterval(this.timer);
-        const interval = Game.botDifficulty === 'hard' ? 1400 : 2200;
-        this.timer = setInterval(() => this.step(), interval);
-      },
-
-      stop() {
-        clearInterval(this.timer);
-      },
-
-      step() {
-        if (Game.isGameOver) return;
-        const randomShapeObj = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-        const shape = randomShapeObj.shape;
-        const color = randomShapeObj.color;
-
-        let placed = false;
-        const coords = [];
-        for (let r = 0; r < GRID_SIZE; r++) {
-          for (let c = 0; c < GRID_SIZE; c++) {
-            coords.push({ r, c });
-          }
-        }
-        coords.sort(() => Math.random() - 0.5);
-
-        for (const pt of coords) {
-          if (this.canPlace(shape, pt.r, pt.c)) {
-            for (let r = 0; r < shape.length; r++) {
-              for (let c = 0; c < shape[0].length; c++) {
-                if (shape[r][c] === 1) {
-                  this.botGrid[pt.r + r][pt.c + c] = color;
-                }
-              }
-            }
-            this.botScore += 30;
-            placed = true;
-            break;
-          }
-        }
-
-        if (placed) {
-          this.checkClears();
-          Game.rivalGrid = this.botGrid;
-          Game.rivalScore = this.botScore;
-          Game.renderGrids();
-          Game.updateScoreboards();
-        } else {
-          this.stop();
-          Game.triggerGameOver(true);
-        }
-      },
-
-      canPlace(shape, sr, sc) {
-        if (sr + shape.length > GRID_SIZE || sc + shape[0].length > GRID_SIZE) return false;
-        for (let r = 0; r < shape.length; r++) {
-          for (let c = 0; c < shape[0].length; c++) {
-            if (shape[r][c] === 1 && this.botGrid[sr + r][sc + c] !== 0) return false;
-          }
-        }
-        return true;
-      },
-
-      checkClears() {
-        const rows = [];
-        const cols = [];
-        for (let r = 0; r < GRID_SIZE; r++) {
-          if (this.botGrid[r].every(c => c !== 0)) rows.push(r);
-        }
-        for (let c = 0; c < GRID_SIZE; c++) {
-          let full = true;
-          for (let r = 0; r < GRID_SIZE; r++) {
-            if (this.botGrid[r][c] === 0) { full = false; break; }
-          }
-          if (full) cols.push(c);
-        }
-
-        const clears = rows.length + cols.length;
-        if (clears > 0) {
-          this.botScore += clears * 120;
-          rows.forEach(r => { for (let c = 0; c < GRID_SIZE; c++) this.botGrid[r][c] = 0; });
-          cols.forEach(c => { for (let r = 0; r < GRID_SIZE; r++) this.botGrid[r][c] = 0; });
-          
-          if (clears >= 2) {
-            Game.receiveGarbage(clears - 1);
-          }
-        }
-      },
-
-      receiveGarbage(count) {
-        for (let k = 0; k < count; k++) {
-          for (let r = 0; r < GRID_SIZE - 1; r++) {
-            this.botGrid[r] = [...this.botGrid[r + 1]];
-          }
-          const hole = Math.floor(Math.random() * GRID_SIZE);
-          const row = Array(GRID_SIZE).fill('garbage');
-          row[hole] = 0;
-          this.botGrid[GRID_SIZE - 1] = row;
-        }
-      },
-
-      onPlayerMove() {}
-    };
-
-    /* ========================================================================
-       7. UI INTERACTION HELPERS & MODALS
+       7. UI HELPERS & MODAL MANAGEMENT
        ======================================================================== */
     function showToast(msg, icon = 'ph-info') {
       const toast = document.getElementById('toast');
@@ -1225,133 +1235,118 @@
       setTimeout(() => {
         toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-2');
         toast.classList.remove('opacity-100', 'translate-y-0');
-      }, 2400);
+      }, 2200);
     }
 
-    document.getElementById('lobby-btn').addEventListener('click', () => {
-      document.getElementById('lobby-modal').classList.remove('hidden');
-    });
+    // Rules Modal controls
+    const rulesModal = document.getElementById('rules-modal');
+    document.getElementById('how-to-play-btn').addEventListener('click', () => rulesModal.classList.remove('hidden'));
+    document.getElementById('close-rules-btn').addEventListener('click', () => rulesModal.classList.add('hidden'));
+    document.getElementById('start-rules-btn').addEventListener('click', () => rulesModal.classList.add('hidden'));
 
-    document.getElementById('close-lobby-modal').addEventListener('click', () => {
-      document.getElementById('lobby-modal').classList.add('hidden');
-    });
+    // Lobby Modal controls
+    const lobbyModal = document.getElementById('lobby-modal');
+    document.getElementById('lobby-btn').addEventListener('click', () => lobbyModal.classList.remove('hidden'));
+    document.getElementById('close-lobby-modal').addEventListener('click', () => lobbyModal.classList.add('hidden'));
 
+    // Sound toggle
     document.getElementById('sound-btn').addEventListener('click', () => {
       const enabled = SoundEngine.toggle();
       const icon = document.getElementById('sound-icon');
-      icon.className = enabled ? 'ph-bold ph-speaker-high text-lg text-slate-300' : 'ph-bold ph-speaker-slash text-lg text-rose-400';
-      showToast(enabled ? 'Sound Effects Enabled' : 'Sound Muted');
+      icon.className = enabled ? 'ph-bold ph-speaker-high text-base text-slate-300' : 'ph-bold ph-speaker-slash text-base text-pink-400';
+      showToast(enabled ? 'Sound On' : 'Sound Muted');
     });
 
-    const tabP2P = document.getElementById('tab-p2p');
+    // Mode tabs
     const tabLocal = document.getElementById('tab-local');
     const tabBot = document.getElementById('tab-bot');
-    const secP2P = document.getElementById('section-p2p');
+    const tabP2P = document.getElementById('tab-p2p');
     const secLocal = document.getElementById('section-local');
     const secBot = document.getElementById('section-bot');
+    const secP2P = document.getElementById('section-p2p');
 
-    function selectTab(activeTab, activeSec) {
-      [tabP2P, tabLocal, tabBot].forEach(t => t.className = 'py-2 rounded-xl text-slate-400 hover:text-white transition');
-      [secP2P, secLocal, secBot].forEach(s => s.classList.add('hidden'));
-
-      activeTab.className = 'py-2 rounded-xl bg-indigo-600 text-white transition';
-      activeSec.classList.remove('hidden');
+    function selectTab(btn, sec) {
+      [tabLocal, tabBot, tabP2P].forEach(t => t.className = 'py-1.5 rounded-lg text-slate-400 hover:text-white transition');
+      [secLocal, secBot, secP2P].forEach(s => s.classList.add('hidden'));
+      btn.className = 'py-1.5 rounded-lg bg-cyan-600 text-white transition';
+      sec.classList.remove('hidden');
     }
 
-    tabP2P.addEventListener('click', () => selectTab(tabP2P, secP2P));
     tabLocal.addEventListener('click', () => selectTab(tabLocal, secLocal));
     tabBot.addEventListener('click', () => selectTab(tabBot, secBot));
+    tabP2P.addEventListener('click', () => selectTab(tabP2P, secP2P));
 
-    // Copy room code to clipboard
-    document.getElementById('copy-code-btn').addEventListener('click', () => {
-      const code = document.getElementById('my-peer-code').innerText;
-      if (code && code !== 'Generating...' && code !== 'OFFLINE') {
-        const input = document.createElement('textarea');
-        input.value = code;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-        showToast(`Copied room code: ${code}! Send to family`, 'ph-check');
-      }
-    });
-
-    // Share full direct invite link (e.g., https://user.github.io/repo/?join=ABCD)
-    document.getElementById('share-link-btn').addEventListener('click', () => {
-      const code = document.getElementById('my-peer-code').innerText;
-      if (code && code !== 'Generating...' && code !== 'OFFLINE') {
-        const baseUrl = window.location.origin + window.location.pathname;
-        const inviteUrl = `${baseUrl}?join=${code}`;
-
-        const input = document.createElement('textarea');
-        input.value = inviteUrl;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-
-        showToast('Invite link copied! Paste into iMessage/WhatsApp', 'ph-link');
-      }
-    });
-
-    // Join room manually
-    document.getElementById('join-peer-btn').addEventListener('click', () => {
-      const input = document.getElementById('join-peer-code-input');
-      const val = input.value.trim();
-      if (val.length >= 3) {
-        Network.join(val);
-      } else {
-        showToast('Please enter a valid room code', 'ph-warning');
-      }
-    });
-
-    // Local Pass & Play
     document.getElementById('start-local-btn').addEventListener('click', () => {
       Game.mode = 'local';
-      BotAI.stop();
-      document.getElementById('p2-name').innerText = 'Local Rival';
-      document.getElementById('lobby-modal').classList.add('hidden');
+      document.getElementById('mode-badge').innerText = 'Pass & Play';
+      lobbyModal.classList.add('hidden');
       Game.init();
-      showToast('Pass & Play Mode active!', 'ph-users');
-    });
-
-    // Bot difficulty & start
-    const easyBtn = document.getElementById('bot-diff-easy');
-    const hardBtn = document.getElementById('bot-diff-hard');
-
-    easyBtn.addEventListener('click', () => {
-      Game.botDifficulty = 'easy';
-      easyBtn.className = 'py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/30 text-indigo-300 font-semibold';
-      hardBtn.className = 'py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold';
-    });
-
-    hardBtn.addEventListener('click', () => {
-      Game.botDifficulty = 'hard';
-      hardBtn.className = 'py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/30 text-indigo-300 font-semibold';
-      easyBtn.className = 'py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold';
+      showToast('Pass & Play Mode started!', 'ph-users');
     });
 
     document.getElementById('start-bot-btn').addEventListener('click', () => {
       Game.mode = 'bot';
-      document.getElementById('lobby-modal').classList.add('hidden');
+      document.getElementById('mode-badge').innerText = 'vs RoboBot';
+      lobbyModal.classList.add('hidden');
       Game.init();
-      BotAI.start();
-      showToast('Bot duel started! Clear lines to attack', 'ph-robot');
+      showToast('Bot duel started!', 'ph-robot');
     });
 
-    // Rematch button
-    document.getElementById('rematch-btn').addEventListener('click', () => {
-      if (Game.mode === 'bot') {
-        Game.init();
-        BotAI.start();
-        document.getElementById('game-over-modal').classList.add('hidden');
+    document.getElementById('copy-code-btn').addEventListener('click', () => {
+      const code = document.getElementById('my-peer-code').innerText;
+      if (code && code !== 'Generating...') {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast(`Copied code: ${code}`, 'ph-check');
+        }).catch(() => {
+          const input = document.createElement('textarea');
+          input.value = code;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          document.body.removeChild(input);
+          showToast(`Copied code: ${code}`, 'ph-check');
+        });
+      }
+    });
+
+    document.getElementById('share-link-btn').addEventListener('click', () => {
+      const code = document.getElementById('my-peer-code').innerText;
+      if (code && code !== 'Generating...') {
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?join=${code}`;
+        navigator.clipboard.writeText(inviteUrl).then(() => {
+          showToast('Invite link copied! Send via text', 'ph-share-network');
+        }).catch(() => {
+          const input = document.createElement('textarea');
+          input.value = inviteUrl;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          document.body.removeChild(input);
+          showToast('Invite link copied! Send via text', 'ph-share-network');
+        });
+      }
+    });
+
+    document.getElementById('join-peer-btn').addEventListener('click', () => {
+      const val = document.getElementById('join-peer-code-input').value.trim();
+      if (val.length >= 3) {
+        Network.join(val);
       } else {
-        Network.requestRematch();
+        showToast('Please enter a valid code', 'ph-warning');
+      }
+    });
+
+    document.getElementById('rematch-btn').addEventListener('click', () => {
+      if (Game.mode === 'p2p') {
+        Network.restart();
+      } else {
+        Game.init();
+        document.getElementById('game-over-modal').classList.add('hidden');
       }
     });
 
     /* ========================================================================
-       8. INITIALIZATION ON WINDOW LOAD
+       8. INIT
        ======================================================================== */
     window.onload = function () {
       Game.init();
