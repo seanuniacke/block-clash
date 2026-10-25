@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Block Clash Duel v2.5</title>
+  <title>Block Clash Duel v3.0 (TV Party Edition)</title>
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,6 +13,8 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Fast, zero-dependency QR code library for TV display -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
@@ -64,18 +66,24 @@
 
     /* Glows */
     .glow-p1 {
-      box-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+      box-shadow: 0 0 25px rgba(34, 211, 238, 0.6);
       border-color: rgba(34, 211, 238, 0.95) !important;
     }
     .glow-p2 {
-      box-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+      box-shadow: 0 0 25px rgba(244, 114, 182, 0.6);
       border-color: rgba(244, 114, 182, 0.95) !important;
+    }
+
+    /* Target Reticle in Controller Mode */
+    .reticle-cell {
+      box-shadow: inset 0 0 0 3px #facc15, 0 0 12px rgba(250, 204, 21, 0.8) !important;
+      background-color: rgba(250, 204, 21, 0.35) !important;
     }
   </style>
 </head>
-<body class="flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-28 sm:pb-8">
+<body class="flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-16 sm:pb-4">
 
-  <!-- TOP APP BAR WITH CLEAR VERSION TAG -->
+  <!-- TOP APP BAR -->
   <header class="w-full bg-slate-900/90 backdrop-blur border-b border-slate-800 px-3 py-2 flex items-center justify-between z-40 shrink-0">
     <div class="flex items-center gap-2">
       <div class="bg-gradient-to-tr from-cyan-500 to-pink-500 p-1.5 rounded-xl shadow-md">
@@ -83,25 +91,31 @@
       </div>
       <div>
         <div class="flex items-center gap-1.5 leading-tight">
-          <h1 class="text-sm font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">
+          <h1 class="text-sm sm:text-base font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">
             BLOCK CLASH
           </h1>
           <span class="text-[9px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-1.5 py-0.2 rounded-full font-bold">
-            v2.5
+            v3.0 TV
           </span>
         </div>
         <p class="text-[10px] text-slate-400 leading-none" id="header-level-desc">Level 1: Classic Duel</p>
       </div>
     </div>
 
-    <!-- Actions (Rules, Theme/Level Settings, Sound) -->
+    <!-- Actions (Rules, TV Host, Theme, Sound) -->
     <div class="flex items-center gap-1.5">
       <button id="how-to-play-btn" class="px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1 transition" title="How to play">
         <i class="ph-bold ph-question text-xs"></i>
-        <span>Rules</span>
+        <span class="hidden sm:inline">Rules</span>
       </button>
 
-      <button id="theme-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1 text-xs transition" title="Change Theme & Emojis">
+      <!-- TV Party Host Launch Button -->
+      <button id="tv-host-btn" class="px-2.5 py-1 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:opacity-90 text-[11px] font-bold text-white border border-indigo-400/40 flex items-center gap-1.5 shadow-md transition" title="Host on TV">
+        <i class="ph-bold ph-television text-xs"></i>
+        <span>Play on TV</span>
+      </button>
+
+      <button id="theme-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1 text-xs transition" title="Change Theme & Scenarios">
         <span id="theme-btn-icon" class="text-xs">🎨</span>
       </button>
 
@@ -109,14 +123,16 @@
         <i class="ph-bold ph-speaker-high text-base" id="sound-icon"></i>
       </button>
 
-      <button id="lobby-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Game Mode">
+      <button id="lobby-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Game Setup">
         <i class="ph-bold ph-gear text-base"></i>
       </button>
     </div>
   </header>
 
-  <!-- MAIN VIEWPORT -->
-  <main class="w-full max-w-sm mx-auto flex-1 px-3 py-1 flex flex-col justify-between items-center">
+  <!-- =========================================================================
+       STANDARD MAIN VIEWPORT (Handheld / Pass & Play)
+       ========================================================================= -->
+  <main id="standard-view" class="w-full max-w-sm mx-auto flex-1 px-3 py-1 flex flex-col justify-between items-center">
 
     <!-- TWO-PLAYER SCOREBOARD -->
     <div class="w-full grid grid-cols-2 gap-2 shrink-0 mt-1">
@@ -151,7 +167,7 @@
       <span id="turn-banner-text">Tap a piece below, then tap the board!</span>
     </div>
 
-    <!-- THE SINGLE SHARED 8x8 BOARD -->
+    <!-- SHARED 8x8 BOARD -->
     <div class="w-full flex items-center justify-center my-auto py-1">
       <div id="board-container" class="relative p-2 rounded-2xl bg-slate-900 border-2 border-cyan-500/70 glow-p1 transition-all duration-300 w-[88vw] max-w-[340px] aspect-square shadow-2xl">
         <div id="shared-grid" class="grid grid-cols-8 grid-rows-8 gap-1.5 w-full h-full p-1.5 bg-slate-950 rounded-xl overflow-hidden touch-none">
@@ -160,7 +176,7 @@
       </div>
     </div>
 
-    <!-- CURRENT PLAYER'S 3 PIECE CHOICES TRAY (ELEVATED WELL ABOVE BOTTOM TO AVOID OVERLAYS) -->
+    <!-- CURRENT PLAYER'S 3 PIECE CHOICES TRAY -->
     <div class="w-full shrink-0 mb-3">
       <div class="flex items-center justify-between px-1 mb-1">
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400" id="tray-instruction">Tap piece to select:</span>
@@ -177,6 +193,133 @@
     </div>
 
   </main>
+
+  <!-- =========================================================================
+       TV / BIG SCREEN SPECTATOR ARENA (Shown when hosted on TV browser)
+       ========================================================================= -->
+  <main id="tv-arena-view" class="w-full max-w-6xl mx-auto flex-1 px-6 py-4 hidden flex-col justify-center items-center">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
+      
+      <!-- Left Column: TV Scoreboard & Player Status -->
+      <div class="lg:col-span-4 flex flex-col gap-4">
+        <!-- Player 1 Card -->
+        <div id="tv-card-p1" class="p-5 rounded-2xl bg-slate-900 border-2 border-cyan-400 shadow-xl transition-all">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span id="tv-p1-avatar" class="text-3xl">💎</span>
+              <div>
+                <h3 class="text-base font-bold text-cyan-400">Player 1</h3>
+                <span id="tv-tag-p1" class="text-xs text-cyan-300 font-semibold">Active Turn</span>
+              </div>
+            </div>
+            <span id="tv-score-p1" class="text-4xl font-black text-white">0</span>
+          </div>
+        </div>
+
+        <!-- Player 2 Card -->
+        <div id="tv-card-p2" class="p-5 rounded-2xl bg-slate-900/60 border-2 border-slate-800 shadow-xl transition-all opacity-60">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span id="tv-p2-avatar" class="text-3xl">🔥</span>
+              <div>
+                <h3 class="text-base font-bold text-pink-400">Player 2</h3>
+                <span id="tv-tag-p2" class="text-xs text-slate-500 font-semibold">Waiting...</span>
+              </div>
+            </div>
+            <span id="tv-score-p2" class="text-4xl font-black text-slate-400">0</span>
+          </div>
+        </div>
+
+        <!-- TV Status Banner -->
+        <div id="tv-turn-banner" class="p-4 rounded-xl bg-cyan-950/40 border border-cyan-700/50 text-center text-sm font-semibold text-cyan-300">
+          Scan QR with phones to play!
+        </div>
+      </div>
+
+      <!-- Center Column: Huge 8x8 Board for the Living Room -->
+      <div class="lg:col-span-5 flex items-center justify-center">
+        <div id="tv-board-container" class="relative p-4 rounded-3xl bg-slate-900 border-4 border-cyan-500/70 glow-p1 w-[75vw] max-w-[480px] aspect-square shadow-2xl transition-all">
+          <div id="tv-shared-grid" class="grid grid-cols-8 grid-rows-8 gap-2 w-full h-full p-2 bg-slate-950 rounded-2xl overflow-hidden">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: QR Codes to Join & Instructions -->
+      <div class="lg:col-span-3 flex flex-col items-center justify-center bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-xl text-center">
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
+          <i class="ph-bold ph-device-mobile"></i> Scan with Phone
+        </span>
+        
+        <!-- Live Generated QR Code Box -->
+        <div id="tv-qr-box" class="bg-white p-3 rounded-2xl shadow-inner mb-3 flex items-center justify-center min-h-[160px] min-w-[160px]"></div>
+
+        <div class="text-xs text-slate-300 space-y-1">
+          <p class="font-bold text-white">Join Room Code:</p>
+          <p id="tv-room-code" class="text-xl font-mono font-black text-cyan-400 tracking-wider">----</p>
+          <p class="text-[11px] text-slate-400 pt-1 leading-snug">
+            Open camera on iPhone or Android, tap the link, and your phone becomes your game controller!
+          </p>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800 w-full flex items-center justify-between text-[11px] text-slate-400">
+          <span>Connected Phones:</span>
+          <span id="tv-players-count" class="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-full">0/2</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       PHONE CONTROLLER VIEW (When player opens the link via QR Code)
+       ========================================================================= -->
+  <main id="controller-view" class="w-full max-w-sm mx-auto flex-1 px-4 py-2 hidden flex-col justify-between items-center">
+    
+    <!-- Phone Controller Header -->
+    <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex items-center justify-between shadow-md">
+      <div class="flex items-center gap-2">
+        <span id="ctrl-player-badge" class="px-2.5 py-1 rounded-xl text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
+          YOU: PLAYER 1
+        </span>
+        <span id="ctrl-turn-pill" class="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+          <i class="ph-fill ph-circle text-[8px]"></i> YOUR TURN
+        </span>
+      </div>
+      <span id="ctrl-score-text" class="text-base font-black text-white">0 pts</span>
+    </div>
+
+    <!-- Mini Board Targeting Pad / Board Mimic -->
+    <div class="w-full flex flex-col items-center justify-center my-auto py-2">
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+        <i class="ph-bold ph-target"></i> Tap Spot on TV Board:
+      </span>
+      <div class="relative p-1.5 rounded-2xl bg-slate-900 border-2 border-slate-700 w-[78vw] max-w-[280px] aspect-square shadow-xl">
+        <div id="ctrl-grid" class="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full p-1 bg-slate-950 rounded-xl overflow-hidden touch-none">
+          <!-- Mini 8x8 representation for tapping on phone -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Dedicated Piece Selection Pad -->
+    <div class="w-full bg-slate-900/95 border border-slate-800 p-3 rounded-2xl shadow-xl mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">1. Select your piece:</span>
+        <span class="text-[10px] text-slate-400">Then tap spot above</span>
+      </div>
+      
+      <div class="grid grid-cols-3 gap-2" id="ctrl-tray">
+        <div id="ctrl-slot-0" class="ctrl-slot p-2 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center min-h-[68px] transition active:scale-95 cursor-pointer"></div>
+        <div id="ctrl-slot-1" class="ctrl-slot p-2 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center min-h-[68px] transition active:scale-95 cursor-pointer"></div>
+        <div id="ctrl-slot-2" class="ctrl-slot p-2 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center min-h-[68px] transition active:scale-95 cursor-pointer"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- =========================================================================
+       MODALS: THEMES, RULES, GAME OVER & LOBBY
+       ========================================================================= -->
 
   <!-- THEME & LEVEL CUSTOMIZER MODAL -->
   <div id="theme-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
@@ -277,7 +420,7 @@
           <h2 class="text-base font-bold text-amber-300 flex items-center gap-1.5">
             <i class="ph-bold ph-book-open"></i> How To Play
           </h2>
-          <span class="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">v2.5</span>
+          <span class="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">v3.0 TV</span>
         </div>
         <button id="close-rules-btn" class="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800">
           <i class="ph-bold ph-x text-base"></i>
@@ -287,7 +430,7 @@
       <div class="space-y-3 text-xs leading-relaxed">
         <div class="flex items-start gap-2.5">
           <div class="w-5 h-5 rounded-md bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold shrink-0 text-xs">1</div>
-          <p><b class="text-white">One Shared Board:</b> Both players take turns placing shapes onto the exact same 8×8 grid.</p>
+          <p><b class="text-white">One Shared Arena:</b> Players take turns placing blocks onto the central 8×8 board (on your phone screen or big TV).</p>
         </div>
 
         <div class="flex items-start gap-2.5">
@@ -300,8 +443,8 @@
           <p><b class="text-white">Trap to Win:</b> If your rival cannot fit any of their remaining pieces on their turn, <b class="text-amber-300">they lose and you win!</b></p>
         </div>
 
-        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 mt-2">
-          💡 <b class="text-cyan-300">How to Place:</b> Tap any piece below, then tap an open spot on the board to drop it. You can also drag and drop!
+        <div class="bg-indigo-950/50 p-2.5 rounded-xl border border-indigo-700/50 text-[11px] text-indigo-200 mt-2">
+          📺 <b class="text-white">Netflix-Style TV Mode:</b> Open this game on your Smart TV browser, click "Play on TV", scan the QR code with two phones, and everyone watches the living room TV while using their phones as game controllers!
         </div>
       </div>
 
@@ -351,7 +494,7 @@
           <h2 class="text-sm font-bold flex items-center gap-2 text-slate-100">
             <i class="ph-bold ph-game-controller text-cyan-400"></i> Game Setup
           </h2>
-          <span class="text-[9px] text-slate-500 font-mono">Build v2.5 (Family Edition)</span>
+          <span class="text-[9px] text-slate-500 font-mono">Build v3.0 (TV Party Edition)</span>
         </div>
         <button id="close-lobby-modal" class="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800">
           <i class="ph-bold ph-x text-base"></i>
@@ -367,7 +510,7 @@
 
       <!-- LOCAL PASS & PLAY -->
       <div id="section-local" class="space-y-3">
-        <p class="text-xs text-slate-300">Take turns placing pieces right on this screen.</p>
+        <p class="text-xs text-slate-300">Take turns placing pieces directly on this device.</p>
         <button id="start-local-btn" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition">
           Start Pass & Play
         </button>
@@ -612,15 +755,16 @@
     const OBSTACLE_VAL = 9;
 
     /* ========================================================================
-       4. GAME ENGINE
+       4. GAME STATE ENGINE
        ======================================================================== */
     const Game = {
       grid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
       activePlayer: 1,
       scores: { 1: 0, 2: 0 },
       currentPieces: [null, null, null],
+      playerPieces: { 1: [null, null, null], 2: [null, null, null] },
       selectedSlotIndex: null,
-      mode: 'local',
+      mode: 'local', // 'local', 'bot', 'p2p', 'tv_host', 'controller'
       myPlayerNumber: 1,
       isGameOver: false,
       currentTheme: 'emoji',
@@ -645,10 +789,36 @@
         const theme = THEMES[this.currentTheme];
         document.getElementById('p1-avatar').innerText = theme.p1Emoji || '🔵';
         document.getElementById('p2-avatar').innerText = theme.p2Emoji || '🔴';
+        document.getElementById('tv-p1-avatar').innerText = theme.p1Emoji || '🔵';
+        document.getElementById('tv-p2-avatar').innerText = theme.p2Emoji || '🔴';
+
+        // Initialize pieces for both players
+        this.refillTrayForPlayer(1);
+        this.refillTrayForPlayer(2);
+        this.currentPieces = this.playerPieces[1];
 
         this.renderBoard();
+        this.renderTVBoard();
+        this.renderControllerGrid();
         this.updateTurnUI();
-        this.refillTray();
+        this.renderTray();
+        this.renderControllerTray();
+      },
+
+      refillTrayForPlayer(pNum) {
+        for (let i = 0; i < 3; i++) {
+          const rand = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+          this.playerPieces[pNum][i] = JSON.parse(JSON.stringify(rand));
+        }
+      },
+
+      refillTray() {
+        this.refillTrayForPlayer(this.activePlayer);
+        this.currentPieces = this.playerPieces[this.activePlayer];
+        this.setSelectedSlot(null);
+        this.renderTray();
+        this.renderControllerTray();
+        this.checkIfActivePlayerCanMove();
       },
 
       renderBoard() {
@@ -683,6 +853,78 @@
             cell.addEventListener('click', () => this.handleCellClick(r, c));
             cell.addEventListener('pointerenter', () => this.previewSelectedPiece(r, c));
             gridEl.appendChild(cell);
+          }
+        }
+      },
+
+      renderTVBoard() {
+        const tvGrid = document.getElementById('tv-shared-grid');
+        if (!tvGrid) return;
+        tvGrid.innerHTML = '';
+        const theme = THEMES[this.currentTheme];
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+            const cell = document.createElement('div');
+            cell.dataset.tvRow = r;
+            cell.dataset.tvCol = c;
+            const val = this.grid[r][c];
+
+            let colorCls = 'bg-slate-900 border border-slate-800';
+            let emojiSpan = '';
+
+            if (val === 1) {
+              colorCls = theme.p1Class + ' text-xl';
+              if (theme.p1Emoji) emojiSpan = `<span class="scale-100">${theme.p1Emoji}</span>`;
+            } else if (val === 2) {
+              colorCls = theme.p2Class + ' text-xl';
+              if (theme.p2Emoji) emojiSpan = `<span class="scale-100">${theme.p2Emoji}</span>`;
+            } else if (val === OBSTACLE_VAL) {
+              colorCls = 'bg-slate-700 border border-slate-600 flex items-center justify-center text-lg';
+              emojiSpan = '<span>🗿</span>';
+            }
+
+            cell.className = `grid-cell rounded-lg flex items-center justify-center select-none ${colorCls}`;
+            if (emojiSpan) cell.innerHTML = emojiSpan;
+            tvGrid.appendChild(cell);
+          }
+        }
+      },
+
+      renderControllerGrid() {
+        const ctrlGrid = document.getElementById('ctrl-grid');
+        if (!ctrlGrid) return;
+        ctrlGrid.innerHTML = '';
+        const theme = THEMES[this.currentTheme];
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+            const cell = document.createElement('div');
+            cell.dataset.ctrlRow = r;
+            cell.dataset.ctrlCol = c;
+            const val = this.grid[r][c];
+
+            let colorCls = 'bg-slate-900 border border-slate-800';
+            if (val === 1) colorCls = 'bg-cyan-500/80 border border-cyan-400';
+            else if (val === 2) colorCls = 'bg-rose-500/80 border border-rose-400';
+            else if (val === OBSTACLE_VAL) colorCls = 'bg-slate-700 border border-slate-600';
+
+            cell.className = `grid-cell rounded-[4px] flex items-center justify-center cursor-pointer ${colorCls}`;
+            
+            cell.addEventListener('click', () => {
+              if (Game.selectedSlotIndex === null) {
+                showToast("Select a piece below first!", "ph-hand-pointing");
+                return;
+              }
+              if (Game.activePlayer !== Game.myPlayerNumber) {
+                showToast("It's your rival's turn!", "ph-hourglass-medium");
+                return;
+              }
+
+              Network.sendControllerMove(Game.selectedSlotIndex, r, c);
+            });
+
+            ctrlGrid.appendChild(cell);
           }
         }
       },
@@ -742,8 +984,8 @@
       },
 
       clearBoardHover() {
-        document.querySelectorAll('#shared-grid .grid-cell').forEach(c => {
-          c.classList.remove('bg-indigo-500/60', 'bg-rose-500/50', 'ring-2', 'ring-white/80');
+        document.querySelectorAll('#shared-grid .grid-cell, #tv-shared-grid .grid-cell').forEach(c => {
+          c.classList.remove('bg-indigo-500/60', 'bg-rose-500/50', 'ring-2', 'ring-white/80', 'reticle-cell');
         });
       },
 
@@ -778,24 +1020,39 @@
         this.selectedSlotIndex = idx;
         for (let i = 0; i < 3; i++) {
           const slot = document.getElementById(`slot-${i}`);
-          if (i === idx) {
-            slot.classList.add('slot-selected');
-          } else {
-            slot.classList.remove('slot-selected');
+          if (slot) {
+            if (i === idx) slot.classList.add('slot-selected');
+            else slot.classList.remove('slot-selected');
+          }
+
+          const ctrlSlot = document.getElementById(`ctrl-slot-${i}`);
+          if (ctrlSlot) {
+            if (i === idx) ctrlSlot.classList.add('slot-selected');
+            else ctrlSlot.classList.remove('slot-selected');
           }
         }
 
         const bannerText = document.getElementById('turn-banner-text');
-        if (idx !== null) {
-          bannerText.innerText = "Now tap an open spot on the board to drop!";
-        } else {
-          bannerText.innerText = "Tap a piece below, then tap the board!";
+        if (bannerText) {
+          bannerText.innerText = (idx !== null) 
+            ? "Now tap an open spot on the board to drop!" 
+            : "Tap a piece below, then tap the board!";
         }
       },
 
       updateTurnUI() {
         document.getElementById('score-p1').innerText = this.scores[1];
         document.getElementById('score-p2').innerText = this.scores[2];
+
+        // TV Scoreboard
+        const tvScoreP1 = document.getElementById('tv-score-p1');
+        const tvScoreP2 = document.getElementById('tv-score-p2');
+        if (tvScoreP1) tvScoreP1.innerText = this.scores[1];
+        if (tvScoreP2) tvScoreP2.innerText = this.scores[2];
+
+        // Controller Score
+        const ctrlScore = document.getElementById('ctrl-score-text');
+        if (ctrlScore) ctrlScore.innerText = `${this.scores[this.myPlayerNumber]} pts`;
 
         const cardP1 = document.getElementById('card-p1');
         const cardP2 = document.getElementById('card-p2');
@@ -804,6 +1061,15 @@
         const banner = document.getElementById('turn-banner');
         const bannerText = document.getElementById('turn-banner-text');
         const boardContainer = document.getElementById('board-container');
+
+        const tvCardP1 = document.getElementById('tv-card-p1');
+        const tvCardP2 = document.getElementById('tv-card-p2');
+        const tvTagP1 = document.getElementById('tv-tag-p1');
+        const tvTagP2 = document.getElementById('tv-tag-p2');
+        const tvBoardContainer = document.getElementById('tv-board-container');
+        const tvBanner = document.getElementById('tv-turn-banner');
+
+        const ctrlTurnPill = document.getElementById('ctrl-turn-pill');
 
         if (this.activePlayer === 1) {
           cardP1.className = 'relative px-3 py-2 rounded-xl bg-slate-900 border-2 border-cyan-400 shadow-md transition-all duration-200';
@@ -815,6 +1081,23 @@
 
           banner.className = 'w-full py-1.5 px-2 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-center text-xs font-semibold text-cyan-300 flex items-center justify-center gap-1.5 shrink-0 my-1';
           bannerText.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 1) ? 'Opponent (P1) is placing...' : 'Player 1: Pick a piece & drop it!';
+
+          if (tvCardP1) {
+            tvCardP1.className = 'p-5 rounded-2xl bg-slate-900 border-2 border-cyan-400 shadow-xl transition-all glow-p1';
+            tvCardP2.className = 'p-5 rounded-2xl bg-slate-900/60 border-2 border-slate-800 shadow-xl transition-all opacity-60';
+            tvTagP1.innerText = 'Active Turn';
+            tvTagP2.innerText = 'Waiting...';
+            tvBoardContainer.className = 'relative p-4 rounded-3xl bg-slate-900 border-4 border-cyan-500/70 glow-p1 w-[75vw] max-w-[480px] aspect-square shadow-2xl transition-all';
+            tvBanner.innerText = 'Player 1 (Blue) is placing on their phone...';
+          }
+
+          if (ctrlTurnPill) {
+            if (this.myPlayerNumber === 1) {
+              ctrlTurnPill.innerHTML = '<i class="ph-fill ph-circle text-[8px] text-emerald-400"></i> <span class="text-emerald-400">YOUR TURN</span>';
+            } else {
+              ctrlTurnPill.innerHTML = '<i class="ph-bold ph-hourglass text-[10px] text-amber-400"></i> <span class="text-amber-400">OPPONENT TURN</span>';
+            }
+          }
         } else {
           cardP1.className = 'relative px-3 py-2 rounded-xl bg-slate-900/60 border-2 border-slate-800 transition-all duration-200 opacity-60';
           cardP2.className = 'relative px-3 py-2 rounded-xl bg-slate-900 border-2 border-pink-500 shadow-md transition-all duration-200';
@@ -825,17 +1108,24 @@
 
           banner.className = 'w-full py-1.5 px-2 rounded-lg bg-pink-950/40 border border-pink-800/50 text-center text-xs font-semibold text-pink-300 flex items-center justify-center gap-1.5 shrink-0 my-1';
           bannerText.innerText = (this.mode === 'bot') ? 'RoboBot is thinking...' : ((this.mode === 'p2p' && this.myPlayerNumber !== 2) ? 'Opponent (P2) is placing...' : 'Player 2: Pick a piece & drop it!');
-        }
-      },
 
-      refillTray() {
-        for (let i = 0; i < 3; i++) {
-          const rand = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-          this.currentPieces[i] = JSON.parse(JSON.stringify(rand));
+          if (tvCardP1) {
+            tvCardP1.className = 'p-5 rounded-2xl bg-slate-900/60 border-2 border-slate-800 shadow-xl transition-all opacity-60';
+            tvCardP2.className = 'p-5 rounded-2xl bg-slate-900 border-2 border-pink-500 shadow-xl transition-all glow-p2';
+            tvTagP1.innerText = 'Waiting...';
+            tvTagP2.innerText = 'Active Turn';
+            tvBoardContainer.className = 'relative p-4 rounded-3xl bg-slate-900 border-4 border-pink-500/70 glow-p2 w-[75vw] max-w-[480px] aspect-square shadow-2xl transition-all';
+            tvBanner.innerText = 'Player 2 (Pink) is placing on their phone...';
+          }
+
+          if (ctrlTurnPill) {
+            if (this.myPlayerNumber === 2) {
+              ctrlTurnPill.innerHTML = '<i class="ph-fill ph-circle text-[8px] text-emerald-400"></i> <span class="text-emerald-400">YOUR TURN</span>';
+            } else {
+              ctrlTurnPill.innerHTML = '<i class="ph-bold ph-hourglass text-[10px] text-amber-400"></i> <span class="text-amber-400">OPPONENT TURN</span>';
+            }
+          }
         }
-        this.setSelectedSlot(null);
-        this.renderTray();
-        this.checkIfActivePlayerCanMove();
       },
 
       renderTray() {
@@ -849,6 +1139,7 @@
 
         for (let i = 0; i < 3; i++) {
           const slot = document.getElementById(`slot-${i}`);
+          if (!slot) continue;
           slot.innerHTML = '';
           const piece = this.currentPieces[i];
           if (piece) {
@@ -881,9 +1172,7 @@
                 const block = document.createElement('div');
                 if (piece.shape[r][c] === 1) {
                   block.className = `w-[16px] h-[16px] rounded-sm ${blockBg} shadow-sm flex items-center justify-center text-[10px]`;
-                  if (currentEmoji) {
-                    block.innerText = currentEmoji;
-                  }
+                  if (currentEmoji) block.innerText = currentEmoji;
                 } else {
                   block.className = 'w-[16px] h-[16px] opacity-0';
                 }
@@ -891,6 +1180,55 @@
               }
             }
 
+            slot.appendChild(container);
+          }
+        }
+      },
+
+      renderControllerTray() {
+        const theme = THEMES[this.currentTheme];
+        const isMyTurn = (this.activePlayer === this.myPlayerNumber);
+        const myPieces = this.playerPieces[this.myPlayerNumber] || [];
+        const blockBg = this.myPlayerNumber === 1 ? 'bg-cyan-400' : 'bg-pink-500';
+        const emoji = this.myPlayerNumber === 1 ? theme.p1Emoji : theme.p2Emoji;
+
+        for (let i = 0; i < 3; i++) {
+          const slot = document.getElementById(`ctrl-slot-${i}`);
+          if (!slot) continue;
+          slot.innerHTML = '';
+          const piece = myPieces[i];
+
+          if (piece) {
+            const container = document.createElement('div');
+            container.className = isMyTurn ? 'cursor-pointer p-1 inline-block' : 'opacity-40 p-1 inline-block';
+            
+            container.addEventListener('click', () => {
+              if (!isMyTurn) {
+                showToast("Wait for your turn!", "ph-hourglass");
+                return;
+              }
+              Game.setSelectedSlot(i);
+            });
+
+            const rows = piece.shape.length;
+            const cols = piece.shape[0].length;
+            container.style.display = 'grid';
+            container.style.gridTemplateRows = `repeat(${rows}, 16px)`;
+            container.style.gridTemplateColumns = `repeat(${cols}, 16px)`;
+            container.style.gap = '2px';
+
+            for (let r = 0; r < rows; r++) {
+              for (let c = 0; c < cols; c++) {
+                const block = document.createElement('div');
+                if (piece.shape[r][c] === 1) {
+                  block.className = `w-[16px] h-[16px] rounded-sm ${blockBg} shadow-sm flex items-center justify-center text-[10px]`;
+                  if (emoji) block.innerText = emoji;
+                } else {
+                  block.className = 'w-[16px] h-[16px] opacity-0';
+                }
+                container.appendChild(block);
+              }
+            }
             slot.appendChild(container);
           }
         }
@@ -913,7 +1251,9 @@
       },
 
       placePiece(slotIndex, startRow, startCol) {
-        const piece = this.currentPieces[slotIndex];
+        const pNum = this.activePlayer;
+        const pieces = (this.mode === 'tv_host') ? this.playerPieces[pNum] : this.currentPieces;
+        const piece = pieces[slotIndex];
         if (!piece || !this.canPlacePiece(piece.shape, startRow, startCol)) return false;
 
         const rows = piece.shape.length;
@@ -923,31 +1263,37 @@
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             if (piece.shape[r][c] === 1) {
-              this.grid[startRow + r][startCol + c] = this.activePlayer;
+              this.grid[startRow + r][startCol + c] = pNum;
               placedCount++;
             }
           }
         }
 
-        this.currentPieces[slotIndex] = null;
+        pieces[slotIndex] = null;
         SoundEngine.playPlace();
-        this.scores[this.activePlayer] += placedCount * 10;
+        this.scores[pNum] += placedCount * 10;
 
         this.processLineClears();
         this.renderBoard();
+        this.renderTVBoard();
+        this.renderControllerGrid();
 
-        if (this.currentPieces.every(p => p === null)) {
-          this.refillTray();
+        if (pieces.every(p => p === null)) {
+          this.refillTrayForPlayer(pNum);
         }
 
         // Switch Turn
         this.activePlayer = this.activePlayer === 1 ? 2 : 1;
+        this.currentPieces = this.playerPieces[this.activePlayer];
         this.setSelectedSlot(null);
         this.updateTurnUI();
         this.renderTray();
+        this.renderControllerTray();
 
         if (this.mode === 'p2p') {
           Network.sendMove(slotIndex, startRow, startCol, this.grid, this.scores, this.activePlayer, this.currentPieces);
+        } else if (this.mode === 'tv_host') {
+          Network.broadcastTVState();
         }
 
         if (this.checkIfActivePlayerCanMove()) {
@@ -963,7 +1309,6 @@
         const rowsToClear = [];
         const colsToClear = [];
 
-        // Obstacles don't prevent clears if row/col is filled with blocks
         for (let r = 0; r < GRID_SIZE; r++) {
           if (this.grid[r].every(cell => cell !== 0)) rowsToClear.push(r);
         }
@@ -983,7 +1328,6 @@
 
           rowsToClear.forEach(r => {
             for (let c = 0; c < GRID_SIZE; c++) {
-              // keep obstacles intact
               if (this.grid[r][c] !== OBSTACLE_VAL) {
                 this.triggerCellPop(r, c);
                 this.grid[r][c] = 0;
@@ -1010,10 +1354,19 @@
           cell.classList.add('cell-cleared');
           setTimeout(() => cell.classList.remove('cell-cleared'), 350);
         }
+        const tvCell = document.querySelector(`#tv-shared-grid [data-tv-row="${r}"][data-tv-col="${c}"]`);
+        if (tvCell) {
+          tvCell.classList.add('cell-cleared');
+          setTimeout(() => tvCell.classList.remove('cell-cleared'), 350);
+        }
       },
 
       checkIfActivePlayerCanMove() {
-        const remaining = this.currentPieces.filter(p => p !== null);
+        const pieces = (this.mode === 'tv_host') 
+          ? this.playerPieces[this.activePlayer] 
+          : this.currentPieces;
+
+        const remaining = pieces.filter(p => p !== null);
         if (remaining.length === 0) return true;
 
         let hasValidMove = false;
@@ -1060,15 +1413,19 @@
         icon.className = `ph-bold ph-trophy text-2xl ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
 
         if (typeof confetti === 'function') {
-          confetti({ particleCount: 90, spread: 60, origin: { y: 0.6 } });
+          confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
         }
 
         modal.classList.remove('hidden');
+
+        if (this.mode === 'tv_host') {
+          Network.broadcastTVState();
+        }
       }
     };
 
     /* ========================================================================
-       5. DRAG & TOUCH CONTROLLER
+       5. DRAG & TOUCH CONTROLLER (Standard Screen)
        ======================================================================== */
     const DragController = {
       draggedSlotIndex: null,
@@ -1277,11 +1634,12 @@
     };
 
     /* ========================================================================
-       7. PEERJS NETWORKING
+       7. MULTIPLAYER & TV ROOM NETWORKING (PeerJS)
        ======================================================================== */
     const Network = {
       peer: null,
       conn: null,
+      connectedControllers: [], // [connP1, connP2] when in TV Host Mode
 
       init() {
         const randomCode = 'bc-' + Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -1291,25 +1649,38 @@
 
             this.peer.on('open', (id) => {
               const displayCode = id.replace('bc-', '');
-              document.getElementById('my-peer-code').innerText = displayCode;
+              const myCodeEl = document.getElementById('my-peer-code');
+              if (myCodeEl) myCodeEl.innerText = displayCode;
 
+              // Check URL Params for TV or Controller mode
               const urlParams = new URLSearchParams(window.location.search);
-              const autoJoinCode = urlParams.get('join');
-              if (autoJoinCode) {
-                showToast(`Connecting to ${autoJoinCode.toUpperCase()}...`, 'ph-wifi-high');
-                setTimeout(() => this.join(autoJoinCode.trim()), 400);
+              const joinCode = urlParams.get('join');
+              const asController = urlParams.get('ctrl');
+              const asTV = urlParams.get('tv');
+
+              if (asTV === '1') {
+                this.startTVHostMode(displayCode);
+              } else if (asController && joinCode) {
+                this.joinAsController(joinCode.trim());
+              } else if (joinCode) {
+                showToast(`Connecting to ${joinCode.toUpperCase()}...`, 'ph-wifi-high');
+                setTimeout(() => this.join(joinCode.trim()), 400);
               }
             });
 
             this.peer.on('connection', (c) => {
-              this.conn = c;
-              Game.mode = 'p2p';
-              Game.myPlayerNumber = 1;
-              this.setupListeners();
-              document.getElementById('mode-badge').innerText = 'Online (You: P1)';
-              document.getElementById('lobby-modal').classList.add('hidden');
-              showToast('Rival joined! You are P1', 'ph-check-circle');
-              Game.init();
+              if (Game.mode === 'tv_host') {
+                this.handleTVIncomingConnection(c);
+              } else {
+                this.conn = c;
+                Game.mode = 'p2p';
+                Game.myPlayerNumber = 1;
+                this.setupStandardListeners();
+                document.getElementById('mode-badge').innerText = 'Online (You: P1)';
+                document.getElementById('lobby-modal').classList.add('hidden');
+                showToast('Rival joined! You are P1', 'ph-check-circle');
+                Game.init();
+              }
             });
           }
         } catch (e) {
@@ -1317,6 +1688,167 @@
         }
       },
 
+      /* TV HOST MODE METHODS */
+      startTVHostMode(roomCode) {
+        Game.mode = 'tv_host';
+        document.getElementById('standard-view').classList.add('hidden');
+        document.getElementById('controller-view').classList.add('hidden');
+        document.getElementById('tv-arena-view').classList.remove('hidden');
+        document.getElementById('tv-arena-view').classList.add('flex');
+
+        const roomCodeClean = roomCode || this.peer.id.replace('bc-', '');
+        document.getElementById('tv-room-code').innerText = roomCodeClean;
+
+        // Render QR Code linking directly to phone controller
+        const qrContainer = document.getElementById('tv-qr-box');
+        qrContainer.innerHTML = '';
+        const controllerUrl = `${window.location.origin}${window.location.pathname}?join=${roomCodeClean}&ctrl=1`;
+
+        try {
+          new QRCode(qrContainer, {
+            text: controllerUrl,
+            width: 160,
+            height: 160,
+            colorDark: "#020617",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch (err) {
+          console.error("QR Code Error:", err);
+        }
+
+        Game.init();
+      },
+
+      handleTVIncomingConnection(c) {
+        if (this.connectedControllers.length >= 2) {
+          c.send({ type: 'ROOM_FULL' });
+          c.close();
+          return;
+        }
+
+        this.connectedControllers.push(c);
+        const playerNum = this.connectedControllers.length; // 1 or 2
+        document.getElementById('tv-players-count').innerText = `${this.connectedControllers.length}/2`;
+
+        c.on('open', () => {
+          c.send({
+            type: 'INIT_CONTROLLER',
+            playerNum: playerNum,
+            grid: Game.grid,
+            scores: Game.scores,
+            activePlayer: Game.activePlayer,
+            pieces: Game.playerPieces[playerNum],
+            theme: Game.currentTheme
+          });
+
+          showToast(`Player ${playerNum} joined on phone! 📱`, 'ph-device-mobile');
+        });
+
+        c.on('data', (data) => {
+          if (data.type === 'CONTROLLER_MOVE') {
+            if (Game.activePlayer === playerNum) {
+              const placed = Game.trySmartPlace(data.slotIndex, data.row, data.col);
+              if (placed) {
+                this.broadcastTVState();
+              }
+            }
+          }
+        });
+
+        c.on('close', () => {
+          this.connectedControllers = this.connectedControllers.filter(conn => conn !== c);
+          document.getElementById('tv-players-count').innerText = `${this.connectedControllers.length}/2`;
+          showToast(`Player ${playerNum} disconnected`, 'ph-warning');
+        });
+      },
+
+      broadcastTVState() {
+        this.connectedControllers.forEach((c, idx) => {
+          const pNum = idx + 1;
+          if (c && c.open) {
+            c.send({
+              type: 'SYNC_STATE',
+              grid: Game.grid,
+              scores: Game.scores,
+              activePlayer: Game.activePlayer,
+              pieces: Game.playerPieces[pNum],
+              isGameOver: Game.isGameOver
+            });
+          }
+        });
+      },
+
+      /* CONTROLLER MODE METHODS (Running on Family Phone) */
+      joinAsController(roomCode) {
+        if (!this.peer) return;
+        Game.mode = 'controller';
+        document.getElementById('standard-view').classList.add('hidden');
+        document.getElementById('tv-arena-view').classList.add('hidden');
+        document.getElementById('controller-view').classList.remove('hidden');
+        document.getElementById('controller-view').classList.add('flex');
+
+        const targetId = 'bc-' + roomCode.trim().toUpperCase();
+        const c = this.peer.connect(targetId);
+        this.conn = c;
+
+        c.on('open', () => {
+          showToast('Connected to TV Arena! 📺', 'ph-television');
+        });
+
+        c.on('data', (data) => {
+          if (data.type === 'INIT_CONTROLLER') {
+            Game.myPlayerNumber = data.playerNum;
+            Game.grid = data.grid;
+            Game.scores = data.scores;
+            Game.activePlayer = data.activePlayer;
+            Game.playerPieces[data.playerNum] = data.pieces;
+            Game.currentPieces = data.pieces;
+            Game.currentTheme = data.theme || 'emoji';
+
+            const badge = document.getElementById('ctrl-player-badge');
+            badge.innerText = `YOU: PLAYER ${data.playerNum}`;
+            badge.className = (data.playerNum === 1)
+              ? 'px-2.5 py-1 rounded-xl text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+              : 'px-2.5 py-1 rounded-xl text-xs font-black bg-pink-500/20 text-pink-300 border border-pink-400/40';
+
+            Game.renderControllerGrid();
+            Game.renderControllerTray();
+            Game.updateTurnUI();
+          } else if (data.type === 'SYNC_STATE') {
+            Game.grid = data.grid;
+            Game.scores = data.scores;
+            Game.activePlayer = data.activePlayer;
+            Game.playerPieces[Game.myPlayerNumber] = data.pieces;
+            Game.currentPieces = data.pieces;
+
+            SoundEngine.playPlace();
+            Game.renderControllerGrid();
+            Game.renderControllerTray();
+            Game.updateTurnUI();
+
+            if (data.isGameOver) {
+              const winner = Game.scores[1] >= Game.scores[2] ? 1 : 2;
+              Game.triggerGameOver(winner);
+            }
+          } else if (data.type === 'ROOM_FULL') {
+            showToast('TV Game room is already full!', 'ph-prohibit');
+          }
+        });
+      },
+
+      sendControllerMove(slotIndex, row, col) {
+        if (this.conn && this.conn.open) {
+          this.conn.send({
+            type: 'CONTROLLER_MOVE',
+            slotIndex,
+            row,
+            col
+          });
+        }
+      },
+
+      /* STANDARD 2-PHONE P2P DUEL METHODS */
       join(roomCode) {
         if (!this.peer) return;
         const targetId = 'bc-' + roomCode.trim().toUpperCase();
@@ -1326,14 +1858,14 @@
         c.on('open', () => {
           Game.mode = 'p2p';
           Game.myPlayerNumber = 2;
-          this.setupListeners();
+          this.setupStandardListeners();
           document.getElementById('mode-badge').innerText = 'Online (You: P2)';
           document.getElementById('lobby-modal').classList.add('hidden');
           showToast('Connected! You are P2', 'ph-check-circle');
         });
       },
 
-      setupListeners() {
+      setupStandardListeners() {
         if (!this.conn) return;
 
         this.conn.on('data', (data) => {
@@ -1393,21 +1925,27 @@
       setTimeout(() => {
         toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-2');
         toast.classList.remove('opacity-100', 'translate-y-0');
-      }, 2200);
+      }, 2400);
     }
 
-    // Rules Modal controls
+    // Header Controls
     const rulesModal = document.getElementById('rules-modal');
     document.getElementById('how-to-play-btn').addEventListener('click', () => rulesModal.classList.remove('hidden'));
     document.getElementById('close-rules-btn').addEventListener('click', () => rulesModal.classList.add('hidden'));
     document.getElementById('start-rules-btn').addEventListener('click', () => rulesModal.classList.add('hidden'));
+
+    // TV Mode Launch Button
+    document.getElementById('tv-host-btn').addEventListener('click', () => {
+      const code = document.getElementById('my-peer-code').innerText;
+      Network.startTVHostMode(code !== 'Generating...' ? code : null);
+      showToast('Switched to Big Screen TV Arena!', 'ph-television');
+    });
 
     // Theme Modal controls
     const themeModal = document.getElementById('theme-modal');
     document.getElementById('theme-btn').addEventListener('click', () => themeModal.classList.remove('hidden'));
     document.getElementById('close-theme-btn').addEventListener('click', () => themeModal.classList.add('hidden'));
 
-    // Theme Selection Buttons
     document.querySelectorAll('.theme-choice').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.theme-choice').forEach(b => {
@@ -1420,7 +1958,6 @@
       });
     });
 
-    // Level Selection Buttons
     document.querySelectorAll('.level-choice').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.level-choice').forEach(b => {
