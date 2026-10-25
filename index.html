@@ -3,19 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Block Clash Duel - Multiplayer Block Puzzle</title>
+  <title>Block Clash Duel v2.5</title>
   
-  <!-- Web App Manifest settings for seamless mobile full-screen experience -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#020617">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- PeerJS for direct WebRTC peer-to-peer multiplayer across devices -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <!-- Canvas Confetti for celebratory victory fireworks -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <!-- Phosphor Icons for high-contrast, scalable iconography -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   
   <style>
@@ -26,13 +22,18 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
-      touch-action: manipulation;
       box-sizing: border-box;
     }
 
-    /* Grid cell animations */
+    body {
+      background-color: #020617;
+      color: #f8fafc;
+      touch-action: manipulation;
+      min-height: 100dvh;
+    }
+
     .grid-cell {
-      transition: background-color 0.12s ease, transform 0.12s ease;
+      transition: background-color 0.12s ease, transform 0.1s ease, filter 0.15s;
     }
 
     .cell-cleared {
@@ -41,67 +42,67 @@
 
     @keyframes popEffect {
       0% { transform: scale(1); filter: brightness(2); }
-      50% { transform: scale(1.22); filter: brightness(2.5); }
+      50% { transform: scale(1.3); filter: brightness(2.8); }
       100% { transform: scale(0); opacity: 0; }
     }
 
-    /* Floating drag ghost that sits above user's thumb */
     #drag-ghost {
       pointer-events: none;
       position: fixed;
       z-index: 9999;
       transform: translate(-50%, -50%);
       display: none;
-      filter: drop-shadow(0 14px 24px rgba(0,0,0,0.6));
+      filter: drop-shadow(0 12px 24px rgba(0,0,0,0.8));
     }
 
-    /* Turn glow indicators */
-    .turn-glow-blue {
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-      border-color: rgba(96, 165, 250, 0.8) !important;
-    }
-
-    .turn-glow-pink {
-      box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
-      border-color: rgba(244, 114, 182, 0.8) !important;
-    }
-
-    /* Selected slot glow */
     .slot-selected {
       border: 2px solid #38bdf8 !important;
-      background: rgba(56, 189, 248, 0.15) !important;
-      box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.22) !important;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.55);
       transform: scale(1.04);
     }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      overscroll-behavior: none;
+    /* Glows */
+    .glow-p1 {
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+      border-color: rgba(34, 211, 238, 0.95) !important;
+    }
+    .glow-p2 {
+      box-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+      border-color: rgba(244, 114, 182, 0.95) !important;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white pb-20 sm:pb-4">
+<body class="flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-28 sm:pb-8">
 
-  <!-- TOP APP BAR -->
-  <header class="w-full bg-slate-900/90 backdrop-blur border-b border-slate-800 px-3 py-1.5 flex items-center justify-between z-40 shrink-0">
+  <!-- TOP APP BAR WITH CLEAR VERSION TAG -->
+  <header class="w-full bg-slate-900/90 backdrop-blur border-b border-slate-800 px-3 py-2 flex items-center justify-between z-40 shrink-0">
     <div class="flex items-center gap-2">
       <div class="bg-gradient-to-tr from-cyan-500 to-pink-500 p-1.5 rounded-xl shadow-md">
         <i class="ph-bold ph-squares-four text-white text-base"></i>
       </div>
       <div>
-        <h1 class="text-sm font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 leading-tight">
-          BLOCK CLASH
-        </h1>
-        <p class="text-[9px] text-slate-400 leading-none">Shared 1-Board Duel</p>
+        <div class="flex items-center gap-1.5 leading-tight">
+          <h1 class="text-sm font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">
+            BLOCK CLASH
+          </h1>
+          <span class="text-[9px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-1.5 py-0.2 rounded-full font-bold">
+            v2.5
+          </span>
+        </div>
+        <p class="text-[10px] text-slate-400 leading-none" id="header-level-desc">Level 1: Classic Duel</p>
       </div>
     </div>
 
-    <!-- Actions -->
+    <!-- Actions (Rules, Theme/Level Settings, Sound) -->
     <div class="flex items-center gap-1.5">
       <button id="how-to-play-btn" class="px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1 transition" title="How to play">
         <i class="ph-bold ph-question text-xs"></i>
         <span>Rules</span>
+      </button>
+
+      <button id="theme-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1 text-xs transition" title="Change Theme & Emojis">
+        <span id="theme-btn-icon" class="text-xs">🎨</span>
       </button>
 
       <button id="sound-btn" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Toggle Sound">
@@ -115,78 +116,175 @@
   </header>
 
   <!-- MAIN VIEWPORT -->
-  <main class="w-full max-w-sm mx-auto flex-1 px-3 py-1.5 flex flex-col justify-between items-center overflow-hidden">
+  <main class="w-full max-w-sm mx-auto flex-1 px-3 py-1 flex flex-col justify-between items-center">
 
     <!-- TWO-PLAYER SCOREBOARD -->
-    <div class="w-full grid grid-cols-2 gap-2 shrink-0">
-      <!-- Player 1 / Blue Card -->
-      <div id="card-p1" class="relative px-2.5 py-1.5 rounded-xl bg-slate-900 border-2 border-cyan-500 shadow-md transition-all duration-200">
+    <div class="w-full grid grid-cols-2 gap-2 shrink-0 mt-1">
+      <!-- Player 1 Card -->
+      <div id="card-p1" class="relative px-3 py-2 rounded-xl bg-slate-900 border-2 border-cyan-400 shadow-md transition-all duration-200">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            <span id="label-p1" class="text-xs font-bold text-cyan-400">P1 (You)</span>
+            <span id="p1-avatar" class="text-sm">💎</span>
+            <span id="label-p1" class="text-xs font-bold text-cyan-400">P1 (Blue)</span>
           </div>
-          <span id="score-p1" class="text-base font-black text-white">0</span>
+          <span id="score-p1" class="text-lg font-black text-white">0</span>
         </div>
-        <div id="tag-p1" class="text-[9px] text-cyan-300 font-semibold leading-none mt-0.5">YOUR TURN!</div>
+        <div id="tag-p1" class="text-[10px] text-cyan-300 font-semibold leading-none mt-1">YOUR TURN!</div>
       </div>
 
-      <!-- Player 2 / Pink Card -->
-      <div id="card-p2" class="relative px-2.5 py-1.5 rounded-xl bg-slate-900/60 border-2 border-slate-800 transition-all duration-200">
+      <!-- Player 2 Card -->
+      <div id="card-p2" class="relative px-3 py-2 rounded-xl bg-slate-900/60 border-2 border-slate-800 transition-all duration-200 opacity-60">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <span id="p2-dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
-            <span id="label-p2" class="text-xs font-bold text-slate-400">P2 (Rival)</span>
+            <span id="p2-avatar" class="text-sm">🔥</span>
+            <span id="label-p2" class="text-xs font-bold text-slate-400">P2 (Pink)</span>
           </div>
-          <span id="score-p2" class="text-base font-black text-slate-400">0</span>
+          <span id="score-p2" class="text-lg font-black text-slate-400">0</span>
         </div>
-        <div id="tag-p2" class="text-[9px] text-slate-500 font-semibold leading-none mt-0.5">Waiting...</div>
+        <div id="tag-p2" class="text-[10px] text-slate-500 font-semibold leading-none mt-1">Waiting...</div>
       </div>
     </div>
 
     <!-- PROMPT / STATUS BANNER -->
-    <div id="turn-banner" class="w-full py-1 px-2 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-center text-[11px] font-semibold text-cyan-300 flex items-center justify-center gap-1.5 shrink-0 my-0.5">
-      <i class="ph-bold ph-hand-pointing text-xs animate-bounce" id="banner-icon"></i>
-      <span id="turn-banner-text">Drag piece or tap piece then tap board</span>
+    <div id="turn-banner" class="w-full py-1.5 px-2 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-center text-xs font-semibold text-cyan-300 flex items-center justify-center gap-1.5 shrink-0 my-1">
+      <i class="ph-bold ph-hand-pointing text-xs" id="banner-icon"></i>
+      <span id="turn-banner-text">Tap a piece below, then tap the board!</span>
     </div>
 
-    <!-- THE SINGLE SHARED 8x8 BOARD (FULL SIZED & FLUID) -->
-    <div class="w-full flex-1 flex items-center justify-center min-h-[260px] my-1">
-      <div id="board-container" class="relative p-2 rounded-2xl bg-slate-900 border-2 border-cyan-500/60 turn-glow-blue transition-all duration-300 w-[90vw] max-w-[340px] aspect-square shadow-2xl">
+    <!-- THE SINGLE SHARED 8x8 BOARD -->
+    <div class="w-full flex items-center justify-center my-auto py-1">
+      <div id="board-container" class="relative p-2 rounded-2xl bg-slate-900 border-2 border-cyan-500/70 glow-p1 transition-all duration-300 w-[88vw] max-w-[340px] aspect-square shadow-2xl">
         <div id="shared-grid" class="grid grid-cols-8 grid-rows-8 gap-1.5 w-full h-full p-1.5 bg-slate-950 rounded-xl overflow-hidden touch-none">
           <!-- 64 cells generated by JS -->
         </div>
       </div>
     </div>
 
-    <!-- CURRENT PLAYER'S 3 PIECE CHOICES TRAY (ELEVATED WELL ABOVE BOTTOM BUTTONS) -->
-    <div class="w-full shrink-0 mb-4 sm:mb-2">
+    <!-- CURRENT PLAYER'S 3 PIECE CHOICES TRAY (ELEVATED WELL ABOVE BOTTOM TO AVOID OVERLAYS) -->
+    <div class="w-full shrink-0 mb-3">
       <div class="flex items-center justify-between px-1 mb-1">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400" id="tray-instruction">Tap or Drag a Piece:</span>
-        <span id="mode-badge" class="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">Pass & Play</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400" id="tray-instruction">Tap piece to select:</span>
+        <div class="flex items-center gap-1">
+          <span id="level-badge" class="text-[9px] bg-slate-800/90 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/30">Level 1</span>
+          <span id="mode-badge" class="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">Pass & Play</span>
+        </div>
       </div>
-      <div class="w-full px-2 py-2.5 bg-slate-900/95 rounded-2xl border border-slate-800 flex items-center justify-around min-h-[82px] shadow-lg" id="piece-tray">
-        <div id="slot-0" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative touch-none"></div>
-        <div id="slot-1" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative touch-none"></div>
-        <div id="slot-2" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative touch-none"></div>
+      <div class="w-full px-2 py-2.5 bg-slate-900/95 rounded-2xl border border-slate-800 flex items-center justify-around min-h-[86px] shadow-lg" id="piece-tray">
+        <div id="slot-0" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative"></div>
+        <div id="slot-1" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative"></div>
+        <div id="slot-2" class="slot flex items-center justify-center w-24 h-16 rounded-xl border border-transparent transition-all relative"></div>
       </div>
     </div>
 
   </main>
 
+  <!-- THEME & LEVEL CUSTOMIZER MODAL -->
+  <div id="theme-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 max-w-sm w-full shadow-2xl relative text-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+        <h2 class="text-sm font-bold text-cyan-400 flex items-center gap-1.5">
+          <i class="ph-bold ph-palette"></i> Themes & Scenarios
+        </h2>
+        <button id="close-theme-btn" class="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800">
+          <i class="ph-bold ph-x text-base"></i>
+        </button>
+      </div>
+
+      <!-- Theme Selectors -->
+      <div class="mb-4">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Style / Skin</label>
+        <div class="grid grid-cols-2 gap-2" id="theme-options">
+          <button data-theme="emoji" class="theme-choice p-2 rounded-xl border border-cyan-400 bg-cyan-950/40 text-left flex items-center gap-2 text-xs">
+            <span class="text-lg">💎🔥</span>
+            <div>
+              <p class="font-bold text-white leading-tight">Emoji Mode</p>
+              <p class="text-[10px] text-slate-400">Gems vs Flames</p>
+            </div>
+          </button>
+          <button data-theme="neon" class="theme-choice p-2 rounded-xl border border-slate-800 bg-slate-950 text-left flex items-center gap-2 text-xs">
+            <span class="text-lg">🟦🟪</span>
+            <div>
+              <p class="font-bold text-white leading-tight">Neon Clash</p>
+              <p class="text-[10px] text-slate-400">Cyan vs Magenta</p>
+            </div>
+          </button>
+          <button data-theme="nature" class="theme-choice p-2 rounded-xl border border-slate-800 bg-slate-950 text-left flex items-center gap-2 text-xs">
+            <span class="text-lg">🍀🍄</span>
+            <div>
+              <p class="font-bold text-white leading-tight">Wild Fauna</p>
+              <p class="text-[10px] text-slate-400">Leaf vs Shroom</p>
+            </div>
+          </button>
+          <button data-theme="candy" class="theme-choice p-2 rounded-xl border border-slate-800 bg-slate-950 text-left flex items-center gap-2 text-xs">
+            <span class="text-lg">🍭🍬</span>
+            <div>
+              <p class="font-bold text-white leading-tight">Sweet Candy</p>
+              <p class="text-[10px] text-slate-400">Lollipop vs Bonbon</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Level / Scenario Selectors -->
+      <div class="mb-3">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Board Scenario / Level</label>
+        <div class="space-y-1.5" id="level-options">
+          <button data-level="1" class="level-choice w-full p-2 rounded-xl border border-indigo-400 bg-indigo-950/30 text-left flex items-center justify-between text-xs">
+            <div>
+              <p class="font-bold text-white">Level 1: Classic Duel</p>
+              <p class="text-[10px] text-slate-400">Empty 8×8 grid. Pure strategy.</p>
+            </div>
+            <span class="text-xs text-indigo-300 font-bold">Standard</span>
+          </button>
+
+          <button data-level="2" class="level-choice w-full p-2 rounded-xl border border-slate-800 bg-slate-950 text-left flex items-center justify-between text-xs">
+            <div>
+              <p class="font-bold text-white">Level 2: Stone Core</p>
+              <p class="text-[10px] text-slate-400">4 fixed immovable stone blocks in center.</p>
+            </div>
+            <span class="text-xs text-slate-400">Tactical</span>
+          </button>
+
+          <button data-level="3" class="level-choice w-full p-2 rounded-xl border border-slate-800 bg-slate-950 text-left flex items-center justify-between text-xs">
+            <div>
+              <p class="font-bold text-white">Level 3: Corner Chokepoints</p>
+              <p class="text-[10px] text-slate-400">Corner barriers that force center battles.</p>
+            </div>
+            <span class="text-xs text-slate-400">Hard</span>
+          </button>
+
+          <button data-level="4" class="level-choice w-full p-2 rounded-xl border border-slate-800 bg-slate-950 text-left flex items-center justify-between text-xs">
+            <div>
+              <p class="font-bold text-white">Level 4: Lightning Blitz</p>
+              <p class="text-[10px] text-slate-400">Scattered obstacles for an ultra-fast trap match.</p>
+            </div>
+            <span class="text-xs text-slate-400">Blitz</span>
+          </button>
+        </div>
+      </div>
+
+      <button id="apply-theme-btn" class="mt-2 w-full py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 text-white font-bold rounded-xl transition text-xs shadow-md">
+        Apply & Start Match
+      </button>
+    </div>
+  </div>
+
   <!-- HOW TO PLAY RULES MODAL -->
-  <div id="rules-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+  <div id="rules-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 max-w-sm w-full shadow-2xl relative text-slate-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
-        <h2 class="text-base font-bold text-amber-300 flex items-center gap-2">
-          <i class="ph-bold ph-book-open"></i> How To Play
-        </h2>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-amber-300 flex items-center gap-1.5">
+            <i class="ph-bold ph-book-open"></i> How To Play
+          </h2>
+          <span class="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">v2.5</span>
+        </div>
         <button id="close-rules-btn" class="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800">
           <i class="ph-bold ph-x text-base"></i>
         </button>
       </div>
 
-      <div class="space-y-2.5 text-xs leading-relaxed">
+      <div class="space-y-3 text-xs leading-relaxed">
         <div class="flex items-start gap-2.5">
           <div class="w-5 h-5 rounded-md bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold shrink-0 text-xs">1</div>
           <p><b class="text-white">One Shared Board:</b> Both players take turns placing shapes onto the exact same 8×8 grid.</p>
@@ -194,20 +292,20 @@
 
         <div class="flex items-start gap-2.5">
           <div class="w-5 h-5 rounded-md bg-pink-500/20 text-pink-400 flex items-center justify-center font-bold shrink-0 text-xs">2</div>
-          <p><b class="text-white">Clear Lines for Points:</b> Fill any full row or column to clear it and bank 100 points!</p>
+          <p><b class="text-white">Clear Lines for Points:</b> Fill any complete horizontal row or vertical column to clear it and bank 100 points!</p>
         </div>
 
         <div class="flex items-start gap-2.5">
           <div class="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold shrink-0 text-xs">3</div>
-          <p><b class="text-white">Trap to Win:</b> If your opponent cannot fit any of their pieces on their turn, <b class="text-amber-300">they lose and you win!</b></p>
+          <p><b class="text-white">Trap to Win:</b> If your rival cannot fit any of their remaining pieces on their turn, <b class="text-amber-300">they lose and you win!</b></p>
         </div>
 
-        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-400 mt-2">
-          💡 <span class="text-slate-200 font-semibold">Two Ways to Place:</span> Drag the piece onto the board, OR tap a piece once to highlight it and then tap any square on the board!
+        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 mt-2">
+          💡 <b class="text-cyan-300">How to Place:</b> Tap any piece below, then tap an open spot on the board to drop it. You can also drag and drop!
         </div>
       </div>
 
-      <button id="start-rules-btn" class="mt-4 w-full py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 text-white font-bold rounded-xl transition text-xs shadow-md">
+      <button id="start-rules-btn" class="mt-4 w-full py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 text-white font-bold rounded-xl transition text-xs shadow-md">
         Got it, Let's Play!
       </button>
     </div>
@@ -219,16 +317,16 @@
       <div id="outcome-icon-container" class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-2 bg-amber-500/20 text-amber-400 border border-amber-500/30">
         <i class="ph-bold ph-trophy text-2xl" id="outcome-icon"></i>
       </div>
-      <h2 id="outcome-title" class="text-lg font-bold mb-0.5">Victory!</h2>
-      <p id="outcome-desc" class="text-xs text-slate-400 mb-4">Player 1 trapped Player 2!</p>
+      <h2 id="outcome-title" class="text-lg font-bold mb-1">Victory!</h2>
+      <p id="outcome-desc" class="text-xs text-slate-400 mb-4">Player was trapped!</p>
 
       <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
         <div class="text-center">
-          <span class="text-[11px] text-cyan-400 block font-semibold" id="final-p1-label">Player 1</span>
+          <span class="text-xs text-cyan-400 block font-semibold" id="final-p1-label">Player 1</span>
           <span id="final-p1-score" class="text-lg font-bold text-white">0</span>
         </div>
         <div class="text-center">
-          <span class="text-[11px] text-pink-400 block font-semibold" id="final-p2-label">Player 2</span>
+          <span class="text-xs text-pink-400 block font-semibold" id="final-p2-label">Player 2</span>
           <span id="final-p2-score" class="text-lg font-bold text-white">0</span>
         </div>
       </div>
@@ -249,9 +347,12 @@
   <div id="lobby-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-5 max-w-sm w-full shadow-2xl relative">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-bold flex items-center gap-2 text-slate-100">
-          <i class="ph-bold ph-game-controller text-cyan-400"></i> Change Game Mode
-        </h2>
+        <div>
+          <h2 class="text-sm font-bold flex items-center gap-2 text-slate-100">
+            <i class="ph-bold ph-game-controller text-cyan-400"></i> Game Setup
+          </h2>
+          <span class="text-[9px] text-slate-500 font-mono">Build v2.5 (Family Edition)</span>
+        </div>
         <button id="close-lobby-modal" class="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800">
           <i class="ph-bold ph-x text-base"></i>
         </button>
@@ -266,7 +367,7 @@
 
       <!-- LOCAL PASS & PLAY -->
       <div id="section-local" class="space-y-3">
-        <p class="text-xs text-slate-300">Play together on this same phone screen (take turns placing blocks).</p>
+        <p class="text-xs text-slate-300">Take turns placing pieces right on this screen.</p>
         <button id="start-local-btn" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition">
           Start Pass & Play
         </button>
@@ -274,7 +375,7 @@
 
       <!-- VS BOT -->
       <div id="section-bot" class="hidden space-y-3">
-        <p class="text-xs text-slate-300">Practice solo against an AI on the shared board.</p>
+        <p class="text-xs text-slate-300">Spar solo against our AI bot on the shared board.</p>
         <button id="start-bot-btn" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">
           Fight Bot
         </button>
@@ -282,9 +383,9 @@
 
       <!-- ONLINE 2 PHONES -->
       <div id="section-p2p" class="hidden space-y-3">
-        <p class="text-xs text-slate-300">Play across 2 separate phones on the exact same board live over WebRTC.</p>
+        <p class="text-xs text-slate-300">Play across 2 separate devices in real-time.</p>
         <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-          <span class="text-[9px] uppercase font-bold text-slate-400 block mb-1">Your Duel Code</span>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Your Duel Code</span>
           <div class="flex items-center gap-2 mb-2">
             <div id="my-peer-code" class="flex-1 bg-slate-900 py-1.5 px-2 rounded-lg font-mono text-center text-sm font-bold text-emerald-400">
               Generating...
@@ -309,10 +410,79 @@
   <!-- DRAGGING GHOST CANVAS/ELEMENT -->
   <div id="drag-ghost"></div>
 
-  <!-- GAME LOGIC -->
+  <!-- JAVASCRIPT GAME LOGIC -->
   <script>
     /* ========================================================================
-       1. WEB AUDIO SYNTHESIZER
+       1. THEMES & LEVEL PRESETS
+       ======================================================================== */
+    const THEMES = {
+      emoji: {
+        name: 'Emoji Mode',
+        p1Class: 'bg-cyan-500/80 border border-cyan-300 text-sm flex items-center justify-center',
+        p2Class: 'bg-rose-500/80 border border-rose-300 text-sm flex items-center justify-center',
+        p1Emoji: '💎',
+        p2Emoji: '🔥',
+        glowP1: 'glow-p1',
+        glowP2: 'glow-p2',
+        p1ColorHex: '#22d3ee',
+        p2ColorHex: '#f43f5e'
+      },
+      neon: {
+        name: 'Neon Clash',
+        p1Class: 'bg-cyan-400 border border-cyan-200/60 shadow-sm',
+        p2Class: 'bg-pink-500 border border-pink-200/60 shadow-sm',
+        p1Emoji: '',
+        p2Emoji: '',
+        glowP1: 'glow-p1',
+        glowP2: 'glow-p2',
+        p1ColorHex: '#22d3ee',
+        p2ColorHex: '#ec4899'
+      },
+      nature: {
+        name: 'Wild Fauna',
+        p1Class: 'bg-emerald-500 border border-emerald-300 text-sm flex items-center justify-center',
+        p2Class: 'bg-amber-500 border border-amber-300 text-sm flex items-center justify-center',
+        p1Emoji: '🍀',
+        p2Emoji: '🍄',
+        glowP1: 'glow-p1',
+        glowP2: 'glow-p2',
+        p1ColorHex: '#10b981',
+        p2ColorHex: '#f59e0b'
+      },
+      candy: {
+        name: 'Sweet Candy',
+        p1Class: 'bg-fuchsia-500 border border-fuchsia-300 text-sm flex items-center justify-center',
+        p2Class: 'bg-teal-400 border border-teal-200 text-sm flex items-center justify-center',
+        p1Emoji: '🍭',
+        p2Emoji: '🍬',
+        glowP1: 'glow-p1',
+        glowP2: 'glow-p2',
+        p1ColorHex: '#d946ef',
+        p2ColorHex: '#2dd4bf'
+      }
+    };
+
+    const LEVELS = {
+      1: {
+        title: "Level 1: Classic Duel",
+        obstacles: []
+      },
+      2: {
+        title: "Level 2: Stone Core",
+        obstacles: [[3, 3], [3, 4], [4, 3], [4, 4]]
+      },
+      3: {
+        title: "Level 3: Corner Chokepoints",
+        obstacles: [[0, 0], [0, 7], [7, 0], [7, 7], [1, 1], [1, 6], [6, 1], [6, 6]]
+      },
+      4: {
+        title: "Level 4: Lightning Blitz",
+        obstacles: [[1, 3], [2, 5], [5, 2], [6, 4], [3, 1], [4, 6]]
+      }
+    };
+
+    /* ========================================================================
+       2. WEB AUDIO SYNTHESIZER
        ======================================================================== */
     const SoundEngine = {
       ctx: null,
@@ -321,7 +491,9 @@
       init() {
         if (!this.ctx) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioContext();
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume();
@@ -336,73 +508,85 @@
       playPickup() {
         if (!this.enabled) return;
         this.init();
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(340, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(560, this.ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.08);
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(380, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(560, this.ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.08);
+        } catch (e) {}
       },
 
       playPlace() {
         if (!this.enabled) return;
         this.init();
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(190, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(90, this.ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.1);
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(240, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.1);
+        } catch (e) {}
       },
 
       playClear(lines) {
         if (!this.enabled) return;
         this.init();
-        const notes = [440, 554.37, 659.25, 880];
-        for (let i = 0; i < Math.min(lines, 4); i++) {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          const t = this.ctx.currentTime + i * 0.07;
-          osc.frequency.setValueAtTime(notes[i % notes.length], t);
-          gain.gain.setValueAtTime(0.18, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(t);
-          osc.stop(t + 0.28);
-        }
+        if (!this.ctx) return;
+        try {
+          const notes = [440, 554.37, 659.25, 880, 1046.5];
+          for (let i = 0; i < Math.min(lines, 4); i++) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            const t = this.ctx.currentTime + i * 0.08;
+            osc.frequency.setValueAtTime(notes[i % notes.length], t);
+            gain.gain.setValueAtTime(0.2, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.3);
+          }
+        } catch (e) {}
       },
 
       playGameOver() {
         if (!this.enabled) return;
         this.init();
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.45);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.45);
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.45);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.45);
+        } catch (e) {}
       }
     };
 
     /* ========================================================================
-       2. PIECE SHAPES
+       3. PIECE SHAPES
        ======================================================================== */
     const SHAPES = [
       { shape: [[1]] },
@@ -424,23 +608,23 @@
       { shape: [[1, 1], [0, 1]] }
     ];
 
-    const P1_COLOR = 'bg-cyan-400 border border-cyan-200/50 shadow-sm';
-    const P2_COLOR = 'bg-pink-500 border border-pink-300/50 shadow-sm';
+    const GRID_SIZE = 8;
+    const OBSTACLE_VAL = 9;
 
     /* ========================================================================
-       3. SINGLE SHARED-BOARD GAME ENGINE
+       4. GAME ENGINE
        ======================================================================== */
-    const GRID_SIZE = 8;
-
     const Game = {
       grid: Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)),
       activePlayer: 1,
       scores: { 1: 0, 2: 0 },
       currentPieces: [null, null, null],
-      selectedSlotIndex: null, // For tap-to-place support!
+      selectedSlotIndex: null,
       mode: 'local',
       myPlayerNumber: 1,
       isGameOver: false,
+      currentTheme: 'emoji',
+      currentLevel: 1,
 
       init() {
         this.grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
@@ -448,6 +632,19 @@
         this.scores = { 1: 0, 2: 0 };
         this.selectedSlotIndex = null;
         this.isGameOver = false;
+
+        // Apply obstacles for selected level
+        const levelConfig = LEVELS[this.currentLevel] || LEVELS[1];
+        levelConfig.obstacles.forEach(([r, c]) => {
+          this.grid[r][c] = OBSTACLE_VAL;
+        });
+
+        document.getElementById('header-level-desc').innerText = levelConfig.title;
+        document.getElementById('level-badge').innerText = `Level ${this.currentLevel}`;
+
+        const theme = THEMES[this.currentTheme];
+        document.getElementById('p1-avatar').innerText = theme.p1Emoji || '🔵';
+        document.getElementById('p2-avatar').innerText = theme.p2Emoji || '🔴';
 
         this.renderBoard();
         this.updateTurnUI();
@@ -457,38 +654,60 @@
       renderBoard() {
         const gridEl = document.getElementById('shared-grid');
         gridEl.innerHTML = '';
+        const theme = THEMES[this.currentTheme];
+
         for (let r = 0; r < GRID_SIZE; r++) {
           for (let c = 0; c < GRID_SIZE; c++) {
             const cell = document.createElement('div');
             cell.dataset.row = r;
             cell.dataset.col = c;
             const val = this.grid[r][c];
-            let colorCls = 'bg-slate-900 border border-slate-800/80';
-            if (val === 1) colorCls = P1_COLOR;
-            if (val === 2) colorCls = P2_COLOR;
 
-            cell.className = `grid-cell rounded-md flex items-center justify-center cursor-pointer ${colorCls}`;
-            
-            // Add tap-to-place click handler on each cell
+            let colorCls = 'bg-slate-900 border border-slate-800/80';
+            let emojiSpan = '';
+
+            if (val === 1) {
+              colorCls = theme.p1Class;
+              if (theme.p1Emoji) emojiSpan = `<span class="scale-90">${theme.p1Emoji}</span>`;
+            } else if (val === 2) {
+              colorCls = theme.p2Class;
+              if (theme.p2Emoji) emojiSpan = `<span class="scale-90">${theme.p2Emoji}</span>`;
+            } else if (val === OBSTACLE_VAL) {
+              colorCls = 'bg-slate-700/80 border border-slate-600 flex items-center justify-center';
+              emojiSpan = '<span class="text-xs">🗿</span>';
+            }
+
+            cell.className = `grid-cell rounded-md flex items-center justify-center cursor-pointer select-none ${colorCls}`;
+            if (emojiSpan) cell.innerHTML = emojiSpan;
+
             cell.addEventListener('click', () => this.handleCellClick(r, c));
+            cell.addEventListener('pointerenter', () => this.previewSelectedPiece(r, c));
             gridEl.appendChild(cell);
           }
         }
       },
 
       handleCellClick(r, c) {
-        if (this.selectedSlotIndex === null) return;
+        if (this.selectedSlotIndex === null) {
+          showToast("Tap a piece below first, then tap the board!", "ph-hand-pointing");
+          return;
+        }
+
+        const isMyTurn = (this.mode === 'local') || 
+                         (this.mode === 'p2p' && this.activePlayer === this.myPlayerNumber) || 
+                         (this.mode === 'bot' && this.activePlayer === 1);
+
+        if (!isMyTurn) return;
+
         const placed = this.trySmartPlace(this.selectedSlotIndex, r, c);
         if (placed) {
           this.setSelectedSlot(null);
           this.clearBoardHover();
         } else {
-          showToast("Piece doesn't fit around there! Try another square", "ph-warning");
+          showToast("Cannot fit there! Pick another spot", "ph-warning");
         }
       },
 
-      // Tries exact top-left placement first; if that's blocked or out-of-bounds,
-      // it searches neighboring offsets so tapping anywhere inside the desired target works
       trySmartPlace(slotIndex, targetRow, targetCol) {
         const piece = this.currentPieces[slotIndex];
         if (!piece) return false;
@@ -496,19 +715,18 @@
         const rows = piece.shape.length;
         const cols = piece.shape[0].length;
 
-        // 1. Direct top-left match
+        // 1. Direct match
         if (this.canPlacePiece(piece.shape, targetRow, targetCol)) {
           return this.placePiece(slotIndex, targetRow, targetCol);
         }
 
-        // 2. Center/offset search: if user tapped in the middle or bottom of where they want it
+        // 2. Proximity search around clicked area
         const candidates = [];
         for (let dr = -(rows - 1); dr <= 0; dr++) {
           for (let dc = -(cols - 1); dc <= 0; dc++) {
             const tr = targetRow + dr;
             const tc = targetCol + dc;
             if (this.canPlacePiece(piece.shape, tr, tc)) {
-              // Priority: closest to the tapped cell
               const dist = Math.abs(dr) + Math.abs(dc);
               candidates.push({ tr, tc, dist });
             }
@@ -569,9 +787,9 @@
 
         const bannerText = document.getElementById('turn-banner-text');
         if (idx !== null) {
-          bannerText.innerText = "Tap any square on the board to drop your piece!";
+          bannerText.innerText = "Now tap an open spot on the board to drop!";
         } else {
-          bannerText.innerText = "Drag piece or tap piece then tap board";
+          bannerText.innerText = "Tap a piece below, then tap the board!";
         }
       },
 
@@ -588,27 +806,25 @@
         const boardContainer = document.getElementById('board-container');
 
         if (this.activePlayer === 1) {
-          cardP1.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900 border-2 border-cyan-500 shadow-md transition-all duration-200';
-          cardP2.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900/40 border-2 border-slate-800 transition-all duration-200 opacity-60';
+          cardP1.className = 'relative px-3 py-2 rounded-xl bg-slate-900 border-2 border-cyan-400 shadow-md transition-all duration-200';
+          cardP2.className = 'relative px-3 py-2 rounded-xl bg-slate-900/60 border-2 border-slate-800 transition-all duration-200 opacity-60';
           tagP1.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 1) ? 'THEIR TURN' : 'YOUR TURN!';
           tagP2.innerText = 'Waiting...';
 
-          boardContainer.classList.remove('turn-glow-pink');
-          boardContainer.classList.add('turn-glow-blue');
+          boardContainer.className = 'relative p-2 rounded-2xl bg-slate-900 border-2 border-cyan-500/70 glow-p1 transition-all duration-300 w-[88vw] max-w-[340px] aspect-square shadow-2xl';
 
-          banner.className = 'w-full py-1 px-2 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-center text-[11px] font-semibold text-cyan-300 flex items-center justify-center gap-1.5 shrink-0 my-0.5';
-          bannerText.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 1) ? 'Opponent (P1) is placing...' : 'Player 1 (Blue): Place a piece!';
+          banner.className = 'w-full py-1.5 px-2 rounded-lg bg-cyan-950/40 border border-cyan-800/50 text-center text-xs font-semibold text-cyan-300 flex items-center justify-center gap-1.5 shrink-0 my-1';
+          bannerText.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 1) ? 'Opponent (P1) is placing...' : 'Player 1: Pick a piece & drop it!';
         } else {
-          cardP1.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900/40 border-2 border-slate-800 transition-all duration-200 opacity-60';
-          cardP2.className = 'relative px-2.5 py-1.5 rounded-xl bg-slate-900 border-2 border-pink-500 shadow-md transition-all duration-200';
+          cardP1.className = 'relative px-3 py-2 rounded-xl bg-slate-900/60 border-2 border-slate-800 transition-all duration-200 opacity-60';
+          cardP2.className = 'relative px-3 py-2 rounded-xl bg-slate-900 border-2 border-pink-500 shadow-md transition-all duration-200';
           tagP1.innerText = 'Waiting...';
           tagP2.innerText = (this.mode === 'p2p' && this.myPlayerNumber !== 2) ? 'THEIR TURN' : 'YOUR TURN!';
 
-          boardContainer.classList.remove('turn-glow-blue');
-          boardContainer.classList.add('turn-glow-pink');
+          boardContainer.className = 'relative p-2 rounded-2xl bg-slate-900 border-2 border-pink-500/70 glow-p2 transition-all duration-300 w-[88vw] max-w-[340px] aspect-square shadow-2xl';
 
-          banner.className = 'w-full py-1 px-2 rounded-lg bg-pink-950/40 border border-pink-800/50 text-center text-[11px] font-semibold text-pink-300 flex items-center justify-center gap-1.5 shrink-0 my-0.5';
-          bannerText.innerText = (this.mode === 'bot') ? 'Bot is thinking...' : ((this.mode === 'p2p' && this.myPlayerNumber !== 2) ? 'Opponent (P2) is placing...' : 'Player 2 (Pink): Place a piece!');
+          banner.className = 'w-full py-1.5 px-2 rounded-lg bg-pink-950/40 border border-pink-800/50 text-center text-xs font-semibold text-pink-300 flex items-center justify-center gap-1.5 shrink-0 my-1';
+          bannerText.innerText = (this.mode === 'bot') ? 'RoboBot is thinking...' : ((this.mode === 'p2p' && this.myPlayerNumber !== 2) ? 'Opponent (P2) is placing...' : 'Player 2: Pick a piece & drop it!');
         }
       },
 
@@ -623,8 +839,13 @@
       },
 
       renderTray() {
-        const isMyTurn = (this.mode === 'local') || (this.mode === 'p2p' && this.activePlayer === this.myPlayerNumber) || (this.mode === 'bot' && this.activePlayer === 1);
-        const currentColor = this.activePlayer === 1 ? 'bg-cyan-400' : 'bg-pink-500';
+        const isMyTurn = (this.mode === 'local') || 
+                         (this.mode === 'p2p' && this.activePlayer === this.myPlayerNumber) || 
+                         (this.mode === 'bot' && this.activePlayer === 1);
+        
+        const theme = THEMES[this.currentTheme];
+        const blockBg = this.activePlayer === 1 ? 'bg-cyan-400' : 'bg-pink-500';
+        const currentEmoji = this.activePlayer === 1 ? theme.p1Emoji : theme.p2Emoji;
 
         for (let i = 0; i < 3; i++) {
           const slot = document.getElementById(`slot-${i}`);
@@ -633,12 +854,13 @@
           if (piece) {
             const container = document.createElement('div');
             container.className = isMyTurn 
-              ? 'cursor-pointer p-1 inline-block transition-transform duration-100' 
+              ? 'cursor-pointer p-1 inline-block transition-transform duration-100 active:scale-95' 
               : 'p-1 inline-block opacity-40 cursor-not-allowed';
             
+            container.dataset.slotIndex = i;
             if (isMyTurn) {
-              container.dataset.slotIndex = i;
               container.addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (Game.selectedSlotIndex === i) {
                   Game.setSelectedSlot(null);
                 } else {
@@ -658,14 +880,18 @@
               for (let c = 0; c < cols; c++) {
                 const block = document.createElement('div');
                 if (piece.shape[r][c] === 1) {
-                  block.className = `w-[16px] h-[16px] rounded-sm ${currentColor} shadow-sm`;
+                  block.className = `w-[16px] h-[16px] rounded-sm ${blockBg} shadow-sm flex items-center justify-center text-[10px]`;
+                  if (currentEmoji) {
+                    block.innerText = currentEmoji;
+                  }
                 } else {
-            cell.className = `grid-cell rounded-md flex items-center justify-center cursor-pointer ${colorCls}`;
-            
-            // Add tap-to-place and hover preview handlers
-            cell.addEventListener('click', () => this.handleCellClick(r, c));
-            cell.addEventListener('pointerenter', () => this.previewSelectedPiece(r, c));
-            gridEl.appendChild(cell);
+                  block.className = 'w-[16px] h-[16px] opacity-0';
+                }
+                container.appendChild(block);
+              }
+            }
+
+            slot.appendChild(container);
           }
         }
       },
@@ -726,7 +952,7 @@
 
         if (this.checkIfActivePlayerCanMove()) {
           if (this.mode === 'bot' && this.activePlayer === 2) {
-            setTimeout(() => BotAI.makeMove(), 700);
+            setTimeout(() => BotAI.makeMove(), 650);
           }
         }
 
@@ -737,6 +963,7 @@
         const rowsToClear = [];
         const colsToClear = [];
 
+        // Obstacles don't prevent clears if row/col is filled with blocks
         for (let r = 0; r < GRID_SIZE; r++) {
           if (this.grid[r].every(cell => cell !== 0)) rowsToClear.push(r);
         }
@@ -756,15 +983,20 @@
 
           rowsToClear.forEach(r => {
             for (let c = 0; c < GRID_SIZE; c++) {
-              this.triggerCellPop(r, c);
-              this.grid[r][c] = 0;
+              // keep obstacles intact
+              if (this.grid[r][c] !== OBSTACLE_VAL) {
+                this.triggerCellPop(r, c);
+                this.grid[r][c] = 0;
+              }
             }
           });
 
           colsToClear.forEach(c => {
             for (let r = 0; r < GRID_SIZE; r++) {
-              this.triggerCellPop(r, c);
-              this.grid[r][c] = 0;
+              if (this.grid[r][c] !== OBSTACLE_VAL) {
+                this.triggerCellPop(r, c);
+                this.grid[r][c] = 0;
+              }
             }
           });
 
@@ -819,16 +1051,16 @@
         document.getElementById('final-p1-score').innerText = this.scores[1];
         document.getElementById('final-p2-score').innerText = this.scores[2];
 
-        const winnerName = winner === 1 ? 'Player 1 (Blue)' : (this.mode === 'bot' ? 'RoboBot' : 'Player 2 (Pink)');
+        const winnerName = winner === 1 ? 'Player 1' : (this.mode === 'bot' ? 'RoboBot' : 'Player 2');
         const loserName = winner === 1 ? (this.mode === 'bot' ? 'RoboBot' : 'Player 2') : 'Player 1';
 
         title.innerText = `${winnerName} WINS!`;
-        title.className = `text-lg font-bold mb-0.5 ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
+        title.className = `text-lg font-bold mb-1 ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
         desc.innerText = `${loserName} was trapped and had no valid moves left!`;
         icon.className = `ph-bold ph-trophy text-2xl ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
 
         if (typeof confetti === 'function') {
-          confetti({ particleCount: 80, spread: 55, origin: { y: 0.6 } });
+          confetti({ particleCount: 90, spread: 60, origin: { y: 0.6 } });
         }
 
         modal.classList.remove('hidden');
@@ -836,7 +1068,7 @@
     };
 
     /* ========================================================================
-       4. TOUCH & MOUSE CONTROLLER (Fluid Drag Above Finger + Tap Selection)
+       5. DRAG & TOUCH CONTROLLER
        ======================================================================== */
     const DragController = {
       draggedSlotIndex: null,
@@ -844,9 +1076,6 @@
       ghostEl: document.getElementById('drag-ghost'),
       hoveredRow: null,
       hoveredCol: null,
-      touchStartY: 0,
-      touchStartX: 0,
-      hasMoved: false,
 
       init() {
         const tray = document.getElementById('piece-tray');
@@ -874,7 +1103,6 @@
 
         this.draggedSlotIndex = slotIndex;
         this.activePiece = piece;
-        this.hasMoved = false;
         SoundEngine.playPickup();
 
         this.ghostEl.innerHTML = '';
@@ -887,12 +1115,15 @@
         container.style.gap = '3px';
 
         const color = Game.activePlayer === 1 ? 'bg-cyan-400' : 'bg-pink-500';
+        const theme = THEMES[Game.currentTheme];
+        const emoji = Game.activePlayer === 1 ? theme.p1Emoji : theme.p2Emoji;
 
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             const block = document.createElement('div');
             if (piece.shape[r][c] === 1) {
-              block.className = `w-[28px] h-[28px] rounded-lg ${color} border border-white/60 shadow-lg`;
+              block.className = `w-[28px] h-[28px] rounded-lg ${color} border border-white/60 shadow-lg flex items-center justify-center text-xs`;
+              if (emoji) block.innerText = emoji;
             } else {
               block.className = 'w-[28px] h-[28px] opacity-0';
             }
@@ -907,8 +1138,7 @@
 
       updateGhostPosition(clientX, clientY) {
         const isTouch = ('ontouchstart' in window);
-        // Elevate higher on touch so user's thumb does not block view of drop cells
-        const yOffset = isTouch ? -85 : 0;
+        const yOffset = isTouch ? -75 : 0;
         this.ghostEl.style.left = `${clientX}px`;
         this.ghostEl.style.top = `${clientY + yOffset}px`;
 
@@ -928,7 +1158,6 @@
           clientY <= rect.bottom
         ) {
           const cellSize = rect.width / GRID_SIZE;
-          // Calculate origin cell with tolerance
           const col = Math.floor((clientX - rect.left) / cellSize);
           const row = Math.floor((clientY - rect.top) / cellSize);
 
@@ -966,7 +1195,6 @@
         if (this.draggedSlotIndex === null) return;
 
         if (this.hoveredRow !== null && this.hoveredCol !== null && this.activePiece) {
-          // Use trySmartPlace so if dropped near the edge or offset, it snaps into the valid cells
           Game.trySmartPlace(this.draggedSlotIndex, this.hoveredRow, this.hoveredCol);
         }
 
@@ -980,79 +1208,11 @@
         Game.clearBoardHover();
       },
 
-      highlightGridTarget(clientX, clientY) {
-        const gridEl = document.getElementById('shared-grid');
-        const rect = gridEl.getBoundingClientRect();
-
-        document.querySelectorAll('#shared-grid .grid-cell').forEach(c => {
-          c.classList.remove('bg-indigo-500/50', 'bg-rose-500/50');
-        });
-
-        if (
-          clientX >= rect.left &&
-          clientX <= rect.right &&
-          clientY >= rect.top &&
-          clientY <= rect.bottom
-        ) {
-          const cellSize = rect.width / GRID_SIZE;
-          const col = Math.floor((clientX - rect.left) / cellSize);
-          const row = Math.floor((clientY - rect.top) / cellSize);
-
-          this.hoveredRow = row;
-          this.hoveredCol = col;
-
-          if (this.activePiece) {
-            const isValid = Game.canPlacePiece(this.activePiece.shape, row, col);
-            const rows = this.activePiece.shape.length;
-            const cols = this.activePiece.shape[0].length;
-
-            for (let r = 0; r < rows; r++) {
-              for (let c = 0; c < cols; c++) {
-                if (this.activePiece.shape[r][c] === 1) {
-                  const tr = row + r;
-                  const tc = col + c;
-                  if (tr < GRID_SIZE && tc < GRID_SIZE) {
-                    const cell = document.querySelector(`#shared-grid [data-row="${tr}"][data-col="${tc}"]`);
-                    if (cell) {
-                      cell.classList.add(isValid ? 'bg-indigo-500/50' : 'bg-rose-500/50');
-                    }
-                  }
-                }
-              }
-            }
-          }
-        } else {
-          this.hoveredRow = null;
-          this.hoveredCol = null;
-        }
-      },
-
-      endDrag() {
-        if (this.draggedSlotIndex === null) return;
-
-        if (this.hoveredRow !== null && this.hoveredCol !== null && this.activePiece) {
-          Game.placePiece(this.draggedSlotIndex, this.hoveredRow, this.hoveredCol);
-        }
-
-        this.ghostEl.style.display = 'none';
-        this.ghostEl.innerHTML = '';
-        this.draggedSlotIndex = null;
-        this.activePiece = null;
-        this.hoveredRow = null;
-        this.hoveredCol = null;
-
-        document.querySelectorAll('#shared-grid .grid-cell').forEach(c => {
-          c.classList.remove('bg-indigo-500/50', 'bg-rose-500/50');
-        });
-      },
-
       onTouchStart(e) {
         const container = e.target.closest('[data-slot-index]');
         if (container) {
           const slot = parseInt(container.dataset.slotIndex, 10);
           const touch = e.touches[0];
-          this.touchStartX = touch.clientX;
-          this.touchStartY = touch.clientY;
           this.startDrag(slot, touch.clientX, touch.clientY);
         }
       },
@@ -1060,12 +1220,8 @@
       onTouchMove(e) {
         if (this.draggedSlotIndex !== null) {
           const touch = e.touches[0];
-          const dist = Math.hypot(touch.clientX - this.touchStartX, touch.clientY - this.touchStartY);
-          if (dist > 8) {
-            e.preventDefault();
-            this.hasMoved = true;
-            this.updateGhostPosition(touch.clientX, touch.clientY);
-          }
+          e.preventDefault();
+          this.updateGhostPosition(touch.clientX, touch.clientY);
         }
       },
 
@@ -1093,7 +1249,7 @@
     };
 
     /* ========================================================================
-       5. BOT ENGINE (Solo Opponent)
+       6. BOT ENGINE
        ======================================================================== */
     const BotAI = {
       makeMove() {
@@ -1121,7 +1277,7 @@
     };
 
     /* ========================================================================
-       6. PEERJS 2-PHONE REALTIME NETWORKING
+       7. PEERJS NETWORKING
        ======================================================================== */
     const Network = {
       peer: null,
@@ -1130,30 +1286,32 @@
       init() {
         const randomCode = 'bc-' + Math.random().toString(36).substring(2, 6).toUpperCase();
         try {
-          this.peer = new Peer(randomCode);
+          if (typeof Peer !== 'undefined') {
+            this.peer = new Peer(randomCode);
 
-          this.peer.on('open', (id) => {
-            const displayCode = id.replace('bc-', '');
-            document.getElementById('my-peer-code').innerText = displayCode;
+            this.peer.on('open', (id) => {
+              const displayCode = id.replace('bc-', '');
+              document.getElementById('my-peer-code').innerText = displayCode;
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const autoJoinCode = urlParams.get('join');
-            if (autoJoinCode) {
-              showToast(`Connecting to ${autoJoinCode.toUpperCase()}...`, 'ph-wifi-high');
-              setTimeout(() => this.join(autoJoinCode.trim()), 400);
-            }
-          });
+              const urlParams = new URLSearchParams(window.location.search);
+              const autoJoinCode = urlParams.get('join');
+              if (autoJoinCode) {
+                showToast(`Connecting to ${autoJoinCode.toUpperCase()}...`, 'ph-wifi-high');
+                setTimeout(() => this.join(autoJoinCode.trim()), 400);
+              }
+            });
 
-          this.peer.on('connection', (c) => {
-            this.conn = c;
-            Game.mode = 'p2p';
-            Game.myPlayerNumber = 1;
-            this.setupListeners();
-            document.getElementById('mode-badge').innerText = 'Online Duel (You: P1)';
-            document.getElementById('lobby-modal').classList.add('hidden');
-            showToast('Rival joined! You are Player 1 (Blue)', 'ph-check-circle');
-            Game.init();
-          });
+            this.peer.on('connection', (c) => {
+              this.conn = c;
+              Game.mode = 'p2p';
+              Game.myPlayerNumber = 1;
+              this.setupListeners();
+              document.getElementById('mode-badge').innerText = 'Online (You: P1)';
+              document.getElementById('lobby-modal').classList.add('hidden');
+              showToast('Rival joined! You are P1', 'ph-check-circle');
+              Game.init();
+            });
+          }
         } catch (e) {
           console.warn('Peer error', e);
         }
@@ -1169,9 +1327,9 @@
           Game.mode = 'p2p';
           Game.myPlayerNumber = 2;
           this.setupListeners();
-          document.getElementById('mode-badge').innerText = 'Online Duel (You: P2)';
+          document.getElementById('mode-badge').innerText = 'Online (You: P2)';
           document.getElementById('lobby-modal').classList.add('hidden');
-          showToast('Connected! You are Player 2 (Pink)', 'ph-check-circle');
+          showToast('Connected! You are P2', 'ph-check-circle');
         });
       },
 
@@ -1220,7 +1378,7 @@
     };
 
     /* ========================================================================
-       7. UI HELPERS & MODAL MANAGEMENT
+       8. UI HELPERS & MODAL MANAGEMENT
        ======================================================================== */
     function showToast(msg, icon = 'ph-info') {
       const toast = document.getElementById('toast');
@@ -1243,6 +1401,43 @@
     document.getElementById('how-to-play-btn').addEventListener('click', () => rulesModal.classList.remove('hidden'));
     document.getElementById('close-rules-btn').addEventListener('click', () => rulesModal.classList.add('hidden'));
     document.getElementById('start-rules-btn').addEventListener('click', () => rulesModal.classList.add('hidden'));
+
+    // Theme Modal controls
+    const themeModal = document.getElementById('theme-modal');
+    document.getElementById('theme-btn').addEventListener('click', () => themeModal.classList.remove('hidden'));
+    document.getElementById('close-theme-btn').addEventListener('click', () => themeModal.classList.add('hidden'));
+
+    // Theme Selection Buttons
+    document.querySelectorAll('.theme-choice').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.theme-choice').forEach(b => {
+          b.classList.remove('border-cyan-400', 'bg-cyan-950/40');
+          b.classList.add('border-slate-800', 'bg-slate-950');
+        });
+        btn.classList.add('border-cyan-400', 'bg-cyan-950/40');
+        btn.classList.remove('border-slate-800', 'bg-slate-950');
+        Game.currentTheme = btn.dataset.theme;
+      });
+    });
+
+    // Level Selection Buttons
+    document.querySelectorAll('.level-choice').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.level-choice').forEach(b => {
+          b.classList.remove('border-indigo-400', 'bg-indigo-950/30');
+          b.classList.add('border-slate-800', 'bg-slate-950');
+        });
+        btn.classList.add('border-indigo-400', 'bg-indigo-950/30');
+        btn.classList.remove('border-slate-800', 'bg-slate-950');
+        Game.currentLevel = parseInt(btn.dataset.level, 10);
+      });
+    });
+
+    document.getElementById('apply-theme-btn').addEventListener('click', () => {
+      themeModal.classList.add('hidden');
+      Game.init();
+      showToast('Theme & Level updated!', 'ph-palette');
+    });
 
     // Lobby Modal controls
     const lobbyModal = document.getElementById('lobby-modal');
@@ -1295,17 +1490,13 @@
     document.getElementById('copy-code-btn').addEventListener('click', () => {
       const code = document.getElementById('my-peer-code').innerText;
       if (code && code !== 'Generating...') {
-        navigator.clipboard.writeText(code).then(() => {
-          showToast(`Copied code: ${code}`, 'ph-check');
-        }).catch(() => {
-          const input = document.createElement('textarea');
-          input.value = code;
-          document.body.appendChild(input);
-          input.select();
-          document.execCommand('copy');
-          document.body.removeChild(input);
-          showToast(`Copied code: ${code}`, 'ph-check');
-        });
+        const input = document.createElement('textarea');
+        input.value = code;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast(`Copied code: ${code}`, 'ph-check');
       }
     });
 
@@ -1313,17 +1504,13 @@
       const code = document.getElementById('my-peer-code').innerText;
       if (code && code !== 'Generating...') {
         const inviteUrl = `${window.location.origin}${window.location.pathname}?join=${code}`;
-        navigator.clipboard.writeText(inviteUrl).then(() => {
-          showToast('Invite link copied! Send via text', 'ph-share-network');
-        }).catch(() => {
-          const input = document.createElement('textarea');
-          input.value = inviteUrl;
-          document.body.appendChild(input);
-          input.select();
-          document.execCommand('copy');
-          document.body.removeChild(input);
-          showToast('Invite link copied! Send via text', 'ph-share-network');
-        });
+        const input = document.createElement('textarea');
+        input.value = inviteUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('Invite link copied! Send to family', 'ph-share-network');
       }
     });
 
@@ -1346,13 +1533,13 @@
     });
 
     /* ========================================================================
-       8. INIT
+       9. INITIALIZATION
        ======================================================================== */
-    window.onload = function () {
+    window.addEventListener('DOMContentLoaded', () => {
       Game.init();
       DragController.init();
       Network.init();
-    };
+    });
   </script>
 </body>
 </html>
