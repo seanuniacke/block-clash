@@ -1,13 +1,531 @@
-<!-- Floating Arcade Switcher Button for Block Clash (index.html) -->
-<a href="./breaker.html" 
-   style="position: fixed; top: 12px; right: 12px; z-index: 9999; 
-          display: inline-flex; align-items: center; gap: 8px;
-          background: linear-gradient(135deg, #2563eb, #ec4899); 
-          color: #ffffff; font-family: system-ui, -apple-system, sans-serif; 
-          font-weight: 900; font-size: 13px; text-transform: uppercase; 
-          letter-spacing: 0.06em; text-decoration: none; 
-          padding: 8px 14px; border-radius: 12px; 
-          border: 2px solid rgba(255,255,255,0.35);
-          box-shadow: 0 4px 15px rgba(236, 72, 153, 0.45);">
-  <span>⚡</span> Play Breaker
-</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Synth Breaker - Block Clash Arcade</title>
+    <style>
+        :root {
+            --bg-deep: #030712;
+            --panel-bg: rgba(15, 23, 42, 0.85);
+            --neon-cyan: #06b6d4;
+            --neon-pink: #ec4899;
+            --neon-yellow: #facc15;
+            --neon-purple: #8b5cf6;
+            --neon-green: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Top Navigation Header */
+        header {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: var(--panel-bg);
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+            z-index: 100;
+        }
+
+        .nav-left, .nav-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .arcade-btn {
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 12px;
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .arcade-btn:hover, .arcade-btn.tv-focused {
+            transform: scale(1.05);
+            box-shadow: 0 0 18px var(--neon-yellow);
+            border-color: var(--neon-yellow);
+            outline: none;
+        }
+
+        .profile-badge {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        /* Game Container & Canvas */
+        .game-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 8px;
+        }
+
+        canvas {
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            border: 3px solid var(--neon-cyan);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.3), inset 0 0 15px rgba(6, 182, 212, 0.2);
+            border-radius: 12px;
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        /* Overlays & Modals */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .overlay.hidden { display: none; }
+
+        h1 {
+            font-size: clamp(28px, 6vw, 48px);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+            margin-bottom: 12px;
+            letter-spacing: 0.05em;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+            max-width: 450px;
+            line-height: 1.5;
+        }
+
+        /* Mobile Touch Controls Footer */
+        .touch-controls {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--panel-bg);
+            border-top: 2px solid rgba(6, 182, 212, 0.2);
+            gap: 12px;
+        }
+
+        .touch-btn {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 900;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+            cursor: pointer;
+        }
+
+        .touch-btn:active {
+            background: var(--neon-cyan);
+            color: var(--bg-deep);
+        }
+
+        /* HUD Overlay Stats */
+        .hud-stats {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 800;
+            font-size: 14px;
+            text-shadow: 0 0 8px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-left">
+            <a href="./index.html" class="arcade-btn">◀ Block Clash</a>
+            <span class="profile-badge" id="currentProfileName">Player 1</span>
+        </div>
+        <div class="nav-right">
+            <button class="arcade-btn" id="btnProfile">Profile</button>
+            <button class="arcade-btn" id="btnScores">Scores</button>
+        </div>
+    </header>
+
+    <div class="game-wrapper">
+        <div class="hud-stats">
+            <div>SCORE: <span id="hudScore">0</span></div>
+            <div>LEVEL: <span id="hudLevel">1</span></div>
+            <div>LIVES: <span id="hudLives">3</span></div>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="750"></canvas>
+
+        <!-- Main Menu / Start Overlay -->
+        <div id="startOverlay" class="overlay">
+            <h1>NEON BLOCK BREAKER</h1>
+            <p>Block Blast puzzle clusters meet arcade breaker action! Destroy blocks, trigger cluster blasts, and collect power-ups.</p>
+            <button class="arcade-btn" id="btnStartGame" style="font-size: 18px; padding: 12px 32px;">LAUNCH GAME</button>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div id="gameOverOverlay" class="overlay hidden">
+            <h1>GAME OVER</h1>
+            <p id="finalStatsText">Final Score: 0</p>
+            <button class="arcade-btn" id="btnRestartGame" style="font-size: 18px; padding: 12px 32px;">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <div class="touch-controls">
+        <button class="touch-btn" id="touchLeft">◀ LEFT</button>
+        <button class="touch-btn" id="touchAction" style="border-color: var(--neon-pink); color: var(--neon-pink);">LAUNCH / LASER</button>
+        <button class="touch-btn" id="touchRight">RIGHT ▶</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game State
+        let gameState = 'START'; // START, PLAYING, GAMEOVER
+        let score = 0;
+        let level = 1;
+        let lives = 3;
+        let playerName = localStorage.getItem('block_clash_active_player') || 'Player 1';
+        document.getElementById('currentProfileName').innerText = playerName;
+
+        // Paddle
+        let paddle = {
+            x: canvas.width / 2 - 60,
+            y: canvas.height - 40,
+            w: 120,
+            h: 16,
+            dx: 0,
+            speed: 8
+        };
+
+        // Ball
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height - 60,
+            r: 8,
+            dx: 4,
+            dy: -4,
+            active: false
+        };
+
+        // Bricks (Block Blast Polyomino Clusters)
+        let bricks = [];
+
+        function initLevel() {
+            bricks = [];
+            const rows = 5;
+            const cols = 8;
+            const bWidth = 64;
+            const bHeight = 28;
+            const padding = 10;
+            const startX = (canvas.width - (cols * (bWidth + padding))) / 2;
+            const startY = 70;
+
+            const colors = ['#06b6d4', '#ec4899', '#facc15', '#8b5cf6', '#10b981'];
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    bricks.push({
+                        x: startX + c * (bWidth + padding),
+                        y: startY + r * (bHeight + padding),
+                        w: bWidth,
+                        h: bHeight,
+                        color: colors[(r + c) % colors.length],
+                        status: 1,
+                        isCore: (r === 2 && c === 3) // Special Blast Core
+                    });
+                }
+            }
+        }
+
+        // Controls Handling
+        let keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'Space') {
+                if (gameState === 'START') startGame();
+                else if (!ball.active) ball.active = true;
+            }
+        });
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        // Touch Control Listeners
+        document.getElementById('touchLeft').addEventListener('pointerdown', () => paddle.dx = -paddle.speed);
+        document.getElementById('touchLeft').addEventListener('pointerup', () => { if(paddle.dx < 0) paddle.dx = 0; });
+        document.getElementById('touchRight').addEventListener('pointerdown', () => paddle.dx = paddle.speed);
+        document.getElementById('touchRight').addEventListener('pointerup', () => { if(paddle.dx > 0) paddle.dx = 0; });
+        document.getElementById('touchAction').addEventListener('pointerdown', () => {
+            if (gameState === 'START') startGame();
+            else if (!ball.active) ball.active = true;
+        });
+
+        // Mouse/Touch Paddle Dragging on Canvas
+        canvas.addEventListener('pointermove', e => {
+            const rect = canvas.getBoundingClientRect();
+            const rootX = e.clientX - rect.left;
+            const scaleX = canvas.width / rect.width;
+            paddle.x = (rootX * scaleX) - paddle.w / 2;
+        });
+
+        canvas.addEventListener('pointerdown', () => {
+            if (gameState === 'START') startGame();
+            else if (!ball.active) ball.active = true;
+        });
+
+        function startGame() {
+            gameState = 'PLAYING';
+            document.getElementById('startOverlay').classList.add('hidden');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            score = 0;
+            lives = 3;
+            level = 1;
+            initLevel();
+            resetBall();
+        }
+
+        function resetBall() {
+            ball.x = paddle.x + paddle.w / 2;
+            ball.y = paddle.y - 12;
+            ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = -4;
+            ball.active = false;
+        }
+
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            // Move paddle
+            if (keys['ArrowLeft'] || keys['KeyA']) paddle.x -= paddle.speed;
+            if (keys['ArrowRight'] || keys['KeyD']) paddle.x += paddle.speed;
+            paddle.x += paddle.dx;
+
+            // Boundaries for paddle
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.w > canvas.width) paddle.x = canvas.width - paddle.w;
+
+            if (!ball.active) {
+                ball.x = paddle.x + paddle.w / 2;
+                ball.y = paddle.y - 12;
+                return;
+            }
+
+            // Move ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Wall collisions
+            if (ball.x - ball.r < 0 || ball.x + ball.r > canvas.width) ball.dx *= -1;
+            if (ball.y - ball.r < 0) ball.dy *= -1;
+
+            // Paddle collision
+            if (
+                ball.y + ball.r >= paddle.y &&
+                ball.y - ball.r <= paddle.y + paddle.h &&
+                ball.x >= paddle.x &&
+                ball.x <= paddle.x + paddle.w
+            ) {
+                let hitPoint = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+                ball.dx = hitPoint * 6;
+                ball.dy = -Math.abs(ball.dy);
+            }
+
+            // Bottom boundary (Lose Life)
+            if (ball.y > canvas.height) {
+                lives--;
+                if (lives <= 0) {
+                    gameState = 'GAMEOVER';
+                    document.getElementById('finalStatsText').innerText = `Player: ${playerName} | Score: ${score}`;
+                    document.getElementById('gameOverOverlay').classList.remove('hidden');
+                    saveScore();
+                } else {
+                    resetBall();
+                }
+            }
+
+            // Brick collisions
+            let remainingBricks = 0;
+            bricks.forEach(b => {
+                if (b.status === 1) {
+                    remainingBricks++;
+                    if (
+                        ball.x + ball.r > b.x &&
+                        ball.x - ball.r < b.x + b.w &&
+                        ball.y + ball.r > b.y &&
+                        ball.y - ball.r < b.y + b.h
+                    ) {
+                        ball.dy *= -1;
+                        b.status = 0;
+                        score += b.isCore ? 500 : 100;
+
+                        if (b.isCore) {
+                            // Explosion effect bonus
+                            score += 1000;
+                        }
+                    }
+                }
+            });
+
+            // Check level clear
+            if (remainingBricks === 0) {
+                level++;
+                initLevel();
+                resetBall();
+            }
+
+            // Update HUD
+            document.getElementById('hudScore').innerText = score;
+            document.getElementById('hudLevel').innerText = level;
+            document.getElementById('hudLives').innerText = lives;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Bricks (Block Blast Clusters)
+            bricks.forEach(b => {
+                if (b.status === 1) {
+                    ctx.fillStyle = b.color;
+                    ctx.shadowColor = b.color;
+                    ctx.shadowBlur = 12;
+                    ctx.fillRect(b.x, b.y, b.w, b.h);
+
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                    if (b.isCore) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 14px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('★', b.x + b.w / 2, b.y + b.h / 2);
+                    }
+                    ctx.shadowBlur = 0;
+                }
+            });
+
+            // Draw Paddle
+            ctx.fillStyle = '#06b6d4';
+            ctx.shadowColor = '#06b6d4';
+            ctx.shadowBlur = 15;
+            ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+            ctx.shadowBlur = 0;
+
+            // Draw Ball
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            ctx.fillStyle = '#ec4899';
+            ctx.shadowColor = '#ec4899';
+            ctx.shadowBlur = 15;
+            ctx.fill();
+            ctx.closePath();
+            ctx.shadowBlur = 0;
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        function saveScore() {
+            let scores = JSON.parse(localStorage.getItem('block_clash_breaker_scores') || '[]');
+            scores.push({ name: playerName, score: score, date: new Date().toLocaleDateString() });
+            localStorage.setItem('block_clash_breaker_scores', JSON.stringify(scores));
+        }
+
+        // Button Event Handlers
+        document.getElementById('btnStartGame').addEventListener('click', startGame);
+        document.getElementById('btnRestartGame').addEventListener('click', startGame);
+        document.getElementById('btnProfile').addEventListener('click', () => {
+            let newName = prompt('Enter Player Name:', playerName);
+            if (newName && newName.trim()) {
+                playerName = newName.trim();
+                localStorage.setItem('block_clash_active_player', playerName);
+                document.getElementById('currentProfileName').innerText = playerName;
+            }
+        });
+        document.getElementById('btnScores').addEventListener('click', () => {
+            let scores = JSON.parse(localStorage.getItem('block_clash_breaker_scores') || '[]');
+            let msg = `--- HALL OF FAME (${playerName}) ---\n\n`;
+            if (scores.length === 0) msg += 'No scores recorded yet!';
+            else {
+                scores.sort((a,b) => b.score - a.score);
+                scores.slice(0, 5).forEach((s, i) => {
+                    msg += `${i+1}. ${s.name}: ${s.score} (${s.date})\n`;
+                });
+            }
+            alert(msg);
+        });
+
+        // Start Loop
+        initLevel();
+        loop();
+    </script>
+</body>
+</html>
