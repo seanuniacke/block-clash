@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#070312">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Neon Block Blast Breaker - Mobile & TV Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-purple: #b500ff;
+            --neon-green: #00ff66;
+            --neon-yellow: #ffee00;
+            --bg-dark: #070312;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Neon Glow Utilities */
+        .text-glow-cyan {
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.8), 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+        .text-glow-pink {
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.8), 0 0 20px rgba(255, 0, 127, 0.4);
+        }
+        .text-glow-yellow {
+            text-shadow: 0 0 10px rgba(255, 238, 0, 0.8), 0 0 20px rgba(255, 238, 0, 0.4);
+        }
+
+        .box-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.35), inset 0 0 15px rgba(0, 243, 255, 0.15);
+            border: 1.5px solid rgba(0, 243, 255, 0.7);
+        }
+
+        /* Arcade Button & 10-Foot TV Focus Styling */
+        .arcade-btn {
+            position: relative;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(181, 0, 255, 0.15));
+            border: 2px solid var(--neon-cyan);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.25), inset 0 0 8px rgba(0, 243, 255, 0.15);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .arcade-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.35), rgba(181, 0, 255, 0.35));
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.7), inset 0 0 12px rgba(0, 243, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .arcade-btn:active:not(:disabled) {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .arcade-btn-pink {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.25), inset 0 0 8px rgba(255, 0, 127, 0.15);
+            background: linear-gradient(135deg, rgba(255, 0, 127, 0.15), rgba(181, 0, 255, 0.15));
+        }
+
+        .arcade-btn-pink:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(255, 0, 127, 0.35), rgba(181, 0, 255, 0.35));
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.7), inset 0 0 12px rgba(255, 0, 127, 0.4);
+        }
+
+        .arcade-btn-yellow {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 10px rgba(255, 238, 0, 0.25), inset 0 0 8px rgba(255, 238, 0, 0.15);
+            background: linear-gradient(135deg, rgba(255, 238, 0, 0.15), rgba(255, 85, 0, 0.15));
+        }
+
+        /* High-Visibility TV / Controller Focus Ring */
+        .tv-focused, .arcade-btn:focus-visible {
+            outline: 3px solid var(--neon-yellow) !important;
+            outline-offset: 3px !important;
+            box-shadow: 0 0 28px rgba(255, 238, 0, 0.9), inset 0 0 15px rgba(255, 238, 0, 0.5) !important;
+            transform: scale(1.05) !important;
+            z-index: 30;
+        }
+
+        /* Responsive Canvas Container for Mobile Portrait, Landscape & 16:9 TV */
+        #game-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 960px;
+            flex: 1 1 auto;
+            min-height: 0;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            background: radial-gradient(circle at center, #14082e 0%, #05020a 100%);
+            border-radius: 12px;
+        }
+
+        /* Scanline Overlay */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.22) 50%,
+                rgba(0, 0, 0, 0.22)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        /* Custom Scrollbar for Modals */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(7, 3, 18, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between items-center p-1.5 sm:p-3 select-none overflow-hidden">
+
+    <!-- TOP HUD & NAVIGATION BAR -->
+    <header class="w-full max-w-[960px] flex flex-wrap justify-between items-center bg-[#0d0620]/95 box-glow-cyan rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2 mb-1.5 z-20 shrink-0 gap-2">
+        <!-- Brand & Active Player Pill -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <div class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-cubes-stacked text-cyan-400 text-lg sm:text-xl animate-pulse"></i>
+                <span class="font-orbitron font-black text-sm sm:text-lg tracking-wider text-glow-cyan hidden md:inline">BLOCK BLAST BREAKER</span>
+            </div>
+
+            <!-- Active Player Switcher Button -->
+            <button id="btn-open-profile" data-tv-nav="hud" class="arcade-btn px-2.5 py-1 rounded-lg flex items-center space-x-1.5 text-xs sm:text-sm" title="Switch Player Profile">
+                <i class="fa-solid fa-user-astronaut text-cyan-300"></i>
+                <span id="hud-player-name" class="font-bold text-yellow-300 truncate max-w-[90px] sm:max-w-[130px]">PLAYER 1</span>
+                <i class="fa-solid fa-caret-down text-xs text-gray-300"></i>
+            </button>
+
+            <!-- Controller Connected Badge -->
+            <div id="gamepad-indicator" class="hidden items-center space-x-1 bg-green-500/20 border border-green-400/60 text-green-300 px-2 py-0.5 rounded-md text-xs font-orbitron">
+                <i class="fa-solid fa-gamepad"></i>
+                <span class="hidden lg:inline">TV PAD</span>
+            </div>
+        </div>
+
+        <!-- Live Score / Level / Lives Readout -->
+        <div class="flex items-center space-x-3 sm:space-x-6 text-xs sm:text-base font-bold tracking-wider">
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] sm:text-xs text-cyan-300 uppercase leading-none">Score</span>
+                <span id="hud-score" class="font-orbitron text-sm sm:text-xl text-white">0</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] sm:text-xs text-purple-300 uppercase leading-none">Best</span>
+                <span id="hud-highscore" class="font-orbitron text-sm sm:text-xl text-purple-200">0</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] sm:text-xs text-pink-300 uppercase leading-none">Wave</span>
+                <span id="hud-level" class="font-orbitron text-sm sm:text-xl text-pink-400">1</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] sm:text-xs text-red-400 uppercase leading-none">Lives</span>
+                <div id="hud-lives" class="flex space-x-1 text-pink-500 text-xs sm:text-base mt-0.5"></div>
+            </div>
+        </div>
+
+        <!-- Leaderboard & GitHub Export Action Buttons -->
+        <div class="flex items-center space-x-1.5 sm:space-x-2">
+            <button id="btn-open-leaderboard" data-tv-nav="hud" class="arcade-btn arcade-btn-yellow px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center" title="Leaderboards & Player Stats">
+                <i class="fa-solid fa-trophy text-yellow-300 sm:mr-1.5"></i>
+                <span class="hidden sm:inline">RANKS</span>
+            </button>
+            <button id="btn-open-github" data-tv-nav="hud" class="arcade-btn px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center" title="Export Multi-File GitHub Repo">
+                <i class="fa-brands fa-github text-cyan-300 sm:mr-1.5 text-sm"></i>
+                <span class="hidden sm:inline">GITHUB</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME CANVAS CONTAINER -->
+    <main id="game-wrapper" class="box-glow-cyan rounded-xl overflow-hidden">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="scanlines absolute inset-0 rounded-xl"></div>
+
+        <!-- 1. START / HOME MENU OVERLAY -->
+        <div id="start-screen" class="absolute inset-0 bg-[#070312]/90 backdrop-blur-md flex flex-col justify-center items-center p-4 sm:p-6 text-center z-20 overflow-y-auto">
+            <div class="mb-1.5 inline-flex items-center gap-2 px-3 py-0.5 rounded-full border border-cyan-400/50 bg-cyan-500/10 text-cyan-300 text-xs font-orbitron tracking-widest uppercase">
+                <span><i class="fa-solid fa-mobile-screen-button mr-1"></i>Mobile Touch</span>
+                <span>•</span>
+                <span><i class="fa-solid fa-tv mr-1"></i>Smart TV D-Pad</span>
+            </div>
+
+            <h1 class="font-orbitron font-black text-3xl sm:text-5xl md:text-6xl mb-2 tracking-tight text-glow-cyan">
+                NEON BLOCK<br><span class="text-pink-500 text-glow-pink">BLAST BREAKER</span>
+            </h1>
+
+            <p class="text-gray-300 max-w-md mb-4 text-xs sm:text-sm leading-relaxed">
+                Shatter vibrant Block-Blast polyomino clusters! Track your personal score history over time or compete on the multiplayer TV & mobile leaderboard.
+            </p>
+
+            <!-- Current Player Card -->
+            <div class="bg-white/5 border border-cyan-500/40 rounded-xl p-3 mb-4 w-full max-w-md flex items-center justify-between">
+                <div class="text-left">
+                    <div class="text-[11px] uppercase tracking-wider text-cyan-300">Active Challenger</div>
+                    <div id="start-current-player" class="font-orbitron font-black text-lg sm:text-xl text-yellow-300">PLAYER 1</div>
+                    <div id="start-player-summary" class="text-xs text-gray-400">Personal Best: 0 • Games: 0</div>
+                </div>
+                <button id="btn-start-change-player" data-tv-nav="start" class="arcade-btn px-3 py-2 rounded-lg text-xs font-bold">
+                    <i class="fa-solid fa-users mr-1"></i> Switch / Add
+                </button>
+            </div>
+
+            <!-- Primary Action Buttons -->
+            <div class="flex flex-wrap justify-center gap-3 mb-4 w-full max-w-md">
+                <button id="btn-start" data-tv-nav="start" class="arcade-btn px-6 py-3.5 rounded-xl font-bold text-base sm:text-lg flex-1 min-w-[180px]">
+                    <i class="fa-solid fa-play mr-2"></i> LAUNCH GAME
+                </button>
+                <button id="btn-start-leaderboard" data-tv-nav="start" class="arcade-btn arcade-btn-pink px-5 py-3.5 rounded-xl font-bold text-sm sm:text-base">
+                    <i class="fa-solid fa-chart-line mr-1.5"></i> SCORES & STATS
+                </button>
+            </div>
+
+            <!-- Power-Up Legend -->
+            <div class="grid grid-cols-4 gap-2 text-[11px] max-w-md w-full">
+                <div class="bg-white/5 border border-cyan-500/30 rounded-lg p-1.5 flex flex-col items-center">
+                    <span class="text-cyan-400 font-orbitron font-bold">[ W ]</span>
+                    <span class="text-gray-300">Mega Paddle</span>
+                </div>
+                <div class="bg-white/5 border border-pink-500/30 rounded-lg p-1.5 flex flex-col items-center">
+                    <span class="text-pink-400 font-orbitron font-bold">[ L ]</span>
+                    <span class="text-gray-300">Laser Blaster</span>
+                </div>
+                <div class="bg-white/5 border border-green-500/30 rounded-lg p-1.5 flex flex-col items-center">
+                    <span class="text-green-400 font-orbitron font-bold">[ M ]</span>
+                    <span class="text-gray-300">Multi-Ball</span>
+                </div>
+                <div class="bg-white/5 border border-yellow-500/30 rounded-lg p-1.5 flex flex-col items-center">
+                    <span class="text-yellow-400 font-orbitron font-bold">[ B ]</span>
+                    <span class="text-gray-300">Blast Bomb</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PLAYER PROFILE & TV ARCADE NAME PICKER MODAL -->
+        <div id="profile-modal" class="hidden absolute inset-0 bg-[#070312]/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 z-30 overflow-y-auto">
+            <div class="w-full max-w-2xl mx-auto flex justify-between items-center border-b border-cyan-500/30 pb-2">
+                <h2 class="font-orbitron font-black text-lg sm:text-2xl text-cyan-400 text-glow-cyan">
+                    <i class="fa-solid fa-user-plus mr-2"></i>SELECT OR CREATE PLAYER
+                </h2>
+                <button id="btn-close-profile" data-tv-nav="profile" class="arcade-btn arcade-btn-pink px-3 py-1 rounded-lg text-xs">
+                    <i class="fa-solid fa-xmark mr-1"></i> Close
+                </button>
+            </div>
+
+            <div class="w-full max-w-2xl mx-auto my-auto py-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Left Column: Existing Players Roster -->
+                <div class="bg-white/5 border border-cyan-500/30 rounded-xl p-3 flex flex-col">
+                    <div class="text-xs font-orbitron text-cyan-300 uppercase mb-2 flex justify-between items-center">
+                        <span>Saved Challengers</span>
+                        <span id="roster-count" class="text-gray-400">0 Players</span>
+                    </div>
+                    <div id="player-roster-list" class="flex flex-col space-y-2 max-h-52 overflow-y-auto pr-1">
+                        <!-- Dynamically populated player buttons -->
+                    </div>
+                </div>
+
+                <!-- Right Column: New Player Input + TV Virtual Keyboard -->
+                <div class="bg-white/5 border border-pink-500/30 rounded-xl p-3 flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-orbitron text-pink-300 uppercase mb-2">New / Custom Player Name</div>
+                        <div class="flex space-x-2 mb-3">
+                            <input id="input-player-name" type="text" maxlength="12" placeholder="ENTER NAME..."
+                                class="w-full bg-[#090418] border-2 border-cyan-400 rounded-lg px-3 py-2 font-orbitron text-base text-yellow-300 uppercase tracking-wider focus:outline-none focus:border-yellow-300" />
+                            <button id="btn-save-player" data-tv-nav="profile" class="arcade-btn arcade-btn-yellow px-4 py-2 rounded-lg text-xs font-bold shrink-0">
+                                USE
+                            </button>
+                        </div>
+
+                        <!-- TV Remote / Controller On-Screen Letter Pad -->
+                        <div class="text-[11px] text-gray-400 mb-1">TV Remote / Arcade Quick-Type Pad:</div>
+                        <div id="tv-letter-grid" class="grid grid-cols-7 gap-1">
+                            <!-- Populated by JS A-Z, CLR, OK -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full max-w-2xl mx-auto text-center text-xs text-gray-400">
+                Tip: Use TV Remote D-Pad / Gamepad or Touch to pick your profile. All scores are logged under the active player.
+            </div>
+        </div>
+
+        <!-- 3. LEADERBOARD & PLAYER SCORE HISTORY OVER TIME MODAL -->
+        <div id="leaderboard-modal" class="hidden absolute inset-0 bg-[#070312]/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 z-30 overflow-y-auto">
+            <div class="w-full max-w-3xl mx-auto flex flex-wrap justify-between items-center border-b border-cyan-500/30 pb-2 gap-2">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-trophy text-yellow-400 text-xl"></i>
+                    <h2 class="font-orbitron font-black text-lg sm:text-2xl text-glow-yellow text-yellow-300">
+                        HALL OF FAME & SCORE HISTORY
+                    </h2>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="tab-global-ranks" data-tv-nav="leaderboard" class="arcade-btn arcade-btn-yellow px-3 py-1 rounded-lg text-xs font-bold">
+                        <i class="fa-solid fa-globe mr-1"></i> Global Top
+                    </button>
+                    <button id="tab-player-history" data-tv-nav="leaderboard" class="arcade-btn px-3 py-1 rounded-lg text-xs font-bold">
+                        <i class="fa-solid fa-chart-line mr-1"></i> Player Progress
+                    </button>
+                    <button id="btn-close-leaderboard" data-tv-nav="leaderboard" class="arcade-btn arcade-btn-pink px-3 py-1 rounded-lg text-xs font-bold">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- View A: Global Leaderboard -->
+            <div id="view-global-ranks" class="w-full max-w-3xl mx-auto my-auto py-3 flex-1 overflow-y-auto">
+                <div class="bg-white/5 border border-cyan-500/30 rounded-xl p-3">
+                    <div class="grid grid-cols-12 text-xs font-orbitron text-cyan-300 border-b border-white/10 pb-2 mb-2 px-2">
+                        <div class="col-span-2">RANK</div>
+                        <div class="col-span-4">PLAYER</div>
+                        <div class="col-span-3 text-right">SCORE</div>
+                        <div class="col-span-3 text-right">WAVE / DATE</div>
+                    </div>
+                    <div id="global-leaderboard-rows" class="space-y-1.5 max-h-72 overflow-y-auto pr-1 text-xs sm:text-sm">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- View B: Player History Over Time (Chart + Log) -->
+            <div id="view-player-history" class="hidden w-full max-w-3xl mx-auto my-auto py-2 flex-1 overflow-y-auto flex flex-col gap-3">
+                <!-- Player Selector Row -->
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-white/5 border border-purple-500/30 rounded-xl p-2.5">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-orbitron text-purple-300">INSPECT PLAYER:</span>
+                        <select id="history-player-select" data-tv-nav="leaderboard" class="bg-[#090418] border border-cyan-400 rounded-lg px-2.5 py-1 font-orbitron text-xs sm:text-sm text-yellow-300">
+                        </select>
+                    </div>
+                    <div class="flex space-x-4 text-xs">
+                        <div>Best: <span id="stat-best" class="font-orbitron text-cyan-300 font-bold">0</span></div>
+                        <div>Avg: <span id="stat-avg" class="font-orbitron text-pink-300 font-bold">0</span></div>
+                        <div>Games: <span id="stat-games" class="font-orbitron text-yellow-300 font-bold">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Score Trend SVG Sparkline Chart Over Time -->
+                <div class="bg-white/5 border border-cyan-500/30 rounded-xl p-3">
+                    <div class="text-[11px] font-orbitron text-cyan-300 uppercase mb-1">Score Progression Over Time</div>
+                    <div id="history-chart-container" class="w-full h-28 flex items-center justify-center">
+                        <!-- Dynamic SVG trend chart -->
+                    </div>
+                </div>
+
+                <!-- Chronological Game Log -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-2.5 flex-1 overflow-y-auto max-h-40">
+                    <div class="text-[11px] font-orbitron text-gray-400 uppercase mb-1.5">Chronological Match History</div>
+                    <div id="player-history-rows" class="space-y-1 text-xs"></div>
+                </div>
+            </div>
+
+            <div class="w-full max-w-3xl mx-auto flex justify-between items-center text-[11px] text-gray-400 pt-1">
+                <span id="storage-status-badge"><i class="fa-solid fa-cloud text-cyan-400 mr-1"></i>Cloud & Local Score Sync Active</span>
+                <span>Scores automatically record after every match</span>
+            </div>
+        </div>
+
+        <!-- 4. GITHUB REPOSITORY STRUCTURE & EXPORT MODAL -->
+        <div id="github-modal" class="hidden absolute inset-0 bg-[#070312]/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 z-30 overflow-y-auto">
+            <div class="w-full max-w-3xl mx-auto flex justify-between items-center border-b border-cyan-500/30 pb-2">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-brands fa-github text-cyan-400 text-xl"></i>
+                    <h2 class="font-orbitron font-black text-base sm:text-xl text-cyan-300">
+                        GITHUB PAGES PROJECT STRUCTURE
+                    </h2>
+                </div>
+                <button id="btn-close-github" data-tv-nav="github" class="arcade-btn arcade-btn-pink px-3 py-1 rounded-lg text-xs font-bold">
+                    <i class="fa-solid fa-xmark mr-1"></i> Close
+                </button>
+            </div>
+
+            <div class="w-full max-w-3xl mx-auto my-2 flex-1 flex flex-col min-h-0">
+                <p class="text-xs text-gray-300 mb-2">
+                    Ready to upload to GitHub! Choose any file below to copy or download the clean, modular multi-file structure (<code class="text-cyan-300">index.html</code>, <code class="text-pink-300">css/style.css</code>, <code class="text-yellow-300">js/game.js</code>, <code class="text-green-300">manifest.json</code>, <code class="text-purple-300">README.md</code>).
+                </p>
+
+                <!-- File Selector Tabs -->
+                <div class="flex flex-wrap gap-1.5 mb-2">
+                    <button data-gh-file="README.md" data-tv-nav="github" class="gh-file-tab arcade-btn arcade-btn-yellow px-2.5 py-1 rounded text-xs font-bold">README.md</button>
+                    <button data-gh-file="index.html" data-tv-nav="github" class="gh-file-tab arcade-btn px-2.5 py-1 rounded text-xs font-bold">index.html</button>
+                    <button data-gh-file="css/style.css" data-tv-nav="github" class="gh-file-tab arcade-btn px-2.5 py-1 rounded text-xs font-bold">css/style.css</button>
+                    <button data-gh-file="js/game.js" data-tv-nav="github" class="gh-file-tab arcade-btn px-2.5 py-1 rounded text-xs font-bold">js/game.js</button>
+                    <button data-gh-file="manifest.json" data-tv-nav="github" class="gh-file-tab arcade-btn px-2.5 py-1 rounded text-xs font-bold">manifest.json</button>
+                </div>
+
+                <!-- Code Preview Area -->
+                <div class="relative flex-1 bg-[#05020a] border border-cyan-500/40 rounded-xl p-3 overflow-hidden flex flex-col min-h-[180px]">
+                    <div class="flex justify-between items-center mb-1.5 pb-1 border-b border-white/10">
+                        <span id="gh-current-filename" class="font-mono text-xs text-yellow-300 font-bold">README.md</span>
+                        <div class="flex space-x-2">
+                            <button id="btn-copy-gh-file" data-tv-nav="github" class="arcade-btn px-2.5 py-1 rounded text-[11px] font-bold">
+                                <i class="fa-solid fa-copy mr-1"></i> Copy File
+                            </button>
+                            <button id="btn-download-gh-file" data-tv-nav="github" class="arcade-btn arcade-btn-pink px-2.5 py-1 rounded text-[11px] font-bold">
+                                <i class="fa-solid fa-download mr-1"></i> Download File
+                            </button>
+                        </div>
+                    </div>
+                    <pre id="gh-code-preview" class="text-[11px] font-mono text-cyan-100 overflow-auto flex-1 select-text whitespace-pre-wrap"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. SECTOR CLEARED OVERLAY -->
+        <div id="level-screen" class="hidden absolute inset-0 bg-[#070312]/85 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center z-20">
+            <div class="text-xs font-orbitron text-yellow-300 uppercase tracking-widest mb-1">Block Matrix Shattered</div>
+            <h2 class="font-orbitron font-black text-3xl sm:text-5xl text-cyan-400 text-glow-cyan mb-2">
+                WAVE CLEARED!
+            </h2>
+            <p id="level-bonus-text" class="text-base sm:text-lg text-pink-400 font-bold mb-6">
+                Wave Bonus: +250 PTS
+            </p>
+            <button id="btn-next-level" data-tv-nav="level" class="arcade-btn px-8 py-3.5 rounded-xl font-bold text-base sm:text-lg">
+                NEXT WAVE <i class="fa-solid fa-forward ml-2"></i>
+            </button>
+        </div>
+
+        <!-- 6. GAME OVER OVERLAY -->
+        <div id="gameover-screen" class="hidden absolute inset-0 bg-[#070312]/92 backdrop-blur-md flex flex-col justify-center items-center p-4 sm:p-6 text-center z-20">
+            <h2 class="font-orbitron font-black text-3xl sm:text-5xl text-pink-500 text-glow-pink mb-1">
+                GRID OVERLOAD
+            </h2>
+            <p id="gameover-player-line" class="text-yellow-300 font-orbitron text-xs sm:text-sm mb-4">
+                SCORE RECORDED FOR PLAYER 1
+            </p>
+
+            <div class="bg-white/5 border border-cyan-500/40 rounded-xl p-4 mb-5 w-full max-w-xs grid grid-cols-2 gap-3">
+                <div>
+                    <div class="text-[11px] text-cyan-300 uppercase">Final Score</div>
+                    <div id="final-score" class="font-orbitron text-2xl sm:text-3xl font-black text-white">0</div>
+                </div>
+                <div>
+                    <div class="text-[11px] text-purple-300 uppercase">Personal Best</div>
+                    <div id="final-highscore" class="font-orbitron text-2xl sm:text-3xl font-black text-purple-300">0</div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <button id="btn-restart" data-tv-nav="gameover" class="arcade-btn arcade-btn-pink px-6 py-3 rounded-xl font-bold text-sm sm:text-base">
+                    <i class="fa-solid fa-rotate-right mr-1.5"></i> PLAY AGAIN
+                </button>
+                <button id="btn-gameover-ranks" data-tv-nav="gameover" class="arcade-btn arcade-btn-yellow px-5 py-3 rounded-xl font-bold text-sm sm:text-base">
+                    <i class="fa-solid fa-trophy mr-1.5"></i> LEADERBOARD
+                </button>
+                <button id="btn-gameover-switch" data-tv-nav="gameover" class="arcade-btn px-4 py-3 rounded-xl font-bold text-xs sm:text-sm">
+                    <i class="fa-solid fa-user-astronaut mr-1"></i> SWITCH PLAYER
+                </button>
+            </div>
+        </div>
+
+        <!-- 7. PAUSE OVERLAY -->
+        <div id="pause-screen" class="hidden absolute inset-0 bg-[#070312]/80 backdrop-blur-sm flex flex-col justify-center items-center z-20 gap-3">
+            <h2 class="font-orbitron font-black text-3xl sm:text-4xl text-cyan-400 text-glow-cyan mb-2 tracking-widest">
+                GAME PAUSED
+            </h2>
+            <button id="btn-resume" data-tv-nav="pause" class="arcade-btn px-8 py-3 rounded-xl font-bold text-base w-52">
+                <i class="fa-solid fa-play mr-2"></i> RESUME
+            </button>
+            <button id="btn-pause-restart" data-tv-nav="pause" class="arcade-btn arcade-btn-pink px-8 py-2.5 rounded-xl font-bold text-sm w-52">
+                <i class="fa-solid fa-rotate mr-2"></i> RESTART
+            </button>
+        </div>
+    </main>
+
+    <!-- BOTTOM VIRTUAL ARCADE DECK (Optimized for Mobile Thumb Reach & TV Hints) -->
+    <footer class="w-full max-w-[960px] flex justify-between items-center mt-1.5 px-1 z-20 shrink-0 gap-2">
+        <!-- Left/Right/Launch Touch Deck -->
+        <div class="flex items-center space-x-1.5 sm:space-x-2 flex-1 sm:flex-initial">
+            <button id="btn-left" class="arcade-btn h-12 sm:h-12 flex-1 sm:w-20 rounded-xl flex items-center justify-center text-xl active:scale-95" aria-label="Move Left">
+                <i class="fa-solid fa-caret-left"></i>
+            </button>
+            <button id="btn-launch-ball" class="arcade-btn arcade-btn-pink px-4 sm:px-6 h-12 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shrink-0" title="Launch / Fire (Space / Enter / A Button)">
+                <i class="fa-solid fa-bolt mr-1.5"></i> LAUNCH
+            </button>
+            <button id="btn-right" class="arcade-btn h-12 sm:h-12 flex-1 sm:w-20 rounded-xl flex items-center justify-center text-xl active:scale-95" aria-label="Move Right">
+                <i class="fa-solid fa-caret-right"></i>
+            </button>
+        </div>
+
+        <!-- TV Remote / Controller Quick Hint -->
+        <div class="hidden md:flex items-center space-x-3 text-xs text-gray-400 font-orbitron">
+            <span><i class="fa-solid fa-arrows-left-right text-cyan-400 mr-1"></i>D-PAD / STICK: MOVE</span>
+            <span><i class="fa-solid fa-circle-dot text-pink-400 mr-1"></i>OK / ENTER / A: FIRE</span>
+        </div>
+
+        <!-- Utility Controls -->
+        <div class="flex space-x-1.5 sm:space-x-2">
+            <button id="btn-pause" class="arcade-btn w-11 h-12 rounded-xl flex items-center justify-center text-base" title="Pause Game (P)">
+                <i id="icon-pause" class="fa-solid fa-pause"></i>
+            </button>
+            <button id="btn-sound" class="arcade-btn w-11 h-12 rounded-xl flex items-center justify-center text-base" title="Toggle Sound (M)">
+                <i id="icon-sound" class="fa-solid fa-volume-high"></i>
+            </button>
+            <button id="btn-quick-reset" class="arcade-btn arcade-btn-pink w-11 h-12 rounded-xl flex items-center justify-center text-base" title="Home / Reset">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- FIREBASE CLOUD + LOCAL SCORE PERSISTENCE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Expose unified Score & Profile Manager to global window
+        window.ScoreStorage = {
+            mode: 'local',
+            db: null,
+            auth: null,
+            user: null,
+            appId: typeof __app_id !== 'undefined' ? __app_id : 'neon-block-blast-breaker',
+            records: [], // { playerName, score, level, timestamp }
+            players: ['PLAYER 1', 'ARCADE PRO', 'SYNTH KING'],
+            currentPlayer: 'PLAYER 1',
+            listeners: [],
+
+            async init() {
+                // Load local fallback cache so exported GitHub Pages builds work out-of-the-box
+                try {
+                    const savedPlayers = JSON.parse(localStorage.getItem('nbbb_players') || 'null');
+                    if (Array.isArray(savedPlayers) && savedPlayers.length > 0) {
+                        this.players = savedPlayers;
+                    }
+                    const savedCurrent = localStorage.getItem('nbbb_current_player');
+                    if (savedCurrent) this.currentPlayer = savedCurrent;
+
+                    const savedRecords = JSON.parse(localStorage.getItem('nbbb_records') || '[]');
+                    if (Array.isArray(savedRecords)) this.records = savedRecords;
+                } catch (e) {
+                    // Ignore storage restrictions
+                }
+
+                // Attempt Firebase initialization if environment config is present
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    try {
+                        const firebaseConfig = JSON.parse(__firebase_config);
+                        const app = initializeApp(firebaseConfig);
+                        this.auth = getAuth(app);
+                        this.db = getFirestore(app);
+
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(this.auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(this.auth);
+                        }
+
+                        onAuthStateChanged(this.auth, (u) => {
+                            this.user = u;
+                            if (u) {
+                                this.mode = 'cloud';
+                                this.subscribeCloudScores();
+                            }
+                        });
+                    } catch (err) {
+                        this.mode = 'local';
+                    }
+                }
+                this.notify();
+            },
+
+            subscribeCloudScores() {
+                if (!this.user || !this.db) return;
+                const scoresCol = collection(this.db, 'artifacts', this.appId, 'public', 'data', 'game_scores');
+                onSnapshot(scoresCol, (snapshot) => {
+                    const cloudRecords = [];
+                    const playerSet = new Set(this.players);
+                    snapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        if (data && data.playerName && typeof data.score === 'number') {
+                            cloudRecords.push(data);
+                            playerSet.add(data.playerName.toUpperCase());
+                        }
+                    });
+                    // Merge cloud + local records cleanly
+                    this.records = cloudRecords.sort((a, b) => b.timestamp - a.timestamp);
+                    this.players = Array.from(playerSet);
+                    this.saveLocalCache();
+                    this.notify();
+                }, () => {
+                    // Fallback silently on permission/network issue
+                });
+            },
+
+            setCurrentPlayer(name) {
+                const clean = (name || 'PLAYER 1').trim().toUpperCase().slice(0, 12);
+                if (!clean) return;
+                this.currentPlayer = clean;
+                if (!this.players.includes(clean)) {
+                    this.players.unshift(clean);
+                }
+                this.saveLocalCache();
+                this.notify();
+            },
+
+            async recordGameScore(score, level) {
+                if (score <= 0) return;
+                const entry = {
+                    playerName: this.currentPlayer,
+                    score: Number(score),
+                    level: Number(level),
+                    timestamp: Date.now()
+                };
+                this.records.unshift(entry);
+                this.saveLocalCache();
+                this.notify();
+
+                if (this.mode === 'cloud' && this.user && this.db) {
+                    try {
+                        const scoresCol = collection(this.db, 'artifacts', this.appId, 'public', 'data', 'game_scores');
+                        await addDoc(scoresCol, entry);
+                    } catch (e) {
+                        // Already stored in local cache
+                    }
+                }
+            },
+
+            getPlayerStats(playerName) {
+                const target = (playerName || this.currentPlayer).toUpperCase();
+                const list = this.records
+                    .filter(r => r.playerName.toUpperCase() === target)
+                    .sort((a, b) => a.timestamp - b.timestamp);
+                const games = list.length;
+                const best = games > 0 ? Math.max(...list.map(r => r.score)) : 0;
+                const avg = games > 0 ? Math.round(list.reduce((s, r) => s + r.score, 0) / games) : 0;
+                return { playerName: target, games, best, avg, history: list };
+            },
+
+            getGlobalTop(limit = 25) {
+                return [...this.records]
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, limit);
+            },
+
+            saveLocalCache() {
+                try {
+                    localStorage.setItem('nbbb_players', JSON.stringify(this.players));
+                    localStorage.setItem('nbbb_current_player', this.currentPlayer);
+                    localStorage.setItem('nbbb_records', JSON.stringify(this.records.slice(0, 200)));
+                } catch (e) {}
+            },
+
+            onChange(fn) {
+                this.listeners.push(fn);
+            },
+
+            notify() {
+                this.listeners.forEach(fn => fn());
+            }
+        };
+
+        window.ScoreStorage.init();
+    </script>
+
+    <!-- MAIN GAME ENGINE, TV NAVIGATION & GITHUB EXPORTER -->
+    <script>
+        /**
+         * ============================================================================
+         * 1. WEB AUDIO SYNTHESIZER (Retro Block Blast & Arcade SFX)
+         * ============================================================================
+         */
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                return this.muted;
+            }
+
+            playTone(freq, type = 'sine', duration = 0.1, vol = 0.14, slideFreq = null) {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    if (slideFreq) {
+                        osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
+                    }
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            uiMove() { this.playTone(520, 'sine', 0.04, 0.06, 620); }
+            uiSelect() { this.playTone(660, 'triangle', 0.09, 0.12, 880); }
+            paddleHit() { this.playTone(330, 'triangle', 0.11, 0.18, 490); }
+            wallHit() { this.playTone(220, 'sine', 0.07, 0.1, 180); }
+            brickHit(row, comboCount = 1) {
+                const pitchBoost = Math.min(comboCount * 22, 300);
+                const baseFreq = 290 + (7 - (row % 7)) * 55 + pitchBoost;
+                this.playTone(baseFreq, 'square', 0.1, 0.12, baseFreq * 1.3);
+            }
+            blockClusterClear() {
+                [523.25, 659.25, 783.99, 1046.5].forEach((n, i) => {
+                    setTimeout(() => this.playTone(n, 'triangle', 0.14, 0.16), i * 45);
+                });
+            }
+            laserShoot() { this.playTone(920, 'sawtooth', 0.08, 0.07, 240); }
+            powerUp() {
+                [440, 554.37, 659.25, 880].forEach((n, idx) => {
+                    setTimeout(() => this.playTone(n, 'triangle', 0.12, 0.14), idx * 50);
+                });
+            }
+            loseLife() { this.playTone(240, 'sawtooth', 0.45, 0.18, 60); }
+            levelClear() {
+                [523.25, 659.25, 783.99, 1046.50].forEach((n, idx) => {
+                    setTimeout(() => this.playTone(n, 'square', 0.18, 0.14), idx * 85);
+                });
+            }
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const synth = new SoundSynth();
+
+        const LOGICAL_WIDTH = 800;
+        const LOGICAL_HEIGHT = 600;
+
+        // Block Blast Polyomino Colors (Vibrant bevelled jewel tones)
+        const BLOCK_BLAST_PALETTE = [
+            { main: '#ff007f', light: '#ff66b2', dark: '#99004d', glow: 'rgba(255, 0, 127, 0.7)' }, // Neon Pink
+            { main: '#00f3ff', light: '#80f9ff', dark: '#007a80', glow: 'rgba(0, 243, 255, 0.7)' }, // Cyber Cyan
+            { main: '#ffee00', light: '#fff680', dark: '#998f00', glow: 'rgba(255, 238, 0, 0.7)' }, // Solar Yellow
+            { main: '#00ff66', light: '#80ffb2', dark: '#008033', glow: 'rgba(0, 255, 102, 0.7)' }, // Matrix Green
+            { main: '#b500ff', light: '#da80ff', dark: '#5b0080', glow: 'rgba(181, 0, 255, 0.7)' }, // Electric Purple
+            { main: '#ff5500', light: '#ffaa80', dark: '#993300', glow: 'rgba(255, 85, 0, 0.7)' }   // Lava Orange
+        ];
+
+        const POWERUP_TYPES = [
+            { type: 'WIDE', label: 'W', color: '#00f3ff', name: 'MEGA PADDLE' },
+            { type: 'LASER', label: 'L', color: '#ff007f', name: 'PLASMA LASERS' },
+            { type: 'MULTI', label: 'M', color: '#00ff66', name: 'MULTI-BALL' },
+            { type: 'BOMB', label: 'B', color: '#ffee00', name: 'BLOCK BLAST BOMB' },
+            { type: 'LIFE', label: '+1', color: '#b500ff', name: 'EXTRA LIFE' }
+        ];
+
+        let gameState = 'START'; // START, PLAYING, PAUSED, LEVEL_CLEAR, GAMEOVER, MODAL
+        let previousStateBeforeModal = 'START';
+        let score = 0;
+        let level = 1;
+        let lives = 3;
+        let combo = 0;
+        let screenShake = 0;
+
+        const keys = { left: false, right: false };
+        let pointerX = null;
+
+        let paddle;
+        let balls = [];
+        let bricks = [];
+        let particles = [];
+        let powerUps = [];
+        let lasers = [];
+        let floatingTexts = [];
+        let bgStars = [];
+
+        /**
+         * ============================================================================
+         * 2. ENTITIES (Block Blast Polyomino Bricks, Paddle, Balls, Particles)
+         * ============================================================================
+         */
+        class Paddle {
+            constructor() {
+                this.baseWidth = 122;
+                this.width = this.baseWidth;
+                this.height = 18;
+                this.x = (LOGICAL_WIDTH - this.width) / 2;
+                this.y = LOGICAL_HEIGHT - 40;
+                this.speed = 9.5;
+                this.color = '#00f3ff';
+                this.wideTimer = 0;
+                this.laserTimer = 0;
+                this.laserCooldown = 0;
+            }
+
+            update() {
+                if (keys.left) {
+                    this.x -= this.speed;
+                    pointerX = null;
+                }
+                if (keys.right) {
+                    this.x += this.speed;
+                    pointerX = null;
+                }
+                if (pointerX !== null) {
+                    const targetX = pointerX - this.width / 2;
+                    this.x += (targetX - this.x) * 0.38;
+                }
+
+                if (this.x < 12) this.x = 12;
+                if (this.x + this.width > LOGICAL_WIDTH - 12) {
+                    this.x = LOGICAL_WIDTH - 12 - this.width;
+                }
+
+                if (this.wideTimer > 0) {
+                    this.wideTimer--;
+                    if (this.wideTimer === 0) {
+                        const center = this.x + this.width / 2;
+                        this.width = this.baseWidth;
+                        this.x = center - this.width / 2;
+                    }
+                }
+
+                if (this.laserTimer > 0) {
+                    this.laserTimer--;
+                    this.laserCooldown--;
+                    if (this.laserCooldown <= 0) {
+                        lasers.push(new Laser(this.x + 10, this.y - 6));
+                        lasers.push(new Laser(this.x + this.width - 14, this.y - 6));
+                        synth.laserShoot();
+                        this.laserCooldown = 20;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.laserTimer > 0 ? '#ff007f' : this.color;
+
+                const grad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.45, this.laserTimer > 0 ? '#ff007f' : '#00f3ff');
+                grad.addColorStop(1, '#083344');
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 9);
+                ctx.fill();
+
+                ctx.strokeStyle = this.laserTimer > 0 ? '#ff80bf' : '#a5f3fc';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                if (this.laserTimer > 0) {
+                    ctx.fillStyle = '#ff007f';
+                    ctx.fillRect(this.x + 8, this.y - 6, 6, 6);
+                    ctx.fillRect(this.x + this.width - 14, this.y - 6, 6, 6);
+                }
+
+                if (this.wideTimer > 0 || this.laserTimer > 0) {
+                    const maxTimer = Math.max(this.wideTimer, this.laserTimer);
+                    const ratio = Math.min(1, maxTimer / 600);
+                    ctx.fillStyle = '#ffee00';
+                    ctx.fillRect(this.x + 14, this.y + this.height - 4, (this.width - 28) * ratio, 2.5);
+                }
+                ctx.restore();
+            }
+        }
+
+        class Ball {
+            constructor(x, y, vx, vy, stuck = false, isBomb = false) {
+                this.radius = isBomb ? 10 : 8;
+                this.x = x;
+                this.y = y;
+                this.baseSpeed = 6.2 + Math.min(level * 0.4, 3.5);
+                this.vx = vx || (Math.random() > 0.5 ? 3.5 : -3.5);
+                this.vy = vy || -this.baseSpeed;
+                this.stuck = stuck;
+                this.isBomb = isBomb;
+                this.trail = [];
+            }
+
+            launch() {
+                if (this.stuck) {
+                    this.stuck = false;
+                    const angle = (Math.random() * 0.5 - 0.25);
+                    this.vx = Math.sin(angle) * this.baseSpeed;
+                    this.vy = -Math.cos(angle) * this.baseSpeed;
+                    synth.paddleHit();
+                }
+            }
+
+            update() {
+                if (this.stuck) {
+                    this.x = paddle.x + paddle.width / 2;
+                    this.y = paddle.y - this.radius - 2;
+                    return;
+                }
+
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > 8) this.trail.shift();
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx = Math.abs(this.vx);
+                    synth.wallHit();
+                } else if (this.x + this.radius > LOGICAL_WIDTH) {
+                    this.x = LOGICAL_WIDTH - this.radius;
+                    this.vx = -Math.abs(this.vx);
+                    synth.wallHit();
+                }
+
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.vy = Math.abs(this.vy);
+                    synth.wallHit();
+                }
+
+                // Paddle bounce
+                if (
+                    this.vy > 0 &&
+                    this.y + this.radius >= paddle.y &&
+                    this.y - this.radius <= paddle.y + paddle.height &&
+                    this.x + this.radius >= paddle.x &&
+                    this.x - this.radius <= paddle.x + paddle.width
+                ) {
+                    const hitPoint = (this.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                    const bounceAngle = hitPoint * (Math.PI / 3);
+                    const currentSpeed = Math.min(Math.hypot(this.vx, this.vy) * 1.015, 11.5);
+                    this.vx = currentSpeed * Math.sin(bounceAngle);
+                    this.vy = -Math.abs(currentSpeed * Math.cos(bounceAngle));
+                    this.y = paddle.y - this.radius - 1;
+
+                    combo = 0;
+                    synth.paddleHit();
+                    spawnParticles(this.x, paddle.y, '#00f3ff', 8);
+                }
+            }
+
+            draw() {
+                for (let i = 0; i < this.trail.length; i++) {
+                    const pos = this.trail[i];
+                    const ratio = (i + 1) / this.trail.length;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, this.radius * ratio * 0.8, 0, Math.PI * 2);
+                    ctx.fillStyle = this.isBomb
+                        ? `rgba(255, 238, 0, ${ratio * 0.45})`
+                        : `rgba(0, 243, 255, ${ratio * 0.35})`;
+                    ctx.fill();
+                }
+
+                ctx.save();
+                ctx.shadowBlur = 14;
+                ctx.shadowColor = this.isBomb ? '#ffee00' : '#00f3ff';
+                ctx.fillStyle = this.isBomb ? '#ffee00' : '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Block Blast Beveled Tile Brick with Cluster ID
+        class Brick {
+            constructor(x, y, size, colorObj, hp = 1, row = 0, clusterId = 0, isBlastCore = false) {
+                this.x = x;
+                this.y = y;
+                this.width = size;
+                this.height = size;
+                this.colorObj = colorObj;
+                this.hp = hp;
+                this.row = row;
+                this.clusterId = clusterId;
+                this.isBlastCore = isBlastCore;
+                this.alive = true;
+            }
+
+            hit(triggerBomb = false) {
+                this.hp--;
+                synth.brickHit(this.row, combo);
+
+                if (this.hp <= 0 || triggerBomb) {
+                    this.alive = false;
+                    combo++;
+                    const pts = (15 + (7 - (this.row % 7)) * 5) * Math.min(combo, 6);
+                    score += pts;
+
+                    screenShake = 5;
+                    spawnParticles(this.x + this.width / 2, this.y + this.height / 2, this.colorObj.main, 14);
+
+                    // If this brick is a Blast Core, detonate adjacent bricks like Block Blast!
+                    if (this.isBlastCore && !triggerBomb) {
+                        detonateNeighborBlocks(this);
+                    }
+
+                    // Check if entire polyomino block cluster is cleared for a Block Blast Bonus!
+                    const remainingInCluster = bricks.filter(b => b.alive && b.clusterId === this.clusterId);
+                    if (remainingInCluster.length === 0) {
+                        const clusterBonus = 150 * level;
+                        score += clusterBonus;
+                        synth.blockClusterClear();
+                        floatingTexts.push(new FloatingText(
+                            this.x + this.width / 2,
+                            this.y,
+                            `BLOCK BLAST! +${clusterBonus}`,
+                            '#ffee00'
+                        ));
+                    } else if (combo > 1) {
+                        floatingTexts.push(new FloatingText(
+                            this.x + this.width / 2,
+                            this.y,
+                            `+${pts} (${combo}x)`,
+                            this.colorObj.light
+                        ));
+                    }
+
+                    updateHUD();
+
+                    if (Math.random() < 0.16) {
+                        const randType = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+                        powerUps.push(new PowerUp(this.x + this.width / 2, this.y + this.height / 2, randType));
+                    }
+                } else {
+                    spawnParticles(this.x + this.width / 2, this.y + this.height / 2, '#ffffff', 6);
+                }
+            }
+
+            draw() {
+                if (!this.alive) return;
+                ctx.save();
+
+                const x = this.x;
+                const y = this.y;
+                const w = this.width;
+                const h = this.height;
+                const bevel = 5;
+
+                // Main Block Blast jewel square
+                ctx.fillStyle = this.colorObj.main;
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, 5);
+                ctx.fill();
+
+                // Top & Left Light Bevel (3D Puzzle Block look)
+                ctx.fillStyle = this.colorObj.light;
+                ctx.beginPath();
+                ctx.moveTo(x + 2, y + 2);
+                ctx.lineTo(x + w - 2, y + 2);
+                ctx.lineTo(x + w - bevel, y + bevel);
+                ctx.lineTo(x + bevel, y + bevel);
+                ctx.lineTo(x + bevel, y + h - bevel);
+                ctx.lineTo(x + 2, y + h - 2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Bottom & Right Shadow Bevel
+                ctx.fillStyle = this.colorObj.dark;
+                ctx.beginPath();
+                ctx.moveTo(x + w - 2, y + h - 2);
+                ctx.lineTo(x + 2, y + h - 2);
+                ctx.lineTo(x + bevel, y + h - bevel);
+                ctx.lineTo(x + w - bevel, y + h - bevel);
+                ctx.lineTo(x + w - bevel, y + bevel);
+                ctx.lineTo(x + w - 2, y + 2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Inner glossy tile face
+                ctx.fillStyle = this.colorObj.main;
+                ctx.fillRect(x + bevel, y + bevel, w - bevel * 2, h - bevel * 2);
+
+                // Armored or Blast Core badge
+                if (this.isBlastCore) {
+                    ctx.fillStyle = '#ffee00';
+                    ctx.font = 'bold 12px Orbitron';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('★', x + w / 2, y + h / 2 + 1);
+                } else if (this.hp > 1) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x + 4, y + 4, w - 8, h - 8);
+                }
+
+                ctx.restore();
+            }
+        }
+
+        function detonateNeighborBlocks(sourceBrick) {
+            const radius = sourceBrick.width * 1.75;
+            const cx = sourceBrick.x + sourceBrick.width / 2;
+            const cy = sourceBrick.y + sourceBrick.height / 2;
+            screenShake = 12;
+            bricks.forEach(b => {
+                if (!b.alive || b === sourceBrick) return;
+                const bx = b.x + b.width / 2;
+                const by = b.y + b.height / 2;
+                if (Math.hypot(cx - bx, cy - by) <= radius) {
+                    b.hit(true);
+                }
+            });
+        }
+
+        class Laser {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 4;
+                this.height = 15;
+                this.speed = 11.5;
+                this.active = true;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < 0) this.active = false;
+            }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff007f';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.restore();
+            }
+        }
+
+        class PowerUp {
+            constructor(x, y, def) {
+                this.x = x;
+                this.y = y;
+                this.width = 36;
+                this.height = 20;
+                this.def = def;
+                this.vy = 2.6;
+                this.active = true;
+            }
+            update() {
+                this.y += this.vy;
+                if (this.y > LOGICAL_HEIGHT) this.active = false;
+                if (
+                    this.y + this.height / 2 >= paddle.y &&
+                    this.y - this.height / 2 <= paddle.y + paddle.height &&
+                    this.x + this.width / 2 >= paddle.x &&
+                    this.x - this.width / 2 <= paddle.x + paddle.width
+                ) {
+                    this.active = false;
+                    applyPowerUp(this.def);
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.def.color;
+                ctx.fillStyle = '#090414';
+                ctx.strokeStyle = this.def.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height, 6);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 11px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.def.label, this.x, this.y + 1);
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 1;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.024 + 0.016;
+                this.size = Math.random() * 5 + 2.5;
+                this.color = color;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.09;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        class FloatingText {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.alpha = 1;
+            }
+            update() {
+                this.y -= 1.3;
+                this.alpha -= 0.02;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.font = 'bold 13px Orbitron';
+                ctx.fillStyle = this.color;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 3. BLOCK BLAST POLYOMINO GRID GENERATOR
+         * ============================================================================
+         */
+        function initBackgroundStars() {
+            bgStars = [];
+            for (let i = 0; i < 50; i++) {
+                bgStars.push({
+                    x: Math.random() * LOGICAL_WIDTH,
+                    y: Math.random() * LOGICAL_HEIGHT,
+                    size: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 0.35 + 0.1,
+                    alpha: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+
+        function buildLevel(lvl) {
+            bricks = [];
+            powerUps = [];
+            lasers = [];
+            floatingTexts = [];
+
+            // Block Blast 14x7 Puzzle Matrix
+            const cols = 14;
+            const rows = Math.min(5 + Math.floor(lvl / 2), 8);
+            const tileSize = 36;
+            const gap = 4;
+            const totalGridWidth = cols * tileSize + (cols - 1) * gap;
+            const offsetLeft = (LOGICAL_WIDTH - totalGridWidth) / 2;
+            const offsetTop = 55;
+
+            // Group cells into Block Blast polyomino clusters (2x2, L-shapes, 1x3 bars)
+            const gridCluster = Array.from({ length: rows }, () => Array(cols).fill(0));
+            let currentClusterId = 1;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (gridCluster[r][c] !== 0) continue;
+                    // Optional level gaps for visual variety
+                    if (lvl % 2 === 0 && (c === 6 || c === 7) && r > 1 && r < rows - 1) continue;
+
+                    const id = currentClusterId++;
+                    gridCluster[r][c] = id;
+
+                    // Grow polyomino shape up to 3-4 connected blocks
+                    const neighbors = [
+                        [r, c + 1],
+                        [r + 1, c],
+                        [r + 1, c + 1]
+                    ];
+                    neighbors.forEach(([nr, nc]) => {
+                        if (nr < rows && nc < cols && gridCluster[nr][nc] === 0 && Math.random() < 0.72) {
+                            gridCluster[nr][nc] = id;
+                        }
+                    });
+                }
+            }
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cid = gridCluster[r][c];
+                    if (cid === 0) continue;
+
+                    const colorObj = BLOCK_BLAST_PALETTE[cid % BLOCK_BLAST_PALETTE.length];
+                    const x = offsetLeft + c * (tileSize + gap);
+                    const y = offsetTop + r * (tileSize + gap);
+                    const hp = (r === 0 && lvl > 1) ? 2 : 1;
+                    const isBlastCore = Math.random() < 0.08;
+
+                    bricks.push(new Brick(x, y, tileSize, colorObj, hp, r, cid, isBlastCore));
+                }
+            }
+        }
+
+        function spawnParticles(x, y, color, count = 12) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function applyPowerUp(def) {
+            synth.powerUp();
+            score += 50;
+            updateHUD();
+            floatingTexts.push(new FloatingText(paddle.x + paddle.width / 2, paddle.y - 15, def.name, def.color));
+
+            if (def.type === 'WIDE') {
+                paddle.width = paddle.baseWidth * 1.55;
+                paddle.wideTimer = 600;
+            } else if (def.type === 'LASER') {
+                paddle.laserTimer = 480;
+            } else if (def.type === 'MULTI') {
+                const src = balls[0] || new Ball(paddle.x + paddle.width / 2, paddle.y - 12, 3, -6, false);
+                if (src.stuck) src.launch();
+                balls.push(new Ball(src.x, src.y, -4.5, -Math.abs(src.vy), false));
+                balls.push(new Ball(src.x, src.y, 4.5, -Math.abs(src.vy), false));
+            } else if (def.type === 'BOMB') {
+                balls.forEach(b => { b.isBomb = true; b.radius = 10; });
+            } else if (def.type === 'LIFE') {
+                lives = Math.min(lives + 1, 5);
+                updateHUD();
+            }
+        }
+
+        function resetBallAndPaddle() {
+            paddle = new Paddle();
+            balls = [new Ball(paddle.x + paddle.width / 2, paddle.y - 10, 0, 0, true)];
+        }
+
+        function updateHUD() {
+            const store = window.ScoreStorage;
+            const currentName = store ? store.currentPlayer : 'PLAYER 1';
+            const stats = store ? store.getPlayerStats(currentName) : { best: 0, games: 0 };
+            const bestScore = Math.max(score, stats.best);
+
+            document.getElementById('hud-player-name').textContent = currentName;
+            document.getElementById('start-current-player').textContent = currentName;
+            document.getElementById('start-player-summary').textContent =
+                `Personal Best: ${bestScore.toLocaleString()} • Games Played: ${stats.games}`;
+
+            document.getElementById('hud-score').textContent = score.toLocaleString();
+            document.getElementById('hud-highscore').textContent = bestScore.toLocaleString();
+            document.getElementById('hud-level').textContent = level;
+
+            const livesContainer = document.getElementById('hud-lives');
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < lives; i++) {
+                const heart = document.createElement('i');
+                heart.className = 'fa-solid fa-heart drop-shadow-[0_0_5px_rgba(255,0,127,0.8)]';
+                livesContainer.appendChild(heart);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 4. COLLISIONS & MAIN GAME LOOP
+         * ============================================================================
+         */
+        function checkCollisions() {
+            for (let b of balls) {
+                if (b.stuck) continue;
+                for (let brick of bricks) {
+                    if (!brick.alive) continue;
+                    const closestX = Math.max(brick.x, Math.min(b.x, brick.x + brick.width));
+                    const closestY = Math.max(brick.y, Math.min(b.y, brick.y + brick.height));
+                    const distX = b.x - closestX;
+                    const distY = b.y - closestY;
+
+                    if ((distX * distX + distY * distY) <= (b.radius * b.radius)) {
+                        if (b.isBomb) {
+                            detonateNeighborBlocks(brick);
+                            b.isBomb = false;
+                            b.radius = 8;
+                        }
+                        brick.hit();
+                        if (Math.abs(distX) > Math.abs(distY)) b.vx = -b.vx;
+                        else b.vy = -b.vy;
+                        break;
+                    }
+                }
+            }
+
+            for (let l of lasers) {
+                if (!l.active) continue;
+                for (let brick of bricks) {
+                    if (!brick.alive) continue;
+                    if (
+                        l.x < brick.x + brick.width &&
+                        l.x + l.width > brick.x &&
+                        l.y < brick.y + brick.height &&
+                        l.y + l.height > brick.y
+                    ) {
+                        l.active = false;
+                        brick.hit();
+                        break;
+                    }
+                }
+            }
+        }
+
+        function updateGame() {
+            pollGamepad();
+            if (gameState !== 'PLAYING') return;
+
+            paddle.update();
+
+            for (let i = balls.length - 1; i >= 0; i--) {
+                balls[i].update();
+                if (balls[i].y - balls[i].radius > LOGICAL_HEIGHT) {
+                    balls.splice(i, 1);
+                }
+            }
+
+            if (balls.length === 0) {
+                lives--;
+                combo = 0;
+                synth.loseLife();
+                screenShake = 10;
+                updateHUD();
+                if (lives <= 0) triggerGameOver();
+                else resetBallAndPaddle();
+            }
+
+            lasers.forEach(l => l.update());
+            lasers = lasers.filter(l => l.active);
+
+            powerUps.forEach(p => p.update());
+            powerUps = powerUps.filter(p => p.active);
+
+            checkCollisions();
+
+            if (bricks.every(b => !b.alive)) {
+                synth.levelClear();
+                gameState = 'LEVEL_CLEAR';
+                const bonus = level * 250;
+                score += bonus;
+                updateHUD();
+                document.getElementById('level-bonus-text').textContent = `Wave Bonus: +${bonus} PTS`;
+                document.getElementById('level-screen').classList.remove('hidden');
+                refreshTvFocus('level');
+            }
+
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => p.alpha > 0);
+
+            floatingTexts.forEach(t => t.update());
+            floatingTexts = floatingTexts.filter(t => t.alpha > 0);
+
+            if (screenShake > 0) screenShake *= 0.85;
+            if (screenShake < 0.5) screenShake = 0;
+        }
+
+        function drawGame() {
+            ctx.save();
+            if (screenShake > 0) {
+                ctx.translate((Math.random() - 0.5) * screenShake * 2, (Math.random() - 0.5) * screenShake * 2);
+            }
+
+            ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+
+            // Subtle Block-Blast puzzle board background grid
+            ctx.strokeStyle = 'rgba(0, 243, 255, 0.06)';
+            ctx.lineWidth = 1;
+            const cell = 40;
+            for (let x = 0; x < LOGICAL_WIDTH; x += cell) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, LOGICAL_HEIGHT); ctx.stroke();
+            }
+            for (let y = 0; y < LOGICAL_HEIGHT; y += cell) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(LOGICAL_WIDTH, y); ctx.stroke();
+            }
+
+            for (let s of bgStars) {
+                s.y += s.speed;
+                if (s.y > LOGICAL_HEIGHT) s.y = 0;
+                ctx.fillStyle = `rgba(0, 243, 255, ${s.alpha})`;
+                ctx.fillRect(s.x, s.y, s.size, s.size);
+            }
+
+            bricks.forEach(b => b.draw());
+            powerUps.forEach(p => p.draw());
+            lasers.forEach(l => l.draw());
+            if (paddle) paddle.draw();
+            balls.forEach(b => b.draw());
+            particles.forEach(p => p.draw());
+            floatingTexts.forEach(t => t.draw());
+
+            if (gameState === 'PLAYING' && balls.length > 0 && balls[0].stuck) {
+                ctx.fillStyle = 'rgba(255, 238, 0, 0.9)';
+                ctx.font = 'bold 14px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText('TAP LAUNCH • PRESS SPACE / OK / ENTER TO FIRE', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 88);
+            }
+
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        /**
+         * ============================================================================
+         * 5. GAME FLOW & MULTI-PLAYER SCORE LOGGING
+         * ============================================================================
+         */
+        function hideAllOverlays() {
+            ['start-screen', 'profile-modal', 'leaderboard-modal', 'github-modal', 'level-screen', 'gameover-screen', 'pause-screen']
+                .forEach(id => document.getElementById(id).classList.add('hidden'));
+        }
+
+        function startGame() {
+            synth.init();
+            synth.uiSelect();
+            score = 0;
+            level = 1;
+            lives = 3;
+            combo = 0;
+            resetBallAndPaddle();
+            buildLevel(level);
+            updateHUD();
+            hideAllOverlays();
+            gameState = 'PLAYING';
+            clearTvFocus();
+        }
+
+        function nextLevel() {
+            synth.uiSelect();
+            level++;
+            resetBallAndPaddle();
+            buildLevel(level);
+            updateHUD();
+            hideAllOverlays();
+            gameState = 'PLAYING';
+            clearTvFocus();
+        }
+
+        function triggerGameOver() {
+            gameState = 'GAMEOVER';
+            const store = window.ScoreStorage;
+            if (store && score > 0) {
+                store.recordGameScore(score, level);
+            }
+            const currentName = store ? store.currentPlayer : 'PLAYER 1';
+            const stats = store ? store.getPlayerStats(currentName) : { best: score };
+
+            document.getElementById('gameover-player-line').textContent = `SCORE LOGGED FOR ${currentName}`;
+            document.getElementById('final-score').textContent = score.toLocaleString();
+            document.getElementById('final-highscore').textContent = Math.max(score, stats.best).toLocaleString();
+            hideAllOverlays();
+            document.getElementById('gameover-screen').classList.remove('hidden');
+            refreshTvFocus('gameover');
+        }
+
+        function togglePause() {
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                document.getElementById('pause-screen').classList.remove('hidden');
+                document.getElementById('icon-pause').className = 'fa-solid fa-play';
+                refreshTvFocus('pause');
+            } else if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                document.getElementById('pause-screen').classList.add('hidden');
+                document.getElementById('icon-pause').className = 'fa-solid fa-pause';
+                clearTvFocus();
+            }
+        }
+
+        function launchStuckBalls() {
+            if (gameState === 'PLAYING') {
+                synth.init();
+                balls.forEach(b => b.launch());
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 6. PLAYER PROFILES, LEADERBOARD & SVG SCORE PROGRESSION CHART
+         * ============================================================================
+         */
+        function openProfileModal() {
+            synth.init();
+            synth.uiSelect();
+            if (gameState !== 'MODAL') previousStateBeforeModal = gameState;
+            gameState = 'MODAL';
+            hideAllOverlays();
+            document.getElementById('profile-modal').classList.remove('hidden');
+            renderProfileRoster();
+            document.getElementById('input-player-name').value = window.ScoreStorage?.currentPlayer || 'PLAYER 1';
+            refreshTvFocus('profile');
+        }
+
+        function closeModalAndRestore() {
+            synth.uiSelect();
+            hideAllOverlays();
+            gameState = previousStateBeforeModal || 'START';
+            if (gameState === 'START') {
+                document.getElementById('start-screen').classList.remove('hidden');
+                refreshTvFocus('start');
+            } else if (gameState === 'GAMEOVER') {
+                document.getElementById('gameover-screen').classList.remove('hidden');
+                refreshTvFocus('gameover');
+            } else if (gameState === 'PAUSED') {
+                document.getElementById('pause-screen').classList.remove('hidden');
+                refreshTvFocus('pause');
+            } else {
+                clearTvFocus();
+            }
+            updateHUD();
+        }
+
+        function renderProfileRoster() {
+            const store = window.ScoreStorage;
+            if (!store) return;
+            const container = document.getElementById('player-roster-list');
+            container.innerHTML = '';
+            document.getElementById('roster-count').textContent = `${store.players.length} Challengers`;
+
+            store.players.forEach(pName => {
+                const stats = store.getPlayerStats(pName);
+                const isCurrent = pName === store.currentPlayer;
+                const btn = document.createElement('button');
+                btn.setAttribute('data-tv-nav', 'profile');
+                btn.className = `arcade-btn ${isCurrent ? 'arcade-btn-yellow' : ''} px-3 py-2 rounded-lg flex justify-between items-center text-left w-full`;
+                btn.innerHTML = `
+                    <div>
+                        <div class="font-orbitron font-bold text-xs sm:text-sm ${isCurrent ? 'text-yellow-300' : 'text-white'}">
+                            <i class="fa-solid fa-user-astronaut mr-1.5"></i>${pName}
+                        </div>
+                        <div class="text-[10px] text-gray-300">Best: ${stats.best.toLocaleString()} • Games: ${stats.games}</div>
+                    </div>
+                    <span class="text-[10px] font-orbitron px-2 py-0.5 rounded bg-white/10">${isCurrent ? 'ACTIVE' : 'SELECT'}</span>
+                `;
+                btn.addEventListener('click', () => {
+                    store.setCurrentPlayer(pName);
+                    closeModalAndRestore();
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        function initTvLetterKeyboard() {
+            const grid = document.getElementById('tv-letter-grid');
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+            grid.innerHTML = '';
+            const input = document.getElementById('input-player-name');
+
+            chars.slice(0, 26).forEach(ch => {
+                const btn = document.createElement('button');
+                btn.setAttribute('data-tv-nav', 'profile');
+                btn.className = 'arcade-btn py-1 rounded text-xs font-bold';
+                btn.textContent = ch;
+                btn.addEventListener('click', () => {
+                    synth.uiMove();
+                    if (input.value.length < 12) input.value += ch;
+                });
+                grid.appendChild(btn);
+            });
+
+            // Space & Backspace buttons
+            const btnSpc = document.createElement('button');
+            btnSpc.setAttribute('data-tv-nav', 'profile');
+            btnSpc.className = 'arcade-btn py-1 rounded text-[10px] font-bold';
+            btnSpc.textContent = 'SPC';
+            btnSpc.addEventListener('click', () => {
+                if (input.value.length < 12) input.value += ' ';
+            });
+            grid.appendChild(btnSpc);
+
+            const btnDel = document.createElement('button');
+            btnDel.setAttribute('data-tv-nav', 'profile');
+            btnDel.className = 'arcade-btn arcade-btn-pink py-1 rounded text-[10px] font-bold';
+            btnDel.textContent = 'DEL';
+            btnDel.addEventListener('click', () => {
+                input.value = input.value.slice(0, -1);
+            });
+            grid.appendChild(btnDel);
+        }
+
+        function openLeaderboardModal(defaultTab = 'global') {
+            synth.init();
+            synth.uiSelect();
+            if (gameState !== 'MODAL') previousStateBeforeModal = gameState;
+            gameState = 'MODAL';
+            hideAllOverlays();
+            document.getElementById('leaderboard-modal').classList.remove('hidden');
+            switchLeaderboardTab(defaultTab);
+            refreshTvFocus('leaderboard');
+        }
+
+        function switchLeaderboardTab(tab) {
+            const globalView = document.getElementById('view-global-ranks');
+            const historyView = document.getElementById('view-player-history');
+            const tabGlobal = document.getElementById('tab-global-ranks');
+            const tabHistory = document.getElementById('tab-player-history');
+
+            if (tab === 'global') {
+                globalView.classList.remove('hidden');
+                historyView.classList.add('hidden');
+                tabGlobal.classList.add('arcade-btn-yellow');
+                tabHistory.classList.remove('arcade-btn-yellow');
+                renderGlobalLeaderboard();
+            } else {
+                globalView.classList.add('hidden');
+                historyView.classList.remove('hidden');
+                tabHistory.classList.add('arcade-btn-yellow');
+                tabGlobal.classList.remove('arcade-btn-yellow');
+                populateHistoryPlayerSelect();
+                renderPlayerHistory(document.getElementById('history-player-select').value);
+            }
+        }
+
+        function renderGlobalLeaderboard() {
+            const store = window.ScoreStorage;
+            const container = document.getElementById('global-leaderboard-rows');
+            container.innerHTML = '';
+            const top = store ? store.getGlobalTop(30) : [];
+
+            if (top.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-8">No games recorded yet. Launch a game to set the first record!</div>`;
+                return;
+            }
+
+            top.forEach((entry, idx) => {
+                const dateStr = new Date(entry.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                const row = document.createElement('div');
+                row.className = `grid grid-cols-12 items-center px-2.5 py-1.5 rounded-lg ${idx < 3 ? 'bg-cyan-500/15 border border-cyan-400/40' : 'bg-white/5'}`;
+                row.innerHTML = `
+                    <div class="col-span-2 font-orbitron font-bold text-yellow-300">${medal}</div>
+                    <div class="col-span-4 font-orbitron font-bold text-white truncate">${entry.playerName}</div>
+                    <div class="col-span-3 text-right font-orbitron font-black text-cyan-300">${entry.score.toLocaleString()}</div>
+                    <div class="col-span-3 text-right text-[11px] text-gray-400">W${entry.level} • ${dateStr}</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function populateHistoryPlayerSelect() {
+            const store = window.ScoreStorage;
+            if (!store) return;
+            const select = document.getElementById('history-player-select');
+            select.innerHTML = '';
+            store.players.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                if (p === store.currentPlayer) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderPlayerHistory(playerName) {
+            const store = window.ScoreStorage;
+            if (!store) return;
+            const stats = store.getPlayerStats(playerName);
+
+            document.getElementById('stat-best').textContent = stats.best.toLocaleString();
+            document.getElementById('stat-avg').textContent = stats.avg.toLocaleString();
+            document.getElementById('stat-games').textContent = stats.games;
+
+            // Render SVG Sparkline Chart of Player's Scores Over Time
+            const chartBox = document.getElementById('history-chart-container');
+            const history = stats.history;
+            if (history.length === 0) {
+                chartBox.innerHTML = `<div class="text-xs text-gray-400">No recorded matches for ${stats.playerName} yet.</div>`;
+            } else {
+                const w = 560, h = 95, pad = 16;
+                const maxS = Math.max(...history.map(e => e.score), 100);
+                const pts = history.map((e, i) => {
+                    const x = history.length === 1 ? w / 2 : pad + (i / (history.length - 1)) * (w - pad * 2);
+                    const y = h - pad - (e.score / maxS) * (h - pad * 2);
+                    return `${x.toFixed(1)},${y.toFixed(1)}`;
+                });
+
+                const circles = history.map((e, i) => {
+                    const x = history.length === 1 ? w / 2 : pad + (i / (history.length - 1)) * (w - pad * 2);
+                    const y = h - pad - (e.score / maxS) * (h - pad * 2);
+                    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="#ffee00" stroke="#070312" stroke-width="1.5"/>`;
+                }).join('');
+
+                chartBox.innerHTML = `
+                    <svg viewBox="0 0 ${w} ${h}" class="w-full h-full overflow-visible">
+                        <polyline fill="none" stroke="#00f3ff" stroke-width="2.5" points="${pts.join(' ')}" />
+                        ${circles}
+                    </svg>
+                `;
+            }
+
+            // Render chronological rows (newest first)
+            const logContainer = document.getElementById('player-history-rows');
+            logContainer.innerHTML = '';
+            [...history].reverse().forEach((entry, i) => {
+                const dt = new Date(entry.timestamp).toLocaleString(undefined, {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center bg-white/5 px-2.5 py-1 rounded';
+                item.innerHTML = `
+                    <span class="text-gray-300">Game #${history.length - i} • <span class="text-pink-400 font-bold">Wave ${entry.level}</span></span>
+                    <span class="font-orbitron font-bold text-cyan-300">${entry.score.toLocaleString()} PTS</span>
+                    <span class="text-[10px] text-gray-400">${dt}</span>
+                `;
+                logContainer.appendChild(item);
+            });
+        }
+
+        /**
+         * ============================================================================
+         * 7. SMART TV D-PAD SPATIAL NAVIGATION & GAMEPAD API SUPPORT
+         * ============================================================================
+         */
+        let currentTvScope = 'start';
+        let tvFocusIndex = 0;
+        let lastGamepadNavTime = 0;
+
+        function getFocusableElements(scope) {
+            const selector = `[data-tv-nav="${scope}"]`;
+            return Array.from(document.querySelectorAll(selector)).filter(el => {
+                return el.offsetParent !== null && !el.disabled;
+            });
+        }
+
+        function refreshTvFocus(scope) {
+            currentTvScope = scope;
+            tvFocusIndex = 0;
+            applyTvFocusHighlight();
+        }
+
+        function clearTvFocus() {
+            document.querySelectorAll('.tv-focused').forEach(el => el.classList.remove('tv-focused'));
+        }
+
+        function applyTvFocusHighlight() {
+            clearTvFocus();
+            const items = getFocusableElements(currentTvScope);
+            if (items.length === 0) return;
+            tvFocusIndex = ((tvFocusIndex % items.length) + items.length) % items.length;
+            const target = items[tvFocusIndex];
+            target.classList.add('tv-focused');
+            target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+
+        function moveTvFocus(delta) {
+            const items = getFocusableElements(currentTvScope);
+            if (items.length === 0) return;
+            synth.init();
+            synth.uiMove();
+            tvFocusIndex = ((tvFocusIndex + delta) % items.length + items.length) % items.length;
+            applyTvFocusHighlight();
+        }
+
+        function triggerTvFocusedElement() {
+            const items = getFocusableElements(currentTvScope);
+            if (items.length === 0) return;
+            const target = items[tvFocusIndex];
+            if (target) {
+                target.click();
+                if (target.tagName === 'SELECT' || target.tagName === 'INPUT') {
+                    target.focus();
+                }
+            }
+        }
+
+        // Poll standard HTML5 Gamepad API (Xbox, PlayStation, Android TV controllers)
+        window.addEventListener('gamepadconnected', () => {
+            document.getElementById('gamepad-indicator').classList.remove('hidden');
+            document.getElementById('gamepad-indicator').classList.add('flex');
+        });
+
+        function pollGamepad() {
+            if (!navigator.getGamepads) return;
+            const pads = navigator.getGamepads();
+            const gp = pads && pads[0];
+            if (!gp) return;
+
+            const now = performance.now();
+            const axisX = gp.axes[0] || 0;
+            const dpadLeft = gp.buttons[14]?.pressed;
+            const dpadRight = gp.buttons[15]?.pressed;
+            const dpadUp = gp.buttons[12]?.pressed;
+            const dpadDown = gp.buttons[13]?.pressed;
+            const btnA = gp.buttons[0]?.pressed;
+            const btnStart = gp.buttons[9]?.pressed;
+
+            if (gameState === 'PLAYING') {
+                if (axisX < -0.25 || dpadLeft) {
+                    paddle.x -= paddle.speed * 1.15;
+                    pointerX = null;
+                } else if (axisX > 0.25 || dpadRight) {
+                    paddle.x += paddle.speed * 1.15;
+                    pointerX = null;
+                }
+                if (btnA && now - lastGamepadNavTime > 250) {
+                    launchStuckBalls();
+                    lastGamepadNavTime = now;
+                }
+                if (btnStart && now - lastGamepadNavTime > 350) {
+                    togglePause();
+                    lastGamepadNavTime = now;
+                }
+            } else {
+                // Menu D-Pad Navigation
+                if (now - lastGamepadNavTime > 210) {
+                    if (dpadRight || dpadDown || axisX > 0.55) {
+                        moveTvFocus(1);
+                        lastGamepadNavTime = now;
+                    } else if (dpadLeft || dpadUp || axisX < -0.55) {
+                        moveTvFocus(-1);
+                        lastGamepadNavTime = now;
+                    } else if (btnA) {
+                        triggerTvFocusedElement();
+                        lastGamepadNavTime = now;
+                    }
+                }
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 8. GITHUB REPOSITORY STRUCTURE GENERATOR & EXPORTER
+         * ============================================================================
+         */
+        let currentGhFile = 'README.md';
+
+        function getGitHubFileContent(filename) {
+            if (filename === 'README.md') {
+                return `# Neon Block Blast Breaker (Mobile & Smart TV Edition)
+
+A high-octane hybrid of **Block Blast** puzzle clusters and **Neon Synth Brick Breaker**, engineered for **Mobile Touchscreens** and **Smart TV 10-Foot UI / Gamepads**.
+
+## ✨ Key Features
+- **Block Blast Polyomino Clusters:** Shatter color-coded puzzle groups for massive *Block Blast* bonuses and chain-reaction Blast Cores.
+- **Mobile & TV Optimized:** Responsive layout with safe-area insets, thumb-friendly virtual arcade deck, D-Pad spatial navigation, and Xbox/PlayStation/TV Gamepad support.
+- **Multi-Player Profiles & Score History Over Time:** Switch or create player profiles, view global rankings, and inspect each player's chronological score progression chart.
+
+## 📁 Repository File Structure
+\`\`\`text
+├── index.html        # Entry HTML5 shell & PWA headers
+├── css/
+│   └── style.css     # Neon synthwave styles & TV focus rings
+├── js/
+│   └── game.js       # Game engine, audio synth, TV nav & score storage
+├── manifest.json     # Installable Mobile & TV Web App manifest
+└── README.md         # Deployment documentation
+\`\`\`
+
+## 🚀 Deploying to GitHub Pages
+1. Create a new GitHub repository and upload the files above (or upload \`index.html\` directly as a single-file bundle).
+2. Go to **Settings → Pages** in your repository.
+3. Under **Build and deployment**, select **Deploy from a branch** and choose \`main\` / \`/(root)\`.
+4. Your game will be live at \`https://<your-username>.github.io/<repo-name>/\`.`;
+            }
+
+            if (filename === 'manifest.json') {
+                return JSON.stringify({
+                    name: "Neon Block Blast Breaker",
+                    short_name: "BlockBreaker",
+                    description: "Neon Block Blast Brick Breaker for Mobile & Smart TV",
+                    start_url: "./index.html",
+                    display: "standalone",
+                    orientation: "any",
+                    background_color: "#070312",
+                    theme_color: "#00f3ff",
+                    icons: [
+                        {
+                            src: "https://placehold.co/192x192/070312/00f3ff?text=NBBB",
+                            sizes: "192x192",
+                            type: "image/png"
+                        },
+                        {
+                            src: "https://placehold.co/512x512/070312/ff007f?text=NBBB",
+                            sizes: "512x512",
+                            type: "image/png"
+                        }
+                    ]
+                }, null, 2);
+            }
+
+            if (filename === 'css/style.css') {
+                const styleTag = document.querySelector('style');
+                return styleTag ? styleTag.innerHTML.trim() : '';
+            }
+
+            if (filename === 'js/game.js') {
+                const scripts = document.querySelectorAll('script');
+                const mainScript = scripts[scripts.length - 1];
+                return mainScript ? mainScript.innerHTML.trim() : '';
+            }
+
+            if (filename === 'index.html') {
+                return '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            }
+            return '';
+        }
+
+        function openGitHubModal() {
+            synth.init();
+            synth.uiSelect();
+            if (gameState !== 'MODAL') previousStateBeforeModal = gameState;
+            gameState = 'MODAL';
+            hideAllOverlays();
+            document.getElementById('github-modal').classList.remove('hidden');
+            selectGitHubFile('README.md');
+            refreshTvFocus('github');
+        }
+
+        function selectGitHubFile(filename) {
+            currentGhFile = filename;
+            document.getElementById('gh-current-filename').textContent = filename;
+            document.getElementById('gh-code-preview').textContent = getGitHubFileContent(filename);
+            document.querySelectorAll('.gh-file-tab').forEach(btn => {
+                if (btn.getAttribute('data-gh-file') === filename) {
+                    btn.classList.add('arcade-btn-yellow');
+                } else {
+                    btn.classList.remove('arcade-btn-yellow');
+                }
+            });
+        }
+
+        function copyCurrentGitHubFile() {
+            const text = getGitHubFileContent(currentGhFile);
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+
+            const copyBtn = document.getElementById('btn-copy-gh-file');
+            const orig = copyBtn.innerHTML;
+            copyBtn.innerHTML = `<i class="fa-solid fa-check mr-1 text-green-400"></i> COPIED!`;
+            setTimeout(() => { copyBtn.innerHTML = orig; }, 1600);
+        }
+
+        function downloadCurrentGitHubFile() {
+            const text = getGitHubFileContent(currentGhFile);
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentGhFile.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        /**
+         * ============================================================================
+         * 9. EVENT LISTENERS (Keyboard, TV Remote, Touch, Mouse, Modals)
+         * ============================================================================
+         */
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                if (e.key === 'Enter') {
+                    document.getElementById('btn-save-player').click();
+                }
+                return;
+            }
+
+            if (gameState === 'PLAYING') {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+                if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    launchStuckBalls();
+                }
+                if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') togglePause();
+            } else {
+                // Smart TV Remote / Keyboard Menu Navigation
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    moveTvFocus(1);
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    moveTvFocus(-1);
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    triggerTvFocusedElement();
+                } else if (e.key === 'Escape' || e.key === 'Backspace') {
+                    if (gameState === 'MODAL') closeModalAndRestore();
+                    else if (gameState === 'PAUSED') togglePause();
+                }
+            }
+
+            if (e.key === 'm' || e.key === 'M') {
+                const isMuted = synth.toggleMute();
+                document.getElementById('icon-sound').className = isMuted
+                    ? 'fa-solid fa-volume-xmark text-pink-500'
+                    : 'fa-solid fa-volume-high';
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        function updatePointerPos(clientX) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = LOGICAL_WIDTH / rect.width;
+            pointerX = (clientX - rect.left) * scaleX;
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameState === 'PLAYING') updatePointerPos(e.clientX);
+        });
+        canvas.addEventListener('mousedown', () => launchStuckBalls());
+        canvas.addEventListener('touchmove', (e) => {
+            if (gameState === 'PLAYING' && e.touches.length > 0) {
+                e.preventDefault();
+                updatePointerPos(e.touches[0].clientX);
+            }
+        }, { passive: false });
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameState === 'PLAYING' && e.touches.length > 0) {
+                updatePointerPos(e.touches[0].clientX);
+                launchStuckBalls();
+            }
+        }, { passive: true });
+
+        // Primary Game Buttons
+        document.getElementById('btn-start').addEventListener('click', startGame);
+        document.getElementById('btn-restart').addEventListener('click', startGame);
+        document.getElementById('btn-pause-restart').addEventListener('click', startGame);
+        document.getElementById('btn-quick-reset').addEventListener('click', () => {
+            hideAllOverlays();
+            gameState = 'START';
+            document.getElementById('start-screen').classList.remove('hidden');
+            refreshTvFocus('start');
+        });
+        document.getElementById('btn-next-level').addEventListener('click', nextLevel);
+        document.getElementById('btn-pause').addEventListener('click', togglePause);
+        document.getElementById('btn-resume').addEventListener('click', togglePause);
+        document.getElementById('btn-launch-ball').addEventListener('click', launchStuckBalls);
+
+        // Profile Modal Listeners
+        document.getElementById('btn-open-profile').addEventListener('click', openProfileModal);
+        document.getElementById('btn-start-change-player').addEventListener('click', openProfileModal);
+        document.getElementById('btn-gameover-switch').addEventListener('click', openProfileModal);
+        document.getElementById('btn-close-profile').addEventListener('click', closeModalAndRestore);
+        document.getElementById('btn-save-player').addEventListener('click', () => {
+            const val = document.getElementById('input-player-name').value;
+            if (window.ScoreStorage) window.ScoreStorage.setCurrentPlayer(val);
+            closeModalAndRestore();
+        });
+
+        // Leaderboard Modal Listeners
+        document.getElementById('btn-open-leaderboard').addEventListener('click', () => openLeaderboardModal('global'));
+        document.getElementById('btn-start-leaderboard').addEventListener('click', () => openLeaderboardModal('global'));
+        document.getElementById('btn-gameover-ranks').addEventListener('click', () => openLeaderboardModal('history'));
+        document.getElementById('btn-close-leaderboard').addEventListener('click', closeModalAndRestore);
+        document.getElementById('tab-global-ranks').addEventListener('click', () => switchLeaderboardTab('global'));
+        document.getElementById('tab-player-history').addEventListener('click', () => switchLeaderboardTab('history'));
+        document.getElementById('history-player-select').addEventListener('change', (e) => {
+            renderPlayerHistory(e.target.value);
+        });
+
+        // GitHub Exporter Modal Listeners
+        document.getElementById('btn-open-github').addEventListener('click', openGitHubModal);
+        document.getElementById('btn-close-github').addEventListener('click', closeModalAndRestore);
+        document.querySelectorAll('.gh-file-tab').forEach(btn => {
+            btn.addEventListener('click', () => selectGitHubFile(btn.getAttribute('data-gh-file')));
+        });
+        document.getElementById('btn-copy-gh-file').addEventListener('click', copyCurrentGitHubFile);
+        document.getElementById('btn-download-gh-file').addEventListener('click', downloadCurrentGitHubFile);
+
+        // Sound Toggle
+        document.getElementById('btn-sound').addEventListener('click', () => {
+            const isMuted = synth.toggleMute();
+            document.getElementById('icon-sound').className = isMuted
+                ? 'fa-solid fa-volume-xmark text-pink-500'
+                : 'fa-solid fa-volume-high';
+        });
+
+        // Touch Hold Deck Buttons
+        const bindHoldButton = (btn, dir) => {
+            const startHold = (e) => { e.preventDefault(); keys[dir] = true; };
+            const endHold = (e) => { e.preventDefault(); keys[dir] = false; };
+            btn.addEventListener('mousedown', startHold);
+            btn.addEventListener('mouseup', endHold);
+            btn.addEventListener('mouseleave', endHold);
+            btn.addEventListener('touchstart', startHold, { passive: false });
+            btn.addEventListener('touchend', endHold, { passive: false });
+        };
+        bindHoldButton(document.getElementById('btn-left'), 'left');
+        bindHoldButton(document.getElementById('btn-right'), 'right');
+
+        // Initialize on load
+        window.onload = function () {
+            initBackgroundStars();
+            initTvLetterKeyboard();
+            resetBallAndPaddle();
+            buildLevel(1);
+            updateHUD();
+            if (window.ScoreStorage) {
+                window.ScoreStorage.onChange(() => updateHUD());
+            }
+            refreshTvFocus('start');
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
