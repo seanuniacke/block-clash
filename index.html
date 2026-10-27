@@ -19,33 +19,37 @@
       color: #f1f5f9;
     }
     .board-cell {
-      transition: background-color 0.12s ease, transform 0.12s ease;
+      transition: background-color 0.12s ease;
     }
-    .board-cell.valid-target {
-      outline: 2px solid rgba(255, 255, 255, 0.85);
+    .board-cell.valid-hover {
+      outline: 2px solid rgba(56, 189, 248, 0.9);
       outline-offset: -2px;
-      background-color: rgba(255, 255, 255, 0.15) !important;
+      background-color: rgba(56, 189, 248, 0.35) !important;
     }
     .selected-tray-piece {
-      transform: scale(1.06);
-      box-shadow: 0 0 16px rgba(56, 189, 248, 0.7);
+      transform: scale(1.05);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
       border-color: #38bdf8 !important;
     }
-    @keyframes line-clear-anim {
-      0% { transform: scale(1); filter: brightness(1); }
-      50% { transform: scale(1.18); filter: brightness(2.5); }
-      100% { transform: scale(0); opacity: 0; }
-    }
-    .clearing-cell {
-      animation: line-clear-anim 0.28s forwards ease-in-out;
+    #drag-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      display: none;
+      opacity: 0.92;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
     }
   </style>
 </head>
 <body class="w-full h-[100dvh] flex flex-col justify-between overflow-hidden bg-[#090d16]">
 
-  <!-- Compact Header -->
-  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b border-slate-800 bg-slate-900/60 backdrop-blur-md shrink-0">
-    <div class="flex items-center gap-1.5">
+  <!-- Floating Drag Avatar for Desktop Mouse & Mobile Touch -->
+  <div id="drag-ghost"></div>
+
+  <!-- Compact Top Bar -->
+  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b border-slate-800 bg-slate-900/70 backdrop-blur-md shrink-0">
+    <div class="flex items-center gap-2">
       <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center shadow-md shadow-cyan-500/20 text-xs font-bold">
         ⚔️
       </div>
@@ -53,15 +57,18 @@
         <h1 class="text-sm font-bold tracking-wide leading-none text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-pink-400">
           BLOCK CLASH
         </h1>
-        <span id="level-label" class="text-[10px] text-slate-400">Level 1</span>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span id="header-mode-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-semibold">Pass &amp; Play</span>
+          <span id="header-level-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-medium">Lvl 1</span>
+        </div>
       </div>
     </div>
 
     <!-- Header Actions -->
     <div class="flex items-center gap-1.5">
-      <button id="tv-toggle-btn" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-[11px] font-semibold rounded-lg flex items-center gap-1 shadow transition">
-        <span>📺</span>
-        <span>TV</span>
+      <button id="mode-quick-toggle" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1">
+        <span id="quick-mode-icon">👥</span>
+        <span id="quick-mode-label">Pass</span>
       </button>
       <button id="history-btn" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm border border-slate-700 transition" title="Match History">
         📜
@@ -72,38 +79,12 @@
     </div>
   </header>
 
-  <!-- TV Big-Screen Arena (Hidden by Default) -->
-  <main id="tv-arena" class="hidden flex-1 w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6 p-4">
-    <div class="flex flex-col items-center justify-center gap-4">
-      <div id="tv-board" class="w-[85vmin] max-w-[520px] aspect-square bg-slate-950/80 p-3 rounded-2xl border-2 border-indigo-500/40 shadow-2xl shadow-indigo-500/20 grid grid-cols-8 gap-1.5"></div>
-      <div id="tv-turn-banner" class="text-xl font-bold px-6 py-2 rounded-full bg-slate-800 border border-slate-700 text-cyan-300">
-        Waiting for players...
-      </div>
-    </div>
-    <div class="flex flex-col items-center gap-4 bg-slate-900/80 p-6 rounded-2xl border border-slate-800 text-center max-w-sm">
-      <h2 class="text-lg font-bold text-slate-200">Scan to Play on TV</h2>
-      <div id="qrcode-container" class="p-3 bg-white rounded-xl shadow-lg"></div>
-      <p class="text-xs text-slate-400">Scan with your iPhone or Android camera to use your phone as the controller!</p>
-      <div class="w-full flex justify-around border-t border-slate-800 pt-3">
-        <div>
-          <div class="text-xs text-slate-400">Player 1</div>
-          <div id="tv-p1-score" class="text-2xl font-bold text-cyan-400">0</div>
-        </div>
-        <div class="border-r border-slate-800"></div>
-        <div>
-          <div class="text-xs text-slate-400">Player 2</div>
-          <div id="tv-p2-score" class="text-2xl font-bold text-pink-400">0</div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Mobile / Handheld Mode -->
-  <main id="handheld-arena" class="flex-1 w-full flex flex-col items-center justify-between px-2 py-1 max-w-md mx-auto">
+  <!-- Mobile & Desktop Play Arena -->
+  <main id="play-arena" class="flex-1 w-full flex flex-col items-center justify-between px-2 py-1 max-w-md mx-auto">
     
-    <!-- Compact Scoreboard (Low Profile) -->
+    <!-- Scoreboard -->
     <section class="w-full grid grid-cols-2 gap-2 mt-1 shrink-0">
-      <div id="p1-card" class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-cyan-500/50 transition">
+      <div id="p1-card" class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-cyan-500/80 transition">
         <div class="flex items-center gap-1.5 min-w-0">
           <span id="p1-icon" class="text-base shrink-0">💎</span>
           <div class="truncate leading-tight">
@@ -128,82 +109,89 @@
 
     <!-- Turn Banner -->
     <div id="turn-banner" class="w-full text-center py-1 text-xs font-semibold text-slate-300 shrink-0">
-      Player 1: Pick a piece & drop it
+      Player 1: Drag a piece or tap piece then board
     </div>
 
     <!-- The 8x8 Board -->
     <section class="w-full flex items-center justify-center flex-1 my-auto">
-      <div id="board" class="w-[88vw] max-w-[340px] max-h-[44dvh] aspect-square bg-slate-950/80 p-2 rounded-2xl border-2 border-slate-800/80 shadow-lg grid grid-cols-8 gap-1"></div>
+      <div id="board" class="w-[88vw] max-w-[340px] max-h-[44dvh] aspect-square bg-slate-950/80 p-2 rounded-2xl border-2 border-slate-800/80 shadow-lg grid grid-cols-8 gap-1 cursor-pointer"></div>
     </section>
 
     <!-- Bottom Piece Tray -->
     <section class="w-full shrink-0 flex flex-col items-center gap-1.5 pb-2">
       <div class="w-full flex items-center justify-between px-2 text-[11px] text-slate-400">
-        <span id="tray-instruction">Tap piece, then tap board:</span>
+        <span id="tray-instruction">Drag with mouse or tap to place:</span>
         <div class="flex gap-1">
-          <button id="level-btn" class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 hover:text-white">Lvl 1</button>
-          <button id="mode-btn" class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 hover:text-white">Pass &amp; Play</button>
+          <button id="level-btn" class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 hover:text-white transition">Lvl 1</button>
         </div>
       </div>
 
       <div id="tray" class="w-full flex items-center justify-around gap-2 bg-slate-900/90 p-2 rounded-2xl border border-slate-800 min-h-[76px]">
-        <!-- 3 piece slots populated dynamically -->
+        <!-- Slots populated dynamically -->
       </div>
     </section>
   </main>
 
-  <!-- Settings Modal (All Consolidated Here) -->
+  <!-- Settings & Game Modes Modal -->
   <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
         <h3 class="text-base font-bold text-white flex items-center gap-1.5">
-          <span>⚙️</span> Settings &amp; Guide
+          <span>⚙️</span> Settings &amp; Game Mode
         </h3>
         <button id="close-settings" class="text-slate-400 hover:text-white text-lg font-bold px-2">&times;</button>
+      </div>
+
+      <!-- Explicit Game Mode Switcher -->
+      <div class="p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50 flex flex-col gap-2">
+        <div class="text-sm font-semibold text-slate-200">Select Game Mode</div>
+        <div class="grid grid-cols-3 gap-1.5 text-xs">
+          <button class="mode-select-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-semibold text-center" data-mode="pass">
+            👥 Pass &amp; Play
+          </button>
+          <button class="mode-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-semibold text-center hover:bg-slate-700" data-mode="bot">
+            🤖 vs AI Bot
+          </button>
+          <button class="mode-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-semibold text-center hover:bg-slate-700" data-mode="online">
+            🌐 2 Phones
+          </button>
+        </div>
+        <div id="online-panel" class="hidden mt-2 pt-2 border-t border-slate-700 flex flex-col gap-2">
+          <div class="text-[11px] text-slate-400">Play remotely with family on two devices:</div>
+          <div class="flex gap-1.5">
+            <button id="host-online-btn" class="flex-1 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">Host Game</button>
+            <button id="join-online-btn" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition">Join Code</button>
+          </div>
+          <div id="online-code-display" class="hidden text-xs text-center font-mono py-1 px-2 rounded bg-black/50 text-cyan-300 border border-cyan-800 break-all select-all"></div>
+        </div>
       </div>
 
       <!-- Audio Toggle -->
       <div class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50">
         <div>
           <div class="text-sm font-semibold text-slate-200">Sound Effects</div>
-          <div class="text-xs text-slate-400">Drops, clears, and win chimes</div>
+          <div class="text-xs text-slate-400">Audio feedback on drop &amp; clears</div>
         </div>
         <button id="sound-toggle-btn" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-xs font-bold rounded-lg transition">
           🔊 ON
         </button>
       </div>
 
-      <!-- Theme / Emoji Selector -->
+      <!-- Theme Selector -->
       <div class="p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50 flex flex-col gap-2">
-        <div class="text-sm font-semibold text-slate-200">Visual Theme &amp; Tiles</div>
+        <div class="text-sm font-semibold text-slate-200">Visual Theme</div>
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-left font-medium active:border-cyan-400" data-theme="emoji">
-            💎 Gems &amp; 🔥 Fire
-          </button>
-          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-left font-medium" data-theme="neon">
-            🟦 Neon Cyber
-          </button>
-          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-left font-medium" data-theme="nature">
-            🍀 Clover &amp; 🍄 Shroom
-          </button>
-          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-left font-medium" data-theme="candy">
-            🍭 Sweet Candy
-          </button>
+          <button class="theme-select-btn p-2 rounded-lg border border-cyan-400 bg-slate-800 font-medium" data-theme="emoji">💎 Gems vs 🔥 Fire</button>
+          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 font-medium" data-theme="neon">🟦 Neon Cyber</button>
+          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 font-medium" data-theme="nature">🍀 Clover vs 🍄 Shroom</button>
+          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 font-medium" data-theme="candy">🍭 Sweet Candy</button>
         </div>
       </div>
 
-      <!-- Quick Rules Guide -->
-      <div class="p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50 flex flex-col gap-1.5 text-xs text-slate-300">
-        <div class="font-semibold text-slate-200">How to Play:</div>
-        <p>• Take turns dropping shapes onto the shared 8×8 board.</p>
-        <p>• Completely filling any horizontal row or vertical column clears it for +100 pts.</p>
-        <p>• <strong class="text-cyan-300">Win Condition:</strong> Trap your rival! If they have no valid spots to place any of their remaining 3 pieces on their turn, you win!</p>
-      </div>
-
-      <!-- Version & Reset -->
+      <!-- Reset -->
       <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-800">
-        <span>Block Clash v3.2</span>
-        <button id="reset-game-btn" class="text-rose-400 hover:underline">Restart Game</button>
+        <span>Block Clash v3.3</span>
+        <button id="reset-game-btn" class="text-rose-400 hover:underline font-semibold">Restart Match</button>
       </div>
     </div>
   </div>
@@ -217,11 +205,7 @@
         </h3>
         <button id="close-history" class="text-slate-400 hover:text-white text-lg font-bold px-2">&times;</button>
       </div>
-
-      <div id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 min-h-[160px]">
-        <!-- Dynamically injected match history cards -->
-      </div>
-
+      <div id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 min-h-[160px]"></div>
       <div class="flex items-center justify-between pt-2 border-t border-slate-800">
         <button id="clear-history-btn" class="text-xs text-rose-400 hover:underline">Clear History</button>
         <button id="history-done-btn" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-200">Close</button>
@@ -232,10 +216,9 @@
   <!-- Win / Game Over Overlay -->
   <div id="gameover-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border-2 border-cyan-500 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-3">
-      <div id="winner-trophy" class="text-5xl">🏆</div>
+      <div class="text-5xl">🏆</div>
       <h2 id="winner-title" class="text-2xl font-black text-cyan-300">PLAYER 1 WINS!</h2>
-      <p id="winner-reason" class="text-xs text-slate-300">Player 2 was trapped with no legal moves left.</p>
-
+      <p id="winner-reason" class="text-xs text-slate-300">Player 2 had no legal moves left.</p>
       <div class="w-full flex justify-around bg-slate-800/80 rounded-xl p-3 my-2 border border-slate-700">
         <div>
           <div class="text-[10px] text-slate-400">P1 SCORE</div>
@@ -247,7 +230,6 @@
           <div id="final-p2-score" class="text-xl font-bold text-pink-400">0</div>
         </div>
       </div>
-
       <button id="play-again-btn" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-pink-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
         Play Next Match
       </button>
@@ -255,20 +237,15 @@
   </div>
 
   <script>
-    // --- Audio Engine (Web Audio API) ---
+    // --- Audio Engine ---
     class SoundFX {
-      constructor() {
-        this.ctx = null;
-        this.enabled = true;
-      }
+      constructor() { this.ctx = null; this.enabled = true; }
       init() {
         if (!this.ctx) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           if (AudioContext) this.ctx = new AudioContext();
         }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
       }
       play(type) {
         if (!this.enabled) return;
@@ -282,9 +259,9 @@
           gain.connect(this.ctx.destination);
 
           if (type === 'place') {
-            osc.frequency.setValueAtTime(320, now);
+            osc.frequency.setValueAtTime(280, now);
             osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
-            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.setValueAtTime(0.2, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
             osc.start(now);
             osc.stop(now + 0.08);
@@ -294,17 +271,17 @@
             osc.frequency.setValueAtTime(659.25, now + 0.08);
             osc.frequency.setValueAtTime(783.99, now + 0.16);
             gain.gain.setValueAtTime(0.25, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
             osc.start(now);
-            osc.stop(now + 0.32);
+            osc.stop(now + 0.3);
           } else if (type === 'win') {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(440, now);
-            osc.frequency.exponentialRampToValueAtTime(880, now + 0.4);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
             gain.gain.setValueAtTime(0.3, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
             osc.start(now);
-            osc.stop(now + 0.5);
+            osc.stop(now + 0.45);
           }
         } catch (e) {}
       }
@@ -358,82 +335,41 @@
       }
     };
 
-    // --- Game State ---
+    // --- State ---
     const state = {
       grid: Array(8).fill(null).map(() => Array(8).fill(0)),
-      currentPlayer: 1, // 1 or 2
+      currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass', // 'pass', 'bot', 'tv-controller'
+      mode: 'pass', // 'pass', 'bot', 'online'
       currentLevel: 1,
       currentTheme: 'emoji',
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
       turnsCount: 0,
       gameOver: false,
-      isTV: false
+      peer: null,
+      conn: null,
+      myPlayerId: 1
     };
 
-    // --- Match History (LocalStorage) ---
-    function saveMatchResult(winnerNum, reason) {
-      try {
-        const history = JSON.parse(localStorage.getItem('block_clash_history') || '[]');
-        const entry = {
-          id: Date.now(),
-          date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-          winner: winnerNum === 1 ? 'Player 1' : 'Player 2',
-          winnerNum: winnerNum,
-          p1Score: state.scores[1],
-          p2Score: state.scores[2],
-          level: `Lvl ${state.currentLevel}`,
-          turns: state.turnsCount,
-          reason: reason
-        };
-        history.unshift(entry);
-        if (history.length > 25) history.pop();
-        localStorage.setItem('block_clash_history', JSON.stringify(history));
-      } catch (e) {}
-    }
+    // --- Drag & Drop Engine (Pointer API for Mouse & Touch) ---
+    const dragData = {
+      active: false,
+      slotIdx: null,
+      piece: null,
+      ghostEl: document.getElementById('drag-ghost')
+    };
 
-    function renderHistoryList() {
-      const container = document.getElementById('history-list');
-      const history = JSON.parse(localStorage.getItem('block_clash_history') || '[]');
-      if (history.length === 0) {
-        container.innerHTML = `<div class="text-center text-xs text-slate-500 py-8">No match history yet. Complete a game to see results here!</div>`;
-        return;
-      }
-      container.innerHTML = history.map(item => `
-        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-2.5 flex items-center justify-between text-xs">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">${item.winnerNum === 1 ? '💎' : '🔥'}</span>
-            <div>
-              <div class="font-bold ${item.winnerNum === 1 ? 'text-cyan-300' : 'text-pink-300'}">${item.winner} Won</div>
-              <div class="text-[10px] text-slate-400">${item.date} • ${item.level} • ${item.turns} turns</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="font-bold text-slate-200">${item.p1Score} - ${item.p2Score}</div>
-            <div class="text-[10px] text-slate-400">P1 vs P2</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // --- Board & Grid Functions ---
     function initBoard() {
       state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
-      // Level obstacles
       if (state.currentLevel === 2) {
-        // 4 center stones
         state.grid[3][3] = 99; state.grid[3][4] = 99;
         state.grid[4][3] = 99; state.grid[4][4] = 99;
       } else if (state.currentLevel === 3) {
-        // Corners
         state.grid[0][0] = 99; state.grid[0][7] = 99;
         state.grid[7][0] = 99; state.grid[7][7] = 99;
       } else if (state.currentLevel === 4) {
-        // Random obstacles
-        const spots = [[2,2],[2,5],[5,2],[5,5]];
-        spots.forEach(([r,c]) => { state.grid[r][c] = 99; });
+        [[2,2],[2,5],[5,2],[5,5]].forEach(([r,c]) => { state.grid[r][c] = 99; });
       }
     }
 
@@ -448,10 +384,10 @@
           const cell = document.createElement('div');
           cell.dataset.r = r;
           cell.dataset.c = c;
-          cell.className = 'board-cell w-full h-full rounded-md flex items-center justify-center text-sm font-bold select-none cursor-pointer ';
+          cell.className = 'board-cell w-full h-full rounded-md flex items-center justify-center text-sm font-bold select-none transition';
 
           if (val === 0) {
-            cell.className += 'bg-slate-900 border border-slate-800/80 hover:bg-slate-800/50';
+            cell.className += 'bg-slate-900 border border-slate-800/80 hover:bg-slate-800/40';
           } else if (val === 1) {
             cell.className += theme.p1Class;
             cell.textContent = theme.p1Char;
@@ -469,7 +405,6 @@
       }
     }
 
-    // --- Piece & Tray Logic ---
     function replenishTray() {
       for (let i = 0; i < 3; i++) {
         const rand = SHAPES[Math.floor(Math.random() * SHAPES.length)];
@@ -482,11 +417,10 @@
     function renderTrayDOM() {
       const tray = document.getElementById('tray');
       tray.innerHTML = '';
-      const theme = THEMES[state.currentTheme];
 
       state.trayPieces.forEach((piece, idx) => {
         const slot = document.createElement('div');
-        slot.className = `flex-1 h-14 bg-slate-950/70 rounded-xl border border-slate-800 flex items-center justify-center cursor-pointer transition p-1 ${
+        slot.className = `flex-1 h-14 bg-slate-950/70 rounded-xl border border-slate-800 flex items-center justify-center cursor-grab active:cursor-grabbing transition p-1 ${
           state.selectedPieceIdx === idx ? 'selected-tray-piece' : 'hover:border-slate-700'
         }`;
 
@@ -494,11 +428,10 @@
           slot.innerHTML = `<span class="text-[10px] text-slate-700 font-bold">USED</span>`;
           slot.classList.add('opacity-30', 'cursor-default');
         } else {
-          // Render preview miniature
           const rows = piece.matrix.length;
           const cols = piece.matrix[0].length;
           const container = document.createElement('div');
-          container.className = 'grid gap-0.5';
+          container.className = 'grid gap-0.5 pointer-events-none';
           container.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
           container.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
 
@@ -513,17 +446,143 @@
           });
 
           slot.appendChild(container);
-          slot.addEventListener('click', () => {
+
+          // Pointer Down: Starts Drag or Prepares Tap Selection
+          slot.addEventListener('pointerdown', (e) => {
+            if (state.gameOver) return;
+            if (state.mode === 'bot' && state.currentPlayer === 2) return;
+            if (state.mode === 'online' && state.currentPlayer !== state.myPlayerId) return;
+
             sfx.init();
-            state.selectedPieceIdx = (state.selectedPieceIdx === idx) ? null : idx;
-            renderTrayDOM();
-            highlightValidMoves();
+            startDragging(e, piece, idx);
           });
         }
         tray.appendChild(slot);
       });
     }
 
+    // --- Drag & Drop Handlers ---
+    function startDragging(e, piece, slotIdx) {
+      dragData.active = true;
+      dragData.slotIdx = slotIdx;
+      dragData.piece = piece;
+      state.selectedPieceIdx = slotIdx;
+      renderTrayDOM();
+
+      // Build Ghost Element
+      const ghost = dragData.ghostEl;
+      ghost.innerHTML = '';
+      const rows = piece.matrix.length;
+      const cols = piece.matrix[0].length;
+      const container = document.createElement('div');
+      container.className = 'grid gap-1 bg-slate-900/90 p-2 rounded-xl border border-cyan-400 shadow-2xl';
+      container.style.gridTemplateRows = `repeat(${rows}, 28px)`;
+      container.style.gridTemplateColumns = `repeat(${cols}, 28px)`;
+
+      piece.matrix.forEach(r => {
+        r.forEach(val => {
+          const c = document.createElement('div');
+          c.className = `w-7 h-7 rounded-md ${val ? (state.currentPlayer === 1 ? 'bg-cyan-400' : 'bg-pink-400') : 'bg-transparent'}`;
+          container.appendChild(c);
+        });
+      });
+
+      ghost.appendChild(container);
+      ghost.style.display = 'block';
+      moveGhost(e.clientX, e.clientY);
+
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerCancel);
+    }
+
+    function moveGhost(x, y) {
+      const ghost = dragData.ghostEl;
+      // Slight upward offset on mobile touch so the finger doesn't block vision
+      const isTouch = window.matchMedia('(pointer: coarse)').matches;
+      const offsetY = isTouch ? -45 : 0;
+      ghost.style.left = `${x}px`;
+      ghost.style.top = `${y + offsetY}px`;
+    }
+
+    function onPointerMove(e) {
+      if (!dragData.active) return;
+      moveGhost(e.clientX, e.clientY);
+      updateHoverPreview(e.clientX, e.clientY);
+    }
+
+    function getBoardCellUnder(clientX, clientY) {
+      const isTouch = window.matchMedia('(pointer: coarse)').matches;
+      const targetY = isTouch ? clientY - 45 : clientY;
+      const els = document.elementsFromPoint(clientX, targetY);
+      for (const el of els) {
+        if (el && el.classList && el.classList.contains('board-cell')) {
+          return {
+            r: parseInt(el.dataset.r, 10),
+            c: parseInt(el.dataset.c, 10)
+          };
+        }
+      }
+      return null;
+    }
+
+    function updateHoverPreview(clientX, clientY) {
+      clearHoverPreview();
+      const cell = getBoardCellUnder(clientX, clientY);
+      if (!cell || !dragData.piece) return;
+
+      const bestSpot = findBestFit(dragData.piece, cell.r, cell.c);
+      if (bestSpot) {
+        const m = dragData.piece.matrix;
+        for (let r = 0; r < m.length; r++) {
+          for (let c = 0; c < m[r].length; c++) {
+            if (m[r][c]) {
+              const target = document.querySelector(`.board-cell[data-r="${bestSpot.r + r}"][data-c="${bestSpot.c + c}"]`);
+              if (target) target.classList.add('valid-hover');
+            }
+          }
+        }
+      }
+    }
+
+    function clearHoverPreview() {
+      document.querySelectorAll('.board-cell.valid-hover').forEach(c => c.classList.remove('valid-hover'));
+    }
+
+    function onPointerUp(e) {
+      if (!dragData.active) return;
+      clearHoverPreview();
+      dragData.ghostEl.style.display = 'none';
+
+      const cell = getBoardCellUnder(e.clientX, e.clientY);
+      let placed = false;
+
+      if (cell && dragData.piece) {
+        const best = findBestFit(dragData.piece, cell.r, cell.c);
+        if (best) {
+          commitPieceDrop(dragData.piece, best.r, best.c, dragData.slotIdx);
+          placed = true;
+        }
+      }
+
+      dragData.active = false;
+      dragData.piece = null;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
+    }
+
+    function onPointerCancel() {
+      clearHoverPreview();
+      dragData.ghostEl.style.display = 'none';
+      dragData.active = false;
+      dragData.piece = null;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
+    }
+
+    // --- Placement Engine (Exact + Snapping) ---
     function canPlace(shape, targetR, targetC) {
       const m = shape.matrix;
       for (let r = 0; r < m.length; r++) {
@@ -539,20 +598,37 @@
       return true;
     }
 
-    function highlightValidMoves() {
-      // Clear old highlights
-      document.querySelectorAll('.board-cell').forEach(c => c.classList.remove('valid-target'));
-      if (state.selectedPieceIdx === null || !state.trayPieces[state.selectedPieceIdx]) return;
+    // Centering + Adjacent Search so clicking/dropping inside open areas always succeeds
+    function findBestFit(piece, clickedR, clickedC) {
+      if (canPlace(piece, clickedR, clickedC)) {
+        return { r: clickedR, c: clickedC };
+      }
 
-      const piece = state.trayPieces[state.selectedPieceIdx];
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          if (canPlace(piece, r, c)) {
-            const el = document.querySelector(`.board-cell[data-r="${r}"][data-c="${c}"]`);
-            if (el) el.classList.add('valid-target');
-          }
+      const rows = piece.matrix.length;
+      const cols = piece.matrix[0].length;
+      const centerR = clickedR - Math.floor(rows / 2);
+      const centerC = clickedC - Math.floor(cols / 2);
+
+      if (canPlace(piece, centerR, centerC)) {
+        return { r: centerR, c: centerC };
+      }
+
+      // 1-to-2 cell perimeter search
+      const offsets = [
+        [0, -1], [-1, 0], [0, 1], [1, 0],
+        [-1, -1], [-1, 1], [1, -1], [1, 1],
+        [0, -2], [-2, 0], [0, 2], [2, 0],
+        [-1, -2], [-2, -1], [1, -2], [2, -1]
+      ];
+
+      for (const [dr, dc] of offsets) {
+        const tr = clickedR + dr;
+        const tc = clickedC + dc;
+        if (canPlace(piece, tr, tc)) {
+          return { r: tr, c: tc };
         }
       }
+      return null;
     }
 
     function onCellClicked(r, c) {
@@ -561,23 +637,9 @@
       const piece = state.trayPieces[state.selectedPieceIdx];
       if (!piece) return;
 
-      // Smart Placement: Check exact cell first, then check small adjacent offsets
-      let placeR = null, placeC = null;
-      if (canPlace(piece, r, c)) {
-        placeR = r; placeC = c;
-      } else {
-        const offsets = [[-1, 0], [0, -1], [-1, -1], [1, 0], [0, 1]];
-        for (const [dr, dc] of offsets) {
-          if (canPlace(piece, r + dr, c + dc)) {
-            placeR = r + dr;
-            placeC = c + dc;
-            break;
-          }
-        }
-      }
-
-      if (placeR !== null && placeC !== null) {
-        commitPieceDrop(piece, placeR, placeC, state.selectedPieceIdx);
+      const best = findBestFit(piece, r, c);
+      if (best) {
+        commitPieceDrop(piece, best.r, best.c, state.selectedPieceIdx);
       }
     }
 
@@ -592,15 +654,12 @@
       }
       sfx.play('place');
 
-      // Consume piece from tray
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
       state.turnsCount++;
 
-      // Check row/column clears
       checkAndClearLines();
 
-      // Check if all 3 tray pieces used
       if (state.trayPieces.every(p => p === null)) {
         replenishTray();
       } else {
@@ -612,12 +671,11 @@
       updateUI();
       renderBoardDOM();
 
-      // Check if current player is trapped
       checkGameEndCondition();
 
-      // If playing bot & it's player 2's turn
+      // Bot Turn trigger
       if (!state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
-        setTimeout(executeBotTurn, 400);
+        setTimeout(executeBotTurn, 450);
       }
     }
 
@@ -636,10 +694,10 @@
         if (full) colsToClear.push(c);
       }
 
-      const totalCleared = rowsToClear.length + colsToClear.length;
-      if (totalCleared > 0) {
+      const total = rowsToClear.length + colsToClear.length;
+      if (total > 0) {
         sfx.play('clear');
-        state.scores[state.currentPlayer] += totalCleared * 100;
+        state.scores[state.currentPlayer] += total * 100;
 
         rowsToClear.forEach(r => {
           for (let c = 0; c < 8; c++) {
@@ -655,10 +713,10 @@
     }
 
     function hasAnyValidMove(playerNum) {
-      const availablePieces = state.trayPieces.filter(p => p !== null);
-      if (availablePieces.length === 0) return true;
+      const available = state.trayPieces.filter(p => p !== null);
+      if (available.length === 0) return true;
 
-      for (const piece of availablePieces) {
+      for (const piece of available) {
         for (let r = 0; r < 8; r++) {
           for (let c = 0; c < 8; c++) {
             if (canPlace(piece, r, c)) return true;
@@ -673,7 +731,7 @@
         state.gameOver = true;
         const winner = state.currentPlayer === 1 ? 2 : 1;
         sfx.play('win');
-        saveMatchResult(winner, `Player ${state.currentPlayer} was trapped with no legal moves left.`);
+        saveMatchResult(winner);
         showGameOverModal(winner);
       }
     }
@@ -682,19 +740,15 @@
       const modal = document.getElementById('gameover-modal');
       const title = document.getElementById('winner-title');
       const reason = document.getElementById('winner-reason');
-      const p1S = document.getElementById('final-p1-score');
-      const p2S = document.getElementById('final-p2-score');
-
       title.textContent = `PLAYER ${winnerNum} WINS!`;
       title.className = `text-2xl font-black ${winnerNum === 1 ? 'text-cyan-300' : 'text-pink-300'}`;
       reason.textContent = `Player ${winnerNum === 1 ? '2' : '1'} had no open moves left on the board!`;
-      p1S.textContent = state.scores[1];
-      p2S.textContent = state.scores[2];
-
+      document.getElementById('final-p1-score').textContent = state.scores[1];
+      document.getElementById('final-p2-score').textContent = state.scores[2];
       modal.classList.remove('hidden');
     }
 
-    // --- AI Sparring Bot ---
+    // --- AI Bot ---
     function executeBotTurn() {
       const available = [];
       state.trayPieces.forEach((piece, idx) => {
@@ -714,7 +768,6 @@
       }
 
       if (validMoves.length > 0) {
-        // Pick random valid move
         const chosen = validMoves[Math.floor(Math.random() * validMoves.length)];
         commitPieceDrop(chosen.piece, chosen.r, chosen.c, chosen.slotIdx);
       } else {
@@ -724,7 +777,6 @@
 
     // --- UI State Management ---
     function updateUI() {
-      // Score cards
       document.getElementById('p1-score').textContent = state.scores[1];
       document.getElementById('p2-score').textContent = state.scores[2];
 
@@ -741,7 +793,7 @@
         p2Card.classList.remove('border-pink-500/80');
         p1Status.textContent = 'YOUR TURN';
         p2Status.textContent = 'Waiting...';
-        banner.textContent = 'Player 1: Pick a piece & drop it';
+        banner.textContent = 'Player 1: Drag a piece or tap piece then board';
       } else {
         p2Card.classList.remove('opacity-60');
         p2Card.classList.add('border-pink-500/80');
@@ -749,12 +801,40 @@
         p1Card.classList.remove('border-cyan-500/80');
         p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
         p1Status.textContent = 'Waiting...';
-        banner.textContent = state.mode === 'bot' ? 'Bot is picking a move...' : 'Player 2: Pick a piece & drop it';
+        banner.textContent = state.mode === 'bot' ? 'Bot is picking a move...' : 'Player 2: Drag a piece or tap piece then board';
       }
 
       const theme = THEMES[state.currentTheme];
       document.getElementById('p1-icon').textContent = theme.p1Char || '💎';
       document.getElementById('p2-icon').textContent = theme.p2Char || '🔥';
+
+      // Header Labels
+      const modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', online: '2-Player Online' };
+      const modeIcons = { pass: '👥', bot: '🤖', online: '🌐' };
+      document.getElementById('header-mode-badge').textContent = modeNames[state.mode];
+      document.getElementById('quick-mode-label').textContent = state.mode === 'pass' ? 'Pass' : (state.mode === 'bot' ? 'Bot' : 'Online');
+      document.getElementById('quick-mode-icon').textContent = modeIcons[state.mode];
+      document.getElementById('p2-name').textContent = state.mode === 'bot' ? 'Bot 🤖' : 'P2 (Pink)';
+    }
+
+    function setGameMode(newMode) {
+      state.mode = newMode;
+      document.querySelectorAll('.mode-select-btn').forEach(btn => {
+        if (btn.dataset.mode === newMode) {
+          btn.className = 'mode-select-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-semibold text-center';
+        } else {
+          btn.className = 'mode-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-semibold text-center hover:bg-slate-700';
+        }
+      });
+
+      const onlinePanel = document.getElementById('online-panel');
+      if (newMode === 'online') {
+        onlinePanel.classList.remove('hidden');
+      } else {
+        onlinePanel.classList.add('hidden');
+      }
+
+      resetGame();
     }
 
     function resetGame() {
@@ -769,14 +849,63 @@
       updateUI();
     }
 
-    // --- Event Listeners & Modals ---
+    function saveMatchResult(winnerNum) {
+      try {
+        const history = JSON.parse(localStorage.getItem('block_clash_history') || '[]');
+        history.unshift({
+          id: Date.now(),
+          date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          winner: winnerNum === 1 ? 'Player 1' : (state.mode === 'bot' ? 'Bot 🤖' : 'Player 2'),
+          winnerNum,
+          p1Score: state.scores[1],
+          p2Score: state.scores[2],
+          level: `Lvl ${state.currentLevel}`,
+          mode: state.mode
+        });
+        if (history.length > 20) history.pop();
+        localStorage.setItem('block_clash_history', JSON.stringify(history));
+      } catch (e) {}
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('history-list');
+      const history = JSON.parse(localStorage.getItem('block_clash_history') || '[]');
+      if (history.length === 0) {
+        container.innerHTML = `<div class="text-center text-xs text-slate-500 py-8">No games recorded yet!</div>`;
+        return;
+      }
+      container.innerHTML = history.map(item => `
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-2.5 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">${item.winnerNum === 1 ? '💎' : '🔥'}</span>
+            <div>
+              <div class="font-bold ${item.winnerNum === 1 ? 'text-cyan-300' : 'text-pink-300'}">${item.winner} Won</div>
+              <div class="text-[10px] text-slate-400">${item.date} • ${item.level} • ${item.mode}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-bold text-slate-200">${item.p1Score} - ${item.p2Score}</div>
+            <div class="text-[10px] text-slate-400">Score</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- Initialization & Listeners ---
     document.addEventListener('DOMContentLoaded', () => {
       initBoard();
       replenishTray();
       renderBoardDOM();
       updateUI();
 
-      // Settings Modal toggles
+      // Quick Mode Toggle in Header: cycles pass -> bot -> online
+      document.getElementById('mode-quick-toggle').addEventListener('click', () => {
+        const order = ['pass', 'bot', 'online'];
+        const nextIdx = (order.indexOf(state.mode) + 1) % order.length;
+        setGameMode(order[nextIdx]);
+      });
+
+      // Settings Modal
       const settingsModal = document.getElementById('settings-modal');
       document.getElementById('settings-btn').addEventListener('click', () => {
         settingsModal.classList.remove('hidden');
@@ -785,7 +914,14 @@
         settingsModal.classList.add('hidden');
       });
 
-      // Sound Toggle inside Settings
+      // Explicit Mode buttons inside Settings
+      document.querySelectorAll('.mode-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setGameMode(btn.dataset.mode);
+        });
+      });
+
+      // Audio Toggle
       const soundBtn = document.getElementById('sound-toggle-btn');
       soundBtn.addEventListener('click', () => {
         sfx.enabled = !sfx.enabled;
@@ -795,129 +931,47 @@
           : 'px-3 py-1 bg-slate-700 text-slate-400 text-xs font-bold rounded-lg transition';
       });
 
-      // Theme Selectors inside Settings
+      // Theme Picker
       document.querySelectorAll('.theme-select-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           state.currentTheme = btn.dataset.theme;
-          document.querySelectorAll('.theme-select-btn').forEach(b => b.classList.remove('border-cyan-400'));
-          btn.classList.add('border-cyan-400');
+          document.querySelectorAll('.theme-select-btn').forEach(b => b.classList.replace('border-cyan-400', 'border-slate-700'));
+          btn.classList.replace('border-slate-700', 'border-cyan-400');
           renderBoardDOM();
           renderTrayDOM();
           updateUI();
         });
       });
 
-      // History Modal toggles
+      // History Modal
       const historyModal = document.getElementById('history-modal');
       document.getElementById('history-btn').addEventListener('click', () => {
         renderHistoryList();
         historyModal.classList.remove('hidden');
       });
-      document.getElementById('close-history').addEventListener('click', () => {
-        historyModal.classList.add('hidden');
-      });
-      document.getElementById('history-done-btn').addEventListener('click', () => {
-        historyModal.classList.add('hidden');
-      });
+      document.getElementById('close-history').addEventListener('click', () => historyModal.classList.add('hidden'));
+      document.getElementById('history-done-btn').addEventListener('click', () => historyModal.classList.add('hidden'));
       document.getElementById('clear-history-btn').addEventListener('click', () => {
         localStorage.removeItem('block_clash_history');
         renderHistoryList();
       });
 
-      // Reset / Play Again
-      document.getElementById('reset-game-btn').addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
-        resetGame();
-      });
-      document.getElementById('play-again-btn').addEventListener('click', () => {
-        resetGame();
-      });
-
-      // Level Switcher button
+      // Level Switcher
       const levelBtn = document.getElementById('level-btn');
       levelBtn.addEventListener('click', () => {
         state.currentLevel = (state.currentLevel % 4) + 1;
         levelBtn.textContent = `Lvl ${state.currentLevel}`;
-        document.getElementById('level-label').textContent = `Level ${state.currentLevel}`;
+        document.getElementById('header-level-badge').textContent = `Lvl ${state.currentLevel}`;
         resetGame();
       });
 
-      // Mode Switcher button (Pass & Play vs Bot)
-      const modeBtn = document.getElementById('mode-btn');
-      modeBtn.addEventListener('click', () => {
-        state.mode = state.mode === 'pass' ? 'bot' : 'pass';
-        modeBtn.textContent = state.mode === 'pass' ? 'Pass & Play' : 'vs Bot 🤖';
-        document.getElementById('p2-name').textContent = state.mode === 'pass' ? 'P2 (Pink)' : 'Bot 🤖';
+      // Restart / Play Again
+      document.getElementById('reset-game-btn').addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
         resetGame();
       });
-
-      // TV Mode Toggle
-      const tvBtn = document.getElementById('tv-toggle-btn');
-      const tvArena = document.getElementById('tv-arena');
-      const handheldArena = document.getElementById('handheld-arena');
-
-      tvBtn.addEventListener('click', () => {
-        state.isTV = !state.isTV;
-        if (state.isTV) {
-          handheldArena.classList.add('hidden');
-          tvArena.classList.remove('hidden');
-          tvBtn.classList.replace('bg-indigo-600', 'bg-rose-600');
-          tvBtn.innerHTML = '<span>📱</span><span>Phone</span>';
-          initTVMode();
-        } else {
-          tvArena.classList.add('hidden');
-          handheldArena.classList.remove('hidden');
-          tvBtn.classList.replace('bg-rose-600', 'bg-indigo-600');
-          tvBtn.innerHTML = '<span>📺</span><span>TV</span>';
-        }
-      });
-
-      // Check URL parameters (e.g. ?tv=1)
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('tv') === '1') {
-        tvBtn.click();
-      }
+      document.getElementById('play-again-btn').addEventListener('click', resetGame);
     });
-
-    // --- TV Mode QR Setup ---
-    function initTVMode() {
-      const qrEl = document.getElementById('qrcode-container');
-      qrEl.innerHTML = '';
-      const currentUrl = window.location.origin + window.location.pathname;
-      new QRCode(qrEl, {
-        text: currentUrl,
-        width: 140,
-        height: 140
-      });
-      renderTVBoard();
-    }
-
-    function renderTVBoard() {
-      const tvBoard = document.getElementById('tv-board');
-      tvBoard.innerHTML = '';
-      const theme = THEMES[state.currentTheme];
-
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          const val = state.grid[r][c];
-          const cell = document.createElement('div');
-          cell.className = 'w-full h-full rounded-lg flex items-center justify-center text-xl font-bold ';
-          if (val === 0) {
-            cell.className += 'bg-slate-900 border border-slate-800';
-          } else if (val === 1) {
-            cell.className += theme.p1Class;
-            cell.textContent = theme.p1Char;
-          } else if (val === 2) {
-            cell.className += theme.p2Class;
-            cell.textContent = theme.p2Char;
-          } else if (val === 99) {
-            cell.className += 'bg-slate-800 border border-slate-700 text-slate-400';
-            cell.textContent = theme.stoneChar;
-          }
-          tvBoard.appendChild(cell);
-        }
-      }
-    }
   </script>
 </body>
 </html>
