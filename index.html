@@ -319,7 +319,7 @@
 
   <!-- =========================================================================
        SETTINGS & PREFERENCES MODAL
-       ========================================================================= -->
+       ======================================================================== -->
   <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="panel-bg w-full max-w-sm rounded-2xl p-5 border shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-700 pb-2">
@@ -588,8 +588,7 @@
       startX: 0,
       startY: 0,
       hasMoved: false,
-      ghostEl: document.getElementById('floating-drag-ghost'),
-      capturedPointerId: null
+      ghostEl: document.getElementById('floating-drag-ghost')
     };
 
     function initBoard() {
@@ -744,6 +743,7 @@
           slot.addEventListener('pointerdown', (e) => {
             if (state.gameOver) return;
             if (state.mode === 'bot' && state.currentPlayer === 2) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
             sfx.init();
 
             drag.active = true;
@@ -752,20 +752,20 @@
             drag.startY = e.clientY;
             drag.piece = piece;
             drag.slotIdx = idx;
-            drag.capturedPointerId = e.pointerId;
 
             state.selectedPieceIdx = idx;
-            renderTrayDOM();
+
+            // Highlight selected slot directly without rebuilding elements
+            document.querySelectorAll('#tray > div').forEach((s, i) => {
+              s.classList.toggle('selected-tray-slot', i === idx);
+            });
 
             buildGhost(piece);
 
-            try {
-              slot.setPointerCapture(e.pointerId);
-            } catch(err) {}
-
-            slot.addEventListener('pointermove', onPointerMove);
-            slot.addEventListener('pointerup', onPointerUp);
-            slot.addEventListener('pointercancel', onPointerCancel);
+            // Listen globally on window so releases outside the slot are cleanly caught
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('pointercancel', onPointerCancel);
           });
         }
         tray.appendChild(slot);
@@ -817,17 +817,10 @@
 
     function onPointerUp(e) {
       if (!drag.active) return;
-      const targetSlot = e.currentTarget;
 
-      try {
-        if (drag.capturedPointerId !== null) {
-          targetSlot.releasePointerCapture(drag.capturedPointerId);
-        }
-      } catch(err) {}
-
-      targetSlot.removeEventListener('pointermove', onPointerMove);
-      targetSlot.removeEventListener('pointerup', onPointerUp);
-      targetSlot.removeEventListener('pointercancel', onPointerCancel);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
 
       drag.ghostEl.style.display = 'none';
       clearCellHover();
@@ -844,23 +837,17 @@
 
       drag.active = false;
       drag.piece = null;
-      drag.capturedPointerId = null;
     }
 
     function onPointerCancel(e) {
-      const targetSlot = e.currentTarget;
-      try {
-        if (drag.capturedPointerId !== null) targetSlot.releasePointerCapture(drag.capturedPointerId);
-      } catch(err) {}
-      targetSlot.removeEventListener('pointermove', onPointerMove);
-      targetSlot.removeEventListener('pointerup', onPointerUp);
-      targetSlot.removeEventListener('pointercancel', onPointerCancel);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
 
       drag.ghostEl.style.display = 'none';
       clearCellHover();
       drag.active = false;
       drag.piece = null;
-      drag.capturedPointerId = null;
     }
 
     function getCellUnderPoint(x, y) {
