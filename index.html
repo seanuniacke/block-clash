@@ -5,228 +5,239 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Block Clash Duel</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    * { touch-action: manipulation; box-sizing: border-box; }
+    * { box-sizing: border-box; }
     body {
       font-family: 'Fredoka', cursive, sans-serif;
       user-select: none;
       -webkit-user-select: none;
       overscroll-behavior: none;
-      background: #090d16;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    /* Dark Theme (Default) */
+    body.theme-dark {
+      background-color: #090d16;
       color: #f1f5f9;
     }
-    .board-cell {
-      transition: background-color 0.12s ease;
+    body.theme-dark .panel-bg { background-color: rgba(15, 23, 42, 0.85); border-color: #1e293b; }
+    body.theme-dark .board-bg { background-color: #030712; border-color: #1e293b; }
+    body.theme-dark .empty-cell { background-color: #0f172a; border: 1px solid #1e293b; }
+    body.theme-dark .empty-cell:hover { background-color: #1e293b; }
+
+    /* Light Theme */
+    body.theme-light {
+      background-color: #f1f5f9;
+      color: #0f172a;
     }
-    .board-cell.valid-hover {
-      outline: 2px solid rgba(56, 189, 248, 0.9);
+    body.theme-light .panel-bg { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); }
+    body.theme-light .board-bg { background-color: #e2e8f0; border-color: #cbd5e1; }
+    body.theme-light .empty-cell { background-color: #ffffff; border: 1px solid #cbd5e1; }
+    body.theme-light .empty-cell:hover { background-color: #f8fafc; }
+
+    /* Active Footprint Hover (Shows exact piece shape) */
+    .cell-preview-valid {
+      background-color: rgba(56, 189, 248, 0.55) !important;
+      outline: 2px solid #38bdf8 !important;
       outline-offset: -2px;
-      background-color: rgba(56, 189, 248, 0.35) !important;
+      transform: scale(0.96);
     }
-    .selected-tray-piece {
-      transform: scale(1.05);
-      box-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
+    .cell-preview-invalid {
+      background-color: rgba(244, 63, 94, 0.45) !important;
+      outline: 2px solid #f43f5e !important;
+      outline-offset: -2px;
+    }
+    .selected-tray-slot {
       border-color: #38bdf8 !important;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+      transform: scale(1.04);
     }
-    #drag-ghost {
+    #floating-drag-ghost {
       position: fixed;
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
       display: none;
-      opacity: 0.92;
-      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+      opacity: 0.95;
+      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.4));
     }
   </style>
 </head>
-<body class="w-full h-[100dvh] flex flex-col justify-between overflow-hidden bg-[#090d16]">
+<body class="theme-dark w-full h-[100dvh] flex flex-col justify-between overflow-hidden">
 
-  <!-- Floating Drag Avatar for Desktop Mouse & Mobile Touch -->
-  <div id="drag-ghost"></div>
+  <!-- Floating Drag Element -->
+  <div id="floating-drag-ghost"></div>
 
-  <!-- Compact Top Bar -->
-  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b border-slate-800 bg-slate-900/70 backdrop-blur-md shrink-0">
+  <!-- Header -->
+  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b panel-bg shrink-0">
     <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center shadow-md shadow-cyan-500/20 text-xs font-bold">
+      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shadow">
         ⚔️
       </div>
       <div>
-        <h1 class="text-sm font-bold tracking-wide leading-none text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-pink-400">
+        <h1 class="text-sm font-bold tracking-wide leading-none text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500">
           BLOCK CLASH
         </h1>
-        <div class="flex items-center gap-1.5 mt-0.5">
-          <span id="header-mode-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-semibold">Pass &amp; Play</span>
-          <span id="header-level-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-medium">Lvl 1</span>
+        <div class="flex items-center gap-1 mt-0.5">
+          <span id="badge-mode" class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800 font-semibold">Pass &amp; Play</span>
+          <span id="badge-lvl" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-medium">Lvl 1</span>
         </div>
       </div>
     </div>
 
-    <!-- Header Actions -->
+    <!-- Actions: Mode, Light/Dark, History, Settings -->
     <div class="flex items-center gap-1.5">
-      <button id="mode-quick-toggle" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1">
-        <span id="quick-mode-icon">👥</span>
-        <span id="quick-mode-label">Pass</span>
+      <button id="theme-mode-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm transition" title="Toggle Light / Dark Mode">
+        ☀️
       </button>
-      <button id="history-btn" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm border border-slate-700 transition" title="Match History">
+      <button id="quick-mode-btn" class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-cyan-300 transition flex items-center gap-1">
+        <span>👥</span>
+        <span id="quick-mode-text">Pass</span>
+      </button>
+      <button id="history-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm transition" title="Match History">
         📜
       </button>
-      <button id="settings-btn" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm border border-slate-700 transition" title="Settings">
+      <button id="settings-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm transition" title="Settings">
         ⚙️
       </button>
     </div>
   </header>
 
-  <!-- Mobile & Desktop Play Arena -->
-  <main id="play-arena" class="flex-1 w-full flex flex-col items-center justify-between px-2 py-1 max-w-md mx-auto">
+  <!-- Main Playing Arena -->
+  <main class="flex-1 w-full flex flex-col items-center justify-between px-2 py-1 max-w-md mx-auto">
     
     <!-- Scoreboard -->
     <section class="w-full grid grid-cols-2 gap-2 mt-1 shrink-0">
-      <div id="p1-card" class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-cyan-500/80 transition">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <span id="p1-icon" class="text-base shrink-0">💎</span>
+      <div id="p1-card" class="panel-bg flex items-center justify-between px-3 py-1.5 rounded-xl border border-cyan-500/80 transition">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-lg">💎</span>
           <div class="truncate leading-tight">
-            <div id="p1-name" class="text-xs font-bold text-cyan-300 truncate">P1 (Blue)</div>
-            <div id="p1-status" class="text-[10px] text-cyan-400 font-semibold leading-none">YOUR TURN</div>
+            <div class="text-xs font-bold text-cyan-400 truncate">P1 (Blue)</div>
+            <div id="p1-turn-text" class="text-[10px] text-cyan-300 font-semibold leading-none">YOUR TURN</div>
           </div>
         </div>
-        <span id="p1-score" class="text-base font-bold text-cyan-200 ml-1">0</span>
+        <span id="p1-score" class="text-base font-bold text-cyan-400 ml-1">0</span>
       </div>
 
-      <div id="p2-card" class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 transition opacity-60">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <span id="p2-icon" class="text-base shrink-0">🔥</span>
+      <div id="p2-card" class="panel-bg flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-700 transition opacity-50">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-lg">🔥</span>
           <div class="truncate leading-tight">
-            <div id="p2-name" class="text-xs font-bold text-pink-300 truncate">P2 (Pink)</div>
-            <div id="p2-status" class="text-[10px] text-slate-400 leading-none">Waiting...</div>
+            <div id="p2-label" class="text-xs font-bold text-pink-400 truncate">P2 (Pink)</div>
+            <div id="p2-turn-text" class="text-[10px] text-slate-400 leading-none">Waiting...</div>
           </div>
         </div>
-        <span id="p2-score" class="text-base font-bold text-pink-200 ml-1">0</span>
+        <span id="p2-score" class="text-base font-bold text-pink-400 ml-1">0</span>
       </div>
     </section>
 
     <!-- Turn Banner -->
-    <div id="turn-banner" class="w-full text-center py-1 text-xs font-semibold text-slate-300 shrink-0">
-      Player 1: Drag a piece or tap piece then board
+    <div id="turn-banner" class="w-full text-center py-1 text-xs font-semibold shrink-0 opacity-80">
+      Drag a piece with mouse/touch or click piece then grid
     </div>
 
-    <!-- The 8x8 Board -->
+    <!-- 8x8 Board -->
     <section class="w-full flex items-center justify-center flex-1 my-auto">
-      <div id="board" class="w-[88vw] max-w-[340px] max-h-[44dvh] aspect-square bg-slate-950/80 p-2 rounded-2xl border-2 border-slate-800/80 shadow-lg grid grid-cols-8 gap-1 cursor-pointer"></div>
+      <div id="board" class="board-bg w-[88vw] max-w-[340px] max-h-[44dvh] aspect-square p-2 rounded-2xl border-2 shadow-xl grid grid-cols-8 gap-1 cursor-pointer"></div>
     </section>
 
-    <!-- Bottom Piece Tray -->
-    <section class="w-full shrink-0 flex flex-col items-center gap-1.5 pb-2">
-      <div class="w-full flex items-center justify-between px-2 text-[11px] text-slate-400">
-        <span id="tray-instruction">Drag with mouse or tap to place:</span>
-        <div class="flex gap-1">
-          <button id="level-btn" class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 hover:text-white transition">Lvl 1</button>
-        </div>
+    <!-- Tray -->
+    <section class="w-full shrink-0 flex flex-col items-center gap-1 pb-2">
+      <div class="w-full flex items-center justify-between px-2 text-[11px] opacity-70">
+        <span id="tray-msg">Drag piece to board:</span>
+        <button id="level-btn" class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 hover:text-white transition">Lvl 1</button>
       </div>
 
-      <div id="tray" class="w-full flex items-center justify-around gap-2 bg-slate-900/90 p-2 rounded-2xl border border-slate-800 min-h-[76px]">
-        <!-- Slots populated dynamically -->
+      <div id="tray" class="panel-bg w-full flex items-center justify-around gap-2 p-2 rounded-2xl border min-h-[76px]">
+        <!-- 3 Slots populated via JS -->
       </div>
     </section>
   </main>
 
-  <!-- Settings & Game Modes Modal -->
+  <!-- Settings Modal -->
   <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-        <h3 class="text-base font-bold text-white flex items-center gap-1.5">
-          <span>⚙️</span> Settings &amp; Game Mode
+    <div class="panel-bg w-full max-w-sm rounded-2xl p-5 border shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+        <h3 class="text-base font-bold flex items-center gap-1.5">
+          <span>⚙️</span> Settings &amp; Modes
         </h3>
-        <button id="close-settings" class="text-slate-400 hover:text-white text-lg font-bold px-2">&times;</button>
+        <button id="close-settings" class="text-lg font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
       </div>
 
-      <!-- Explicit Game Mode Switcher -->
-      <div class="p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50 flex flex-col gap-2">
-        <div class="text-sm font-semibold text-slate-200">Select Game Mode</div>
-        <div class="grid grid-cols-3 gap-1.5 text-xs">
-          <button class="mode-select-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-semibold text-center" data-mode="pass">
+      <!-- Mode Selector -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-bold uppercase tracking-wider opacity-60">Game Mode</label>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button class="mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold" data-mode="pass">
             👥 Pass &amp; Play
           </button>
-          <button class="mode-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-semibold text-center hover:bg-slate-700" data-mode="bot">
+          <button class="mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700" data-mode="bot">
             🤖 vs AI Bot
           </button>
-          <button class="mode-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-semibold text-center hover:bg-slate-700" data-mode="online">
-            🌐 2 Phones
-          </button>
-        </div>
-        <div id="online-panel" class="hidden mt-2 pt-2 border-t border-slate-700 flex flex-col gap-2">
-          <div class="text-[11px] text-slate-400">Play remotely with family on two devices:</div>
-          <div class="flex gap-1.5">
-            <button id="host-online-btn" class="flex-1 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">Host Game</button>
-            <button id="join-online-btn" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition">Join Code</button>
-          </div>
-          <div id="online-code-display" class="hidden text-xs text-center font-mono py-1 px-2 rounded bg-black/50 text-cyan-300 border border-cyan-800 break-all select-all"></div>
         </div>
       </div>
 
-      <!-- Audio Toggle -->
-      <div class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50">
+      <!-- Appearance: Light / Dark -->
+      <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
         <div>
-          <div class="text-sm font-semibold text-slate-200">Sound Effects</div>
-          <div class="text-xs text-slate-400">Audio feedback on drop &amp; clears</div>
+          <div class="text-sm font-semibold">Appearance</div>
+          <div class="text-xs opacity-60">Switch between Dark and Light display</div>
         </div>
-        <button id="sound-toggle-btn" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-xs font-bold rounded-lg transition">
+        <button id="modal-theme-toggle" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition">
+          ☀️ Light
+        </button>
+      </div>
+
+      <!-- Audio -->
+      <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
+        <div>
+          <div class="text-sm font-semibold">Sound Effects</div>
+          <div class="text-xs opacity-60">Piece drop &amp; line clear chimes</div>
+        </div>
+        <button id="sound-btn" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">
           🔊 ON
         </button>
       </div>
 
-      <!-- Theme Selector -->
-      <div class="p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50 flex flex-col gap-2">
-        <div class="text-sm font-semibold text-slate-200">Visual Theme</div>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <button class="theme-select-btn p-2 rounded-lg border border-cyan-400 bg-slate-800 font-medium" data-theme="emoji">💎 Gems vs 🔥 Fire</button>
-          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 font-medium" data-theme="neon">🟦 Neon Cyber</button>
-          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 font-medium" data-theme="nature">🍀 Clover vs 🍄 Shroom</button>
-          <button class="theme-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 font-medium" data-theme="candy">🍭 Sweet Candy</button>
-        </div>
-      </div>
-
-      <!-- Reset -->
-      <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-800">
-        <span>Block Clash v3.3</span>
-        <button id="reset-game-btn" class="text-rose-400 hover:underline font-semibold">Restart Match</button>
+      <!-- Restart Match -->
+      <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs">
+        <span class="opacity-50">Block Clash v3.4</span>
+        <button id="reset-btn" class="text-rose-400 hover:underline font-bold">Restart Match</button>
       </div>
     </div>
   </div>
 
   <!-- Match History Modal -->
   <div id="history-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col gap-3 max-h-[80vh]">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-        <h3 class="text-base font-bold text-white flex items-center gap-1.5">
+    <div class="panel-bg w-full max-w-sm rounded-2xl p-5 border shadow-2xl flex flex-col gap-3 max-h-[80vh]">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+        <h3 class="text-base font-bold flex items-center gap-1.5">
           <span>📜</span> Match History
         </h3>
-        <button id="close-history" class="text-slate-400 hover:text-white text-lg font-bold px-2">&times;</button>
+        <button id="close-history" class="text-lg font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
       </div>
-      <div id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 min-h-[160px]"></div>
-      <div class="flex items-center justify-between pt-2 border-t border-slate-800">
-        <button id="clear-history-btn" class="text-xs text-rose-400 hover:underline">Clear History</button>
-        <button id="history-done-btn" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-200">Close</button>
+      <div id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-2 min-h-[160px] pr-1"></div>
+      <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs">
+        <button id="clear-history-btn" class="text-rose-400 hover:underline">Clear History</button>
+        <button id="history-done-btn" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg font-semibold">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- Win / Game Over Overlay -->
+  <!-- Game Over Modal -->
   <div id="gameover-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border-2 border-cyan-500 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-3">
+    <div class="panel-bg border-2 border-cyan-500 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-3">
       <div class="text-5xl">🏆</div>
-      <h2 id="winner-title" class="text-2xl font-black text-cyan-300">PLAYER 1 WINS!</h2>
-      <p id="winner-reason" class="text-xs text-slate-300">Player 2 had no legal moves left.</p>
-      <div class="w-full flex justify-around bg-slate-800/80 rounded-xl p-3 my-2 border border-slate-700">
+      <h2 id="winner-title" class="text-2xl font-black text-cyan-400">PLAYER 1 WINS!</h2>
+      <p id="winner-reason" class="text-xs opacity-70">No valid moves left on the board.</p>
+      <div class="w-full flex justify-around p-3 my-2 rounded-xl border border-slate-700 bg-slate-800/40">
         <div>
-          <div class="text-[10px] text-slate-400">P1 SCORE</div>
+          <div class="text-[10px] opacity-60 font-bold">P1 SCORE</div>
           <div id="final-p1-score" class="text-xl font-bold text-cyan-400">0</div>
         </div>
         <div class="border-r border-slate-700"></div>
         <div>
-          <div class="text-[10px] text-slate-400">P2 SCORE</div>
+          <div class="text-[10px] opacity-60 font-bold">P2 SCORE</div>
           <div id="final-p2-score" class="text-xl font-bold text-pink-400">0</div>
         </div>
       </div>
@@ -237,7 +248,7 @@
   </div>
 
   <script>
-    // --- Audio Engine ---
+    // Audio Synthesizer
     class SoundFX {
       constructor() { this.ctx = null; this.enabled = true; }
       init() {
@@ -259,7 +270,7 @@
           gain.connect(this.ctx.destination);
 
           if (type === 'place') {
-            osc.frequency.setValueAtTime(280, now);
+            osc.frequency.setValueAtTime(320, now);
             osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
@@ -288,7 +299,7 @@
     }
     const sfx = new SoundFX();
 
-    // --- Shapes & Themes ---
+    // Shapes
     const SHAPES = [
       { name: 'dot', matrix: [[1]] },
       { name: 'h2', matrix: [[1, 1]] },
@@ -296,7 +307,6 @@
       { name: 'h3', matrix: [[1, 1, 1]] },
       { name: 'v3', matrix: [[1], [1], [1]] },
       { name: 'h4', matrix: [[1, 1, 1, 1]] },
-      { name: 'v4', matrix: [[1], [1], [1], [1]] },
       { name: 'sq2', matrix: [[1, 1], [1, 1]] },
       { name: 'sq3', matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]] },
       { name: 'l-tr', matrix: [[1, 0], [1, 1]] },
@@ -304,60 +314,29 @@
       { name: 't-up', matrix: [[1, 1, 1], [0, 1, 0]] }
     ];
 
-    const THEMES = {
-      emoji: {
-        p1Class: 'bg-cyan-500/30 border border-cyan-400',
-        p2Class: 'bg-pink-500/30 border border-pink-400',
-        p1Char: '💎',
-        p2Char: '🔥',
-        stoneChar: '🗿'
-      },
-      neon: {
-        p1Class: 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]',
-        p2Class: 'bg-fuchsia-500 shadow-[0_0_8px_#d946ef]',
-        p1Char: '',
-        p2Char: '',
-        stoneChar: '⬛'
-      },
-      nature: {
-        p1Class: 'bg-emerald-500/30 border border-emerald-400',
-        p2Class: 'bg-amber-500/30 border border-amber-400',
-        p1Char: '🍀',
-        p2Char: '🍄',
-        stoneChar: '🪨'
-      },
-      candy: {
-        p1Class: 'bg-pink-400/30 border border-pink-300',
-        p2Class: 'bg-purple-500/30 border border-purple-400',
-        p1Char: '🍭',
-        p2Char: '🍬',
-        stoneChar: '🍫'
-      }
-    };
-
-    // --- State ---
+    // State
     const state = {
       grid: Array(8).fill(null).map(() => Array(8).fill(0)),
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass', // 'pass', 'bot', 'online'
+      mode: 'pass', // 'pass' or 'bot'
+      themeMode: 'dark', // 'dark' or 'light'
       currentLevel: 1,
-      currentTheme: 'emoji',
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
       turnsCount: 0,
-      gameOver: false,
-      peer: null,
-      conn: null,
-      myPlayerId: 1
+      gameOver: false
     };
 
-    // --- Drag & Drop Engine (Pointer API for Mouse & Touch) ---
-    const dragData = {
+    // Pointer Drag Tracking
+    const drag = {
       active: false,
-      slotIdx: null,
       piece: null,
-      ghostEl: document.getElementById('drag-ghost')
+      slotIdx: null,
+      startX: 0,
+      startY: 0,
+      hasMoved: false,
+      ghostEl: document.getElementById('floating-drag-ghost')
     };
 
     function initBoard() {
@@ -376,7 +355,6 @@
     function renderBoardDOM() {
       const board = document.getElementById('board');
       board.innerHTML = '';
-      const theme = THEMES[state.currentTheme];
 
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -384,22 +362,26 @@
           const cell = document.createElement('div');
           cell.dataset.r = r;
           cell.dataset.c = c;
-          cell.className = 'board-cell w-full h-full rounded-md flex items-center justify-center text-sm font-bold select-none transition';
+          cell.className = 'board-cell w-full h-full rounded-md flex items-center justify-center text-sm font-bold select-none transition-all ';
 
           if (val === 0) {
-            cell.className += 'bg-slate-900 border border-slate-800/80 hover:bg-slate-800/40';
+            cell.className += 'empty-cell';
           } else if (val === 1) {
-            cell.className += theme.p1Class;
-            cell.textContent = theme.p1Char;
+            cell.className += 'bg-cyan-500/30 border border-cyan-400 text-cyan-300';
+            cell.textContent = '💎';
           } else if (val === 2) {
-            cell.className += theme.p2Class;
-            cell.textContent = theme.p2Char;
+            cell.className += 'bg-pink-500/30 border border-pink-400 text-pink-300';
+            cell.textContent = '🔥';
           } else if (val === 99) {
-            cell.className += 'bg-slate-800 border border-slate-700 text-slate-400';
-            cell.textContent = theme.stoneChar;
+            cell.className += 'bg-slate-700/60 border border-slate-600 text-slate-400';
+            cell.textContent = '🗿';
           }
 
-          cell.addEventListener('click', () => onCellClicked(r, c));
+          // Desktop Mouse Hover & Click handlers
+          cell.addEventListener('mouseenter', () => handleCellHover(r, c));
+          cell.addEventListener('mouseleave', () => clearCellHover());
+          cell.addEventListener('click', () => handleCellClick(r, c));
+
           board.appendChild(cell);
         }
       }
@@ -420,13 +402,13 @@
 
       state.trayPieces.forEach((piece, idx) => {
         const slot = document.createElement('div');
-        slot.className = `flex-1 h-14 bg-slate-950/70 rounded-xl border border-slate-800 flex items-center justify-center cursor-grab active:cursor-grabbing transition p-1 ${
-          state.selectedPieceIdx === idx ? 'selected-tray-piece' : 'hover:border-slate-700'
-        }`;
+        slot.className = `flex-1 h-14 rounded-xl border flex items-center justify-center cursor-grab active:cursor-grabbing transition p-1 ${
+          state.themeMode === 'dark' ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-100 border-slate-300'
+        } ${state.selectedPieceIdx === idx ? 'selected-tray-slot' : ''}`;
 
         if (!piece) {
-          slot.innerHTML = `<span class="text-[10px] text-slate-700 font-bold">USED</span>`;
-          slot.classList.add('opacity-30', 'cursor-default');
+          slot.innerHTML = `<span class="text-[10px] opacity-40 font-bold">USED</span>`;
+          slot.classList.add('cursor-default', 'opacity-30');
         } else {
           const rows = piece.matrix.length;
           const cols = piece.matrix[0].length;
@@ -437,152 +419,157 @@
 
           piece.matrix.forEach(r => {
             r.forEach(val => {
-              const cell = document.createElement('div');
-              cell.className = `w-3 h-3 rounded-[3px] flex items-center justify-center text-[8px] ${
-                val ? (state.currentPlayer === 1 ? 'bg-cyan-400' : 'bg-pink-400') : 'bg-transparent'
-              }`;
-              container.appendChild(cell);
+              const c = document.createElement('div');
+              c.className = `w-3 h-3 rounded-[3px] ${val ? (state.currentPlayer === 1 ? 'bg-cyan-400' : 'bg-pink-400') : 'bg-transparent'}`;
+              container.appendChild(c);
             });
           });
 
           slot.appendChild(container);
 
-          // Pointer Down: Starts Drag or Prepares Tap Selection
+          // Pointer Down for Desktop Drag + Click Selection
           slot.addEventListener('pointerdown', (e) => {
             if (state.gameOver) return;
             if (state.mode === 'bot' && state.currentPlayer === 2) return;
-            if (state.mode === 'online' && state.currentPlayer !== state.myPlayerId) return;
-
             sfx.init();
-            startDragging(e, piece, idx);
+
+            drag.active = true;
+            drag.hasMoved = false;
+            drag.startX = e.clientX;
+            drag.startY = e.clientY;
+            drag.piece = piece;
+            drag.slotIdx = idx;
+
+            state.selectedPieceIdx = idx;
+            renderTrayDOM();
+
+            buildGhost(piece);
+            window.addEventListener('pointermove', onWindowPointerMove);
+            window.addEventListener('pointerup', onWindowPointerUp);
           });
         }
         tray.appendChild(slot);
       });
     }
 
-    // --- Drag & Drop Handlers ---
-    function startDragging(e, piece, slotIdx) {
-      dragData.active = true;
-      dragData.slotIdx = slotIdx;
-      dragData.piece = piece;
-      state.selectedPieceIdx = slotIdx;
-      renderTrayDOM();
-
-      // Build Ghost Element
-      const ghost = dragData.ghostEl;
+    // Floating Ghost for Dragging
+    function buildGhost(piece) {
+      const ghost = drag.ghostEl;
       ghost.innerHTML = '';
       const rows = piece.matrix.length;
       const cols = piece.matrix[0].length;
       const container = document.createElement('div');
-      container.className = 'grid gap-1 bg-slate-900/90 p-2 rounded-xl border border-cyan-400 shadow-2xl';
-      container.style.gridTemplateRows = `repeat(${rows}, 28px)`;
-      container.style.gridTemplateColumns = `repeat(${cols}, 28px)`;
+      container.className = 'grid gap-1 bg-slate-900/90 p-2 rounded-xl border border-cyan-400';
+      container.style.gridTemplateRows = `repeat(${rows}, 24px)`;
+      container.style.gridTemplateColumns = `repeat(${cols}, 24px)`;
 
       piece.matrix.forEach(r => {
         r.forEach(val => {
-          const c = document.createElement('div');
-          c.className = `w-7 h-7 rounded-md ${val ? (state.currentPlayer === 1 ? 'bg-cyan-400' : 'bg-pink-400') : 'bg-transparent'}`;
-          container.appendChild(c);
+          const cell = document.createElement('div');
+          cell.className = `w-6 h-6 rounded-md ${val ? (state.currentPlayer === 1 ? 'bg-cyan-400' : 'bg-pink-400') : 'bg-transparent'}`;
+          container.appendChild(cell);
         });
       });
-
       ghost.appendChild(container);
-      ghost.style.display = 'block';
-      moveGhost(e.clientX, e.clientY);
-
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      window.addEventListener('pointercancel', onPointerCancel);
     }
 
-    function moveGhost(x, y) {
-      const ghost = dragData.ghostEl;
-      // Slight upward offset on mobile touch so the finger doesn't block vision
+    function onWindowPointerMove(e) {
+      if (!drag.active) return;
+      const dist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
+      if (dist > 5) {
+        drag.hasMoved = true;
+        drag.ghostEl.style.display = 'block';
+        const isTouch = window.matchMedia('(pointer: coarse)').matches;
+        drag.ghostEl.style.left = `${e.clientX}px`;
+        drag.ghostEl.style.top = `${e.clientY + (isTouch ? -45 : 0)}px`;
+
+        const cell = getCellUnderPoint(e.clientX, e.clientY);
+        if (cell) {
+          handleCellHover(cell.r, cell.c, drag.piece);
+        } else {
+          clearCellHover();
+        }
+      }
+    }
+
+    function onWindowPointerUp(e) {
+      if (!drag.active) return;
+      window.removeEventListener('pointermove', onWindowPointerMove);
+      window.removeEventListener('pointerup', onWindowPointerUp);
+
+      drag.ghostEl.style.display = 'none';
+      clearCellHover();
+
+      if (drag.hasMoved) {
+        // Drag release
+        const cell = getCellUnderPoint(e.clientX, e.clientY);
+        if (cell && drag.piece) {
+          const best = findBestFit(drag.piece, cell.r, cell.c);
+          if (best) {
+            commitDrop(drag.piece, best.r, best.c, drag.slotIdx);
+          }
+        }
+      }
+      drag.active = false;
+      drag.piece = null;
+    }
+
+    function getCellUnderPoint(x, y) {
       const isTouch = window.matchMedia('(pointer: coarse)').matches;
-      const offsetY = isTouch ? -45 : 0;
-      ghost.style.left = `${x}px`;
-      ghost.style.top = `${y + offsetY}px`;
-    }
-
-    function onPointerMove(e) {
-      if (!dragData.active) return;
-      moveGhost(e.clientX, e.clientY);
-      updateHoverPreview(e.clientX, e.clientY);
-    }
-
-    function getBoardCellUnder(clientX, clientY) {
-      const isTouch = window.matchMedia('(pointer: coarse)').matches;
-      const targetY = isTouch ? clientY - 45 : clientY;
-      const els = document.elementsFromPoint(clientX, targetY);
+      const targetY = isTouch ? y - 45 : y;
+      const els = document.elementsFromPoint(x, targetY);
       for (const el of els) {
         if (el && el.classList && el.classList.contains('board-cell')) {
-          return {
-            r: parseInt(el.dataset.r, 10),
-            c: parseInt(el.dataset.c, 10)
-          };
+          return { r: parseInt(el.dataset.r, 10), c: parseInt(el.dataset.c, 10) };
         }
       }
       return null;
     }
 
-    function updateHoverPreview(clientX, clientY) {
-      clearHoverPreview();
-      const cell = getBoardCellUnder(clientX, clientY);
-      if (!cell || !dragData.piece) return;
+    // Hover footprint preview (Only highlights the exact piece shape, NOT a giant box)
+    function handleCellHover(r, c, overridePiece = null) {
+      clearCellHover();
+      const piece = overridePiece || (state.selectedPieceIdx !== null ? state.trayPieces[state.selectedPieceIdx] : null);
+      if (!piece) return;
 
-      const bestSpot = findBestFit(dragData.piece, cell.r, cell.c);
-      if (bestSpot) {
-        const m = dragData.piece.matrix;
-        for (let r = 0; r < m.length; r++) {
-          for (let c = 0; c < m[r].length; c++) {
-            if (m[r][c]) {
-              const target = document.querySelector(`.board-cell[data-r="${bestSpot.r + r}"][data-c="${bestSpot.c + c}"]`);
-              if (target) target.classList.add('valid-hover');
+      const best = findBestFit(piece, r, c);
+      const isValid = best !== null;
+      const baseR = best ? best.r : r;
+      const baseC = best ? best.c : c;
+
+      const m = piece.matrix;
+      for (let pr = 0; pr < m.length; pr++) {
+        for (let pc = 0; pc < m[pr].length; pc++) {
+          if (m[pr][pc]) {
+            const tr = baseR + pr;
+            const tc = baseC + pc;
+            const el = document.querySelector(`.board-cell[data-r="${tr}"][data-c="${tc}"]`);
+            if (el) {
+              el.classList.add(isValid ? 'cell-preview-valid' : 'cell-preview-invalid');
             }
           }
         }
       }
     }
 
-    function clearHoverPreview() {
-      document.querySelectorAll('.board-cell.valid-hover').forEach(c => c.classList.remove('valid-hover'));
+    function clearCellHover() {
+      document.querySelectorAll('.board-cell').forEach(c => {
+        c.classList.remove('cell-preview-valid', 'cell-preview-invalid');
+      });
     }
 
-    function onPointerUp(e) {
-      if (!dragData.active) return;
-      clearHoverPreview();
-      dragData.ghostEl.style.display = 'none';
+    function handleCellClick(r, c) {
+      if (state.gameOver) return;
+      if (state.selectedPieceIdx === null) return;
+      const piece = state.trayPieces[state.selectedPieceIdx];
+      if (!piece) return;
 
-      const cell = getBoardCellUnder(e.clientX, e.clientY);
-      let placed = false;
-
-      if (cell && dragData.piece) {
-        const best = findBestFit(dragData.piece, cell.r, cell.c);
-        if (best) {
-          commitPieceDrop(dragData.piece, best.r, best.c, dragData.slotIdx);
-          placed = true;
-        }
+      const best = findBestFit(piece, r, c);
+      if (best) {
+        commitDrop(piece, best.r, best.c, state.selectedPieceIdx);
       }
-
-      dragData.active = false;
-      dragData.piece = null;
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerCancel);
     }
 
-    function onPointerCancel() {
-      clearHoverPreview();
-      dragData.ghostEl.style.display = 'none';
-      dragData.active = false;
-      dragData.piece = null;
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerCancel);
-    }
-
-    // --- Placement Engine (Exact + Snapping) ---
     function canPlace(shape, targetR, targetC) {
       const m = shape.matrix;
       for (let r = 0; r < m.length; r++) {
@@ -598,58 +585,35 @@
       return true;
     }
 
-    // Centering + Adjacent Search so clicking/dropping inside open areas always succeeds
     function findBestFit(piece, clickedR, clickedC) {
-      if (canPlace(piece, clickedR, clickedC)) {
-        return { r: clickedR, c: clickedC };
-      }
+      if (canPlace(piece, clickedR, clickedC)) return { r: clickedR, c: clickedC };
 
+      // Centered offset search
       const rows = piece.matrix.length;
       const cols = piece.matrix[0].length;
       const centerR = clickedR - Math.floor(rows / 2);
       const centerC = clickedC - Math.floor(cols / 2);
+      if (canPlace(piece, centerR, centerC)) return { r: centerR, c: centerC };
 
-      if (canPlace(piece, centerR, centerC)) {
-        return { r: centerR, c: centerC };
-      }
-
-      // 1-to-2 cell perimeter search
+      // Adjacent perimeter search
       const offsets = [
         [0, -1], [-1, 0], [0, 1], [1, 0],
         [-1, -1], [-1, 1], [1, -1], [1, 1],
-        [0, -2], [-2, 0], [0, 2], [2, 0],
-        [-1, -2], [-2, -1], [1, -2], [2, -1]
+        [0, -2], [-2, 0], [0, 2], [2, 0]
       ];
-
       for (const [dr, dc] of offsets) {
-        const tr = clickedR + dr;
-        const tc = clickedC + dc;
-        if (canPlace(piece, tr, tc)) {
-          return { r: tr, c: tc };
+        if (canPlace(piece, clickedR + dr, clickedC + dc)) {
+          return { r: clickedR + dr, c: clickedC + dc };
         }
       }
       return null;
     }
 
-    function onCellClicked(r, c) {
-      if (state.gameOver) return;
-      if (state.selectedPieceIdx === null) return;
-      const piece = state.trayPieces[state.selectedPieceIdx];
-      if (!piece) return;
-
-      const best = findBestFit(piece, r, c);
-      if (best) {
-        commitPieceDrop(piece, best.r, best.c, state.selectedPieceIdx);
-      }
-    }
-
-    function commitPieceDrop(piece, targetR, targetC, slotIdx) {
+    function commitDrop(piece, r, c, slotIdx) {
       const m = piece.matrix;
-      for (let r = 0; r < m.length; r++) {
-        for (let c = 0; c < m[r].length; c++) {
-          if (m[r][c]) {
-            state.grid[targetR + r][targetC + c] = state.currentPlayer;
-          }
+      for (let pr = 0; pr < m.length; pr++) {
+        for (let pc = 0; pc < m[pr].length; pc++) {
+          if (m[pr][pc]) state.grid[r + pr][c + pc] = state.currentPlayer;
         }
       }
       sfx.play('place');
@@ -658,7 +622,7 @@
       state.selectedPieceIdx = null;
       state.turnsCount++;
 
-      checkAndClearLines();
+      checkLines();
 
       if (state.trayPieces.every(p => p === null)) {
         replenishTray();
@@ -666,175 +630,139 @@
         renderTrayDOM();
       }
 
-      // Switch turn
       state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
       updateUI();
       renderBoardDOM();
 
-      checkGameEndCondition();
+      checkGameOver();
 
-      // Bot Turn trigger
       if (!state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
-        setTimeout(executeBotTurn, 450);
+        setTimeout(executeBot, 400);
       }
     }
 
-    function checkAndClearLines() {
-      const rowsToClear = [];
-      const colsToClear = [];
-
+    function checkLines() {
+      const rows = [];
+      const cols = [];
       for (let r = 0; r < 8; r++) {
-        if (state.grid[r].every(v => v !== 0)) rowsToClear.push(r);
+        if (state.grid[r].every(v => v !== 0)) rows.push(r);
       }
       for (let c = 0; c < 8; c++) {
         let full = true;
         for (let r = 0; r < 8; r++) {
           if (state.grid[r][c] === 0) { full = false; break; }
         }
-        if (full) colsToClear.push(c);
+        if (full) cols.push(c);
       }
 
-      const total = rowsToClear.length + colsToClear.length;
+      const total = rows.length + cols.length;
       if (total > 0) {
         sfx.play('clear');
         state.scores[state.currentPlayer] += total * 100;
-
-        rowsToClear.forEach(r => {
-          for (let c = 0; c < 8; c++) {
-            if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
-          }
+        rows.forEach(r => {
+          for (let c = 0; c < 8; c++) if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
         });
-        colsToClear.forEach(c => {
-          for (let r = 0; r < 8; r++) {
-            if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
-          }
+        cols.forEach(c => {
+          for (let r = 0; r < 8; r++) if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
         });
       }
     }
 
-    function hasAnyValidMove(playerNum) {
+    function checkGameOver() {
       const available = state.trayPieces.filter(p => p !== null);
-      if (available.length === 0) return true;
+      if (available.length === 0) return;
 
+      let canMove = false;
       for (const piece of available) {
         for (let r = 0; r < 8; r++) {
           for (let c = 0; c < 8; c++) {
-            if (canPlace(piece, r, c)) return true;
+            if (canPlace(piece, r, c)) { canMove = true; break; }
           }
+          if (canMove) break;
         }
+        if (canMove) break;
       }
-      return false;
-    }
 
-    function checkGameEndCondition() {
-      if (!hasAnyValidMove(state.currentPlayer)) {
+      if (!canMove) {
         state.gameOver = true;
         const winner = state.currentPlayer === 1 ? 2 : 1;
         sfx.play('win');
-        saveMatchResult(winner);
-        showGameOverModal(winner);
+        saveHistory(winner);
+
+        const modal = document.getElementById('gameover-modal');
+        document.getElementById('winner-title').textContent = `PLAYER ${winner} WINS!`;
+        document.getElementById('winner-title').className = `text-2xl font-black ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
+        document.getElementById('final-p1-score').textContent = state.scores[1];
+        document.getElementById('final-p2-score').textContent = state.scores[2];
+        modal.classList.remove('hidden');
       }
     }
 
-    function showGameOverModal(winnerNum) {
-      const modal = document.getElementById('gameover-modal');
-      const title = document.getElementById('winner-title');
-      const reason = document.getElementById('winner-reason');
-      title.textContent = `PLAYER ${winnerNum} WINS!`;
-      title.className = `text-2xl font-black ${winnerNum === 1 ? 'text-cyan-300' : 'text-pink-300'}`;
-      reason.textContent = `Player ${winnerNum === 1 ? '2' : '1'} had no open moves left on the board!`;
-      document.getElementById('final-p1-score').textContent = state.scores[1];
-      document.getElementById('final-p2-score').textContent = state.scores[2];
-      modal.classList.remove('hidden');
-    }
-
-    // --- AI Bot ---
-    function executeBotTurn() {
+    function executeBot() {
       const available = [];
-      state.trayPieces.forEach((piece, idx) => {
-        if (piece) available.push({ piece, idx });
-      });
+      state.trayPieces.forEach((piece, idx) => { if (piece) available.push({ piece, idx }); });
       if (available.length === 0) return;
 
-      const validMoves = [];
+      const moves = [];
       for (const item of available) {
         for (let r = 0; r < 8; r++) {
           for (let c = 0; c < 8; c++) {
-            if (canPlace(item.piece, r, c)) {
-              validMoves.push({ piece: item.piece, slotIdx: item.idx, r, c });
-            }
+            if (canPlace(item.piece, r, c)) moves.push({ piece: item.piece, slot: item.idx, r, c });
           }
         }
       }
 
-      if (validMoves.length > 0) {
-        const chosen = validMoves[Math.floor(Math.random() * validMoves.length)];
-        commitPieceDrop(chosen.piece, chosen.r, chosen.c, chosen.slotIdx);
+      if (moves.length > 0) {
+        const move = moves[Math.floor(Math.random() * moves.length)];
+        commitDrop(move.piece, move.r, move.c, move.slot);
       } else {
-        checkGameEndCondition();
+        checkGameOver();
       }
     }
 
-    // --- UI State Management ---
+    // UI & Mode Updates
     function updateUI() {
       document.getElementById('p1-score').textContent = state.scores[1];
       document.getElementById('p2-score').textContent = state.scores[2];
 
       const p1Card = document.getElementById('p1-card');
       const p2Card = document.getElementById('p2-card');
-      const p1Status = document.getElementById('p1-status');
-      const p2Status = document.getElementById('p2-status');
+      const p1Text = document.getElementById('p1-turn-text');
+      const p2Text = document.getElementById('p2-turn-text');
       const banner = document.getElementById('turn-banner');
 
       if (state.currentPlayer === 1) {
-        p1Card.classList.remove('opacity-60');
+        p1Card.classList.remove('opacity-50');
         p1Card.classList.add('border-cyan-500/80');
-        p2Card.classList.add('opacity-60');
+        p2Card.classList.add('opacity-50');
         p2Card.classList.remove('border-pink-500/80');
-        p1Status.textContent = 'YOUR TURN';
-        p2Status.textContent = 'Waiting...';
-        banner.textContent = 'Player 1: Drag a piece or tap piece then board';
+        p1Text.textContent = 'YOUR TURN';
+        p2Text.textContent = 'Waiting...';
+        banner.textContent = 'Player 1: Drag a piece or click to place';
       } else {
-        p2Card.classList.remove('opacity-60');
+        p2Card.classList.remove('opacity-50');
         p2Card.classList.add('border-pink-500/80');
-        p1Card.classList.add('opacity-60');
+        p1Card.classList.add('opacity-50');
         p1Card.classList.remove('border-cyan-500/80');
-        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
-        p1Status.textContent = 'Waiting...';
-        banner.textContent = state.mode === 'bot' ? 'Bot is picking a move...' : 'Player 2: Drag a piece or tap piece then board';
+        p2Text.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
+        p1Text.textContent = 'Waiting...';
+        banner.textContent = state.mode === 'bot' ? 'Bot is picking a spot...' : 'Player 2: Drag a piece or click to place';
       }
 
-      const theme = THEMES[state.currentTheme];
-      document.getElementById('p1-icon').textContent = theme.p1Char || '💎';
-      document.getElementById('p2-icon').textContent = theme.p2Char || '🔥';
-
-      // Header Labels
-      const modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', online: '2-Player Online' };
-      const modeIcons = { pass: '👥', bot: '🤖', online: '🌐' };
-      document.getElementById('header-mode-badge').textContent = modeNames[state.mode];
-      document.getElementById('quick-mode-label').textContent = state.mode === 'pass' ? 'Pass' : (state.mode === 'bot' ? 'Bot' : 'Online');
-      document.getElementById('quick-mode-icon').textContent = modeIcons[state.mode];
-      document.getElementById('p2-name').textContent = state.mode === 'bot' ? 'Bot 🤖' : 'P2 (Pink)';
+      document.getElementById('badge-mode').textContent = state.mode === 'pass' ? 'Pass & Play' : 'vs AI Bot';
+      document.getElementById('quick-mode-text').textContent = state.mode === 'pass' ? 'Pass' : 'Bot';
+      document.getElementById('p2-label').textContent = state.mode === 'bot' ? 'Bot 🤖' : 'P2 (Pink)';
     }
 
-    function setGameMode(newMode) {
-      state.mode = newMode;
-      document.querySelectorAll('.mode-select-btn').forEach(btn => {
-        if (btn.dataset.mode === newMode) {
-          btn.className = 'mode-select-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-semibold text-center';
-        } else {
-          btn.className = 'mode-select-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-semibold text-center hover:bg-slate-700';
-        }
-      });
-
-      const onlinePanel = document.getElementById('online-panel');
-      if (newMode === 'online') {
-        onlinePanel.classList.remove('hidden');
-      } else {
-        onlinePanel.classList.add('hidden');
-      }
-
-      resetGame();
+    function toggleTheme() {
+      state.themeMode = state.themeMode === 'dark' ? 'light' : 'dark';
+      document.body.className = `theme-${state.themeMode} w-full h-[100dvh] flex flex-col justify-between overflow-hidden`;
+      const btn = document.getElementById('theme-mode-btn');
+      const modalBtn = document.getElementById('modal-theme-toggle');
+      btn.textContent = state.themeMode === 'dark' ? '☀️' : '🌙';
+      modalBtn.textContent = state.themeMode === 'dark' ? '☀️ Light' : '🌙 Dark';
+      renderBoardDOM();
+      renderTrayDOM();
     }
 
     function resetGame() {
@@ -849,124 +777,106 @@
       updateUI();
     }
 
-    function saveMatchResult(winnerNum) {
+    function saveHistory(winnerNum) {
       try {
-        const history = JSON.parse(localStorage.getItem('block_clash_history') || '[]');
+        const history = JSON.parse(localStorage.getItem('clash_history') || '[]');
         history.unshift({
-          id: Date.now(),
           date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
           winner: winnerNum === 1 ? 'Player 1' : (state.mode === 'bot' ? 'Bot 🤖' : 'Player 2'),
-          winnerNum,
-          p1Score: state.scores[1],
-          p2Score: state.scores[2],
-          level: `Lvl ${state.currentLevel}`,
-          mode: state.mode
+          p1: state.scores[1],
+          p2: state.scores[2],
+          level: `Lvl ${state.currentLevel}`
         });
         if (history.length > 20) history.pop();
-        localStorage.setItem('block_clash_history', JSON.stringify(history));
+        localStorage.setItem('clash_history', JSON.stringify(history));
       } catch (e) {}
     }
 
-    function renderHistoryList() {
+    function renderHistory() {
       const container = document.getElementById('history-list');
-      const history = JSON.parse(localStorage.getItem('block_clash_history') || '[]');
-      if (history.length === 0) {
-        container.innerHTML = `<div class="text-center text-xs text-slate-500 py-8">No games recorded yet!</div>`;
+      const history = JSON.parse(localStorage.getItem('clash_history') || '[]');
+      if (!history.length) {
+        container.innerHTML = `<div class="text-center text-xs opacity-50 py-8">No match records yet.</div>`;
         return;
       }
       container.innerHTML = history.map(item => `
-        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-2.5 flex items-center justify-between text-xs">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">${item.winnerNum === 1 ? '💎' : '🔥'}</span>
-            <div>
-              <div class="font-bold ${item.winnerNum === 1 ? 'text-cyan-300' : 'text-pink-300'}">${item.winner} Won</div>
-              <div class="text-[10px] text-slate-400">${item.date} • ${item.level} • ${item.mode}</div>
-            </div>
+        <div class="panel-bg p-2.5 rounded-xl border flex items-center justify-between text-xs">
+          <div>
+            <div class="font-bold text-cyan-400">${item.winner} Won</div>
+            <div class="text-[10px] opacity-60">${item.date} • ${item.level}</div>
           </div>
-          <div class="text-right">
-            <div class="font-bold text-slate-200">${item.p1Score} - ${item.p2Score}</div>
-            <div class="text-[10px] text-slate-400">Score</div>
-          </div>
+          <div class="text-right font-bold text-sm">${item.p1} - ${item.p2}</div>
         </div>
       `).join('');
     }
 
-    // --- Initialization & Listeners ---
+    // Listeners
     document.addEventListener('DOMContentLoaded', () => {
       initBoard();
       replenishTray();
       renderBoardDOM();
       updateUI();
 
-      // Quick Mode Toggle in Header: cycles pass -> bot -> online
-      document.getElementById('mode-quick-toggle').addEventListener('click', () => {
-        const order = ['pass', 'bot', 'online'];
-        const nextIdx = (order.indexOf(state.mode) + 1) % order.length;
-        setGameMode(order[nextIdx]);
+      // Theme Toggles
+      document.getElementById('theme-mode-btn').addEventListener('click', toggleTheme);
+      document.getElementById('modal-theme-toggle').addEventListener('click', toggleTheme);
+
+      // Quick Mode Toggle
+      document.getElementById('quick-mode-btn').addEventListener('click', () => {
+        state.mode = state.mode === 'pass' ? 'bot' : 'pass';
+        resetGame();
       });
 
       // Settings Modal
       const settingsModal = document.getElementById('settings-modal');
-      document.getElementById('settings-btn').addEventListener('click', () => {
-        settingsModal.classList.remove('hidden');
-      });
-      document.getElementById('close-settings').addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
-      });
+      document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
+      document.getElementById('close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
 
-      // Explicit Mode buttons inside Settings
-      document.querySelectorAll('.mode-select-btn').forEach(btn => {
+      document.querySelectorAll('.mode-opt-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          setGameMode(btn.dataset.mode);
+          state.mode = btn.dataset.mode;
+          document.querySelectorAll('.mode-opt-btn').forEach(b => {
+            b.className = b.dataset.mode === state.mode
+              ? 'mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold'
+              : 'mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700';
+          });
+          resetGame();
         });
       });
 
-      // Audio Toggle
-      const soundBtn = document.getElementById('sound-toggle-btn');
+      // Sound
+      const soundBtn = document.getElementById('sound-btn');
       soundBtn.addEventListener('click', () => {
         sfx.enabled = !sfx.enabled;
         soundBtn.textContent = sfx.enabled ? '🔊 ON' : '🔇 OFF';
         soundBtn.className = sfx.enabled
-          ? 'px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-xs font-bold rounded-lg transition'
-          : 'px-3 py-1 bg-slate-700 text-slate-400 text-xs font-bold rounded-lg transition';
+          ? 'px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition'
+          : 'px-3 py-1 bg-slate-700 text-slate-400 rounded-lg text-xs font-bold transition';
       });
 
-      // Theme Picker
-      document.querySelectorAll('.theme-select-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.currentTheme = btn.dataset.theme;
-          document.querySelectorAll('.theme-select-btn').forEach(b => b.classList.replace('border-cyan-400', 'border-slate-700'));
-          btn.classList.replace('border-slate-700', 'border-cyan-400');
-          renderBoardDOM();
-          renderTrayDOM();
-          updateUI();
-        });
-      });
-
-      // History Modal
-      const historyModal = document.getElementById('history-modal');
+      // History
+      const histModal = document.getElementById('history-modal');
       document.getElementById('history-btn').addEventListener('click', () => {
-        renderHistoryList();
-        historyModal.classList.remove('hidden');
+        renderHistory();
+        histModal.classList.remove('hidden');
       });
-      document.getElementById('close-history').addEventListener('click', () => historyModal.classList.add('hidden'));
-      document.getElementById('history-done-btn').addEventListener('click', () => historyModal.classList.add('hidden'));
+      document.getElementById('close-history').addEventListener('click', () => histModal.classList.add('hidden'));
+      document.getElementById('history-done-btn').addEventListener('click', () => histModal.classList.add('hidden'));
       document.getElementById('clear-history-btn').addEventListener('click', () => {
-        localStorage.removeItem('block_clash_history');
-        renderHistoryList();
+        localStorage.removeItem('clash_history');
+        renderHistory();
       });
 
-      // Level Switcher
+      // Levels & Reset
       const levelBtn = document.getElementById('level-btn');
       levelBtn.addEventListener('click', () => {
         state.currentLevel = (state.currentLevel % 4) + 1;
         levelBtn.textContent = `Lvl ${state.currentLevel}`;
-        document.getElementById('header-level-badge').textContent = `Lvl ${state.currentLevel}`;
+        document.getElementById('badge-lvl').textContent = `Lvl ${state.currentLevel}`;
         resetGame();
       });
 
-      // Restart / Play Again
-      document.getElementById('reset-game-btn').addEventListener('click', () => {
+      document.getElementById('reset-btn').addEventListener('click', () => {
         settingsModal.classList.add('hidden');
         resetGame();
       });
