@@ -69,22 +69,22 @@
     .board-grid-equal {
       display: grid !important;
       grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-      grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
-    }
-
-    /* Force strict 1:1 square ratio on every single cell so they NEVER stretch or elongate */
-    .board-cell-square {
-      aspect-ratio: 1 / 1 !important;
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    /* Board container that scales proportionally up on desktop and down on mobile */
+    <!-- Board container that scales proportionally up on desktop and down on mobile -->
     .responsive-board-box {
       width: min(92vw, calc(100dvh - 210px), 640px) !important;
       height: min(92vw, calc(100dvh - 210px), 640px) !important;
       aspect-ratio: 1 / 1 !important;
       flex-shrink: 0 !important;
+    }
+
+    /* Mulligan Button Styling */
+    .mulligan-btn {
+      transition: all 0.15s ease;
+    }
+    .mulligan-btn:disabled {
+      opacity: 0.35 !important;
+      cursor: not-allowed !important;
+      filter: grayscale(1);
     }
 
     /* Tray Highlight */
@@ -166,7 +166,12 @@
             <div id="p1-status" class="text-[9px] text-cyan-300 font-semibold leading-none">YOUR TURN</div>
           </div>
         </div>
-        <span id="p1-score" class="text-base font-bold text-cyan-300 ml-1">0</span>
+        <div class="flex items-center gap-2">
+          <button id="p1-mulligan-btn" class="mulligan-btn text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-700 text-cyan-300 font-bold" title="Takeback move (Costs 50% points)">
+            ↩️ 1x
+          </button>
+          <span id="p1-score" class="text-base font-bold text-cyan-300">0</span>
+        </div>
       </div>
 
       <div id="p2-card" class="panel-bg flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-700 transition opacity-50">
@@ -177,13 +182,23 @@
             <div id="p2-status" class="text-[9px] text-slate-400 leading-none">Waiting...</div>
           </div>
         </div>
-        <span id="p2-score" class="text-base font-bold text-pink-300 ml-1">0</span>
+        <div class="flex items-center gap-2">
+          <button id="p2-mulligan-btn" class="mulligan-btn text-[10px] px-2 py-0.5 rounded bg-pink-950/80 hover:bg-pink-900 border border-pink-700 text-pink-300 font-bold" title="Takeback move (Costs 50% points)">
+            ↩️ 1x
+          </button>
+          <span id="p2-score" class="text-base font-bold text-pink-300">0</span>
+        </div>
       </div>
     </section>
 
-    <!-- Turn Banner -->
-    <div id="turn-banner" class="w-full text-center py-0.5 text-xs font-semibold shrink-0 opacity-80 text-cyan-300">
-      Player 1: Drag a piece or tap piece then board
+    <!-- Turn Banner & Target Score Goal Indicator -->
+    <div class="w-full flex items-center justify-center gap-2 shrink-0 py-0.5">
+      <div id="turn-banner" class="text-center text-xs font-semibold opacity-80 text-cyan-300">
+        Player 1: Drag a piece or tap piece then board
+      </div>
+      <span id="goal-badge" class="hidden text-[10px] px-2 py-0.2 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold">
+        🎯 Race to 2000
+      </span>
     </div>
 
     <!-- 8x8 Board Container: Strictly square, larger on desktop, fits mobile -->
@@ -193,11 +208,16 @@
       </div>
     </section>
 
-    <!-- Piece Tray Section -->
+    <!-- Piece Tray & Main Screen Actions (Includes Restart & Mulligan info) -->
     <section class="w-full max-w-xl shrink-0 flex flex-col items-center gap-1 mb-1">
       <div class="w-full flex items-center justify-between px-2 text-[10px] opacity-70">
         <span id="tray-msg">Drag piece to board:</span>
-        <span id="active-mode-label" class="font-bold text-cyan-400">Pass &amp; Play</span>
+        <div class="flex items-center gap-2">
+          <button id="main-restart-btn" class="px-2 py-0.5 rounded bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-[10px] transition active:scale-95 flex items-center gap-1">
+            <span>🔄</span> Restart
+          </button>
+          <span id="active-mode-label" class="font-bold text-cyan-400">Pass &amp; Play</span>
+        </div>
       </div>
 
       <div id="tray" class="panel-bg w-full flex items-center justify-around gap-2 p-2 rounded-2xl border min-h-[76px] shadow-lg touch-none">
@@ -298,16 +318,58 @@
         <button id="close-settings" class="text-xl font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
       </div>
 
-      <!-- Game Mode Selection -->
+      <!-- Game Mode Selection (All 3 Options: Pass & Play, AI Bot, 2 Devices) -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold uppercase tracking-wider opacity-60">Game Mode</label>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <button class="mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold" data-mode="pass">
+        <div class="grid grid-cols-3 gap-1.5 text-xs">
+          <button class="mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold text-center" data-mode="pass">
             👥 Pass &amp; Play
           </button>
-          <button class="mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700" data-mode="bot">
+          <button class="mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-center" data-mode="bot">
             🤖 vs AI Bot
           </button>
+          <button class="mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-center" data-mode="online">
+            🌐 2 Phones
+          </button>
+        </div>
+
+        <!-- Inline 2 Phones / Online Connection Panel -->
+        <div id="online-connect-panel" class="hidden p-2.5 rounded-xl border border-indigo-700/60 bg-indigo-950/30 flex flex-col gap-2 mt-1">
+          <div class="text-[11px] text-slate-300 font-medium">Duel across two phones or computers:</div>
+          <div class="flex gap-1.5">
+            <button id="host-room-btn" class="flex-1 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition">
+              Create Room
+            </button>
+            <button id="join-room-btn" class="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition">
+              Join Code
+            </button>
+          </div>
+          <div id="room-code-display" class="hidden text-xs text-center font-mono py-1 px-2 rounded bg-slate-900 border border-indigo-500/50 text-cyan-300 select-all"></div>
+        </div>
+      </div>
+
+      <!-- Win Condition Selector: Survival Trap vs Points Race -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-bold uppercase tracking-wider opacity-60">Win Condition</label>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button id="winrule-trap-btn" class="winrule-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold text-left">
+            🪤 Survival Trap
+            <div class="text-[9px] font-normal opacity-70">Opponent can't move</div>
+          </button>
+          <button id="winrule-points-btn" class="winrule-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-left">
+            🎯 Points Race
+            <div class="text-[9px] font-normal opacity-70">First to reach target</div>
+          </button>
+        </div>
+
+        <!-- Target Points Selection -->
+        <div id="points-target-box" class="hidden mt-1 p-2 rounded-xl bg-slate-800/50 border border-slate-700 flex items-center justify-between text-xs">
+          <span class="opacity-70 text-[11px]">Race Target:</span>
+          <div class="flex gap-1">
+            <button class="target-pts-btn px-2 py-0.5 rounded border border-slate-700 bg-slate-800 text-slate-300 font-bold" data-target="1000">1000</button>
+            <button class="target-pts-btn px-2 py-0.5 rounded border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold" data-target="2000">2000</button>
+            <button class="target-pts-btn px-2 py-0.5 rounded border border-slate-700 bg-slate-800 text-slate-300 font-bold" data-target="3000">3000</button>
+          </div>
         </div>
       </div>
 
@@ -355,10 +417,12 @@
         </button>
       </div>
 
-      <!-- Reset / Version -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs">
-        <span class="opacity-50 font-mono">v3.5 TV Party</span>
-        <button id="reset-btn" class="text-rose-400 hover:underline font-bold">Restart Match</button>
+      <!-- Bottom Settings Bar with Explicit Close Button -->
+      <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+        <span class="opacity-50 font-mono text-[11px]">v3.6 Duel</span>
+        <button id="bottom-close-settings" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition active:scale-95">
+          Done / Close
+        </button>
       </div>
     </div>
   </div>
@@ -490,14 +554,21 @@
       grid: Array(8).fill(null).map(() => Array(8).fill(0)),
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass', // 'pass' or 'bot'
+      mode: 'pass', // 'pass', 'bot', or 'online'
       themeMode: 'dark',
       currentLevel: 1,
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
       gameOver: false,
       peer: null,
-      tvCode: null
+      conn: null,
+      tvCode: null,
+      // Win Rule Settings: 'trap' or 'race'
+      winCondition: 'trap',
+      targetScore: 2000,
+      // Mulligan (Takeback) feature: 1 per player per game, costs 50% score
+      mulliganUsed: { 1: false, 2: false },
+      lastTurnSnapshot: null
     };
 
     /* Robust Drag Engine */
@@ -587,6 +658,47 @@
       }
       state.selectedPieceIdx = null;
       renderTrayDOM();
+    }
+
+    /* Save Snapshot before each move for Mulligan (takeback) */
+    function recordSnapshot(slotIdx) {
+      state.lastTurnSnapshot = {
+        grid: state.grid.map(row => [...row]),
+        scores: { ...state.scores },
+        currentPlayer: state.currentPlayer,
+        slotIdx: slotIdx,
+        restoredPiece: JSON.parse(JSON.stringify(state.trayPieces[slotIdx]))
+      };
+    }
+
+    /* Apply Mulligan: reverts board, consumes the 1x allowance, and cuts points in half */
+    function useMulligan(playerNum) {
+      if (state.gameOver) return;
+      if (state.mulliganUsed[playerNum]) return;
+      if (!state.lastTurnSnapshot || state.lastTurnSnapshot.currentPlayer !== playerNum) return;
+
+      const snap = state.lastTurnSnapshot;
+
+      // Restore board grid
+      state.grid = snap.grid.map(row => [...row]);
+
+      // Halve player's score as penalty
+      state.scores[playerNum] = Math.floor(snap.scores[playerNum] / 2);
+
+      // Restore piece in tray
+      state.trayPieces[snap.slotIdx] = snap.restoredPiece;
+      state.selectedPieceIdx = snap.slotIdx;
+
+      // Revert current turn to that player
+      state.currentPlayer = playerNum;
+      state.mulliganUsed[playerNum] = true;
+      state.lastTurnSnapshot = null;
+
+      sfx.play('clear');
+      renderBoardDOM();
+      renderTrayDOM();
+      renderTVBoardDOM();
+      updateUI();
     }
 
     function renderTrayDOM() {
@@ -833,6 +945,9 @@
     }
 
     function commitDrop(piece, r, c, slotIdx) {
+      // Record snapshot prior to committing placement
+      recordSnapshot(slotIdx);
+
       const m = piece.matrix;
       for (let pr = 0; pr < m.length; pr++) {
         for (let pc = 0; pc < m[pr].length; pc++) {
@@ -846,10 +961,27 @@
 
       checkLines();
 
+      // Check Points Race Win Condition immediately after line clears
+      if (state.winCondition === 'race' && state.scores[state.currentPlayer] >= state.targetScore) {
+        triggerWin(state.currentPlayer, `Reached the target goal of ${state.targetScore} points!`);
+        return;
+      }
+
       if (state.trayPieces.every(p => p === null)) {
         replenishTray();
       } else {
         renderTrayDOM();
+      }
+
+      // Sync online peer if connected
+      if (state.mode === 'online' && state.conn && state.conn.open) {
+        state.conn.send({
+          type: 'MOVE',
+          grid: state.grid,
+          scores: state.scores,
+          tray: state.trayPieces,
+          nextPlayer: state.currentPlayer === 1 ? 2 : 1
+        });
       }
 
       state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
@@ -892,6 +1024,18 @@
     }
 
     function checkGameOver() {
+      // In Race Mode, check if anyone reached target
+      if (state.winCondition === 'race') {
+        if (state.scores[1] >= state.targetScore) {
+          triggerWin(1, `Hit the ${state.targetScore} score target first!`);
+          return;
+        }
+        if (state.scores[2] >= state.targetScore) {
+          triggerWin(2, `Hit the ${state.targetScore} score target first!`);
+          return;
+        }
+      }
+
       const available = state.trayPieces.filter(p => p !== null);
       if (available.length === 0) return;
 
@@ -907,21 +1051,26 @@
       }
 
       if (!canMove) {
-        state.gameOver = true;
         const winner = state.currentPlayer === 1 ? 2 : 1;
-        sfx.play('win');
-        saveHistory(winner);
+        triggerWin(winner, `Rival was trapped with no legal moves left.`);
+      }
+    }
 
-        const modal = document.getElementById('gameover-modal');
-        document.getElementById('winner-title').textContent = `PLAYER ${winner} WINS!`;
-        document.getElementById('winner-title').className = `text-2xl font-black ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
-        document.getElementById('final-p1-score').textContent = state.scores[1];
-        document.getElementById('final-p2-score').textContent = state.scores[2];
-        modal.classList.remove('hidden');
+    function triggerWin(winner, reason) {
+      state.gameOver = true;
+      sfx.play('win');
+      saveHistory(winner);
 
-        if (typeof confetti === 'function') {
-          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-        }
+      const modal = document.getElementById('gameover-modal');
+      document.getElementById('winner-title').textContent = `PLAYER ${winner} WINS!`;
+      document.getElementById('winner-title').className = `text-2xl font-black ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
+      document.getElementById('winner-reason').textContent = reason;
+      document.getElementById('final-p1-score').textContent = state.scores[1];
+      document.getElementById('final-p2-score').textContent = state.scores[2];
+      modal.classList.remove('hidden');
+
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 110, spread: 75, origin: { y: 0.6 } });
       }
     }
 
@@ -962,6 +1111,27 @@
       const p2Status = document.getElementById('p2-status');
       const banner = document.getElementById('turn-banner');
 
+      // Update Mulligan Button states
+      const m1 = document.getElementById('p1-mulligan-btn');
+      const m2 = document.getElementById('p2-mulligan-btn');
+      if (m1) {
+        m1.disabled = state.mulliganUsed[1] || (state.lastTurnSnapshot && state.lastTurnSnapshot.currentPlayer !== 1) || (!state.lastTurnSnapshot && state.currentPlayer !== 1);
+        m1.textContent = state.mulliganUsed[1] ? 'USED' : '↩️ 1x (-50%)';
+      }
+      if (m2) {
+        m2.disabled = state.mulliganUsed[2] || (state.lastTurnSnapshot && state.lastTurnSnapshot.currentPlayer !== 2) || (!state.lastTurnSnapshot && state.currentPlayer !== 2);
+        m2.textContent = state.mulliganUsed[2] ? 'USED' : '↩️ 1x (-50%)';
+      }
+
+      // Goal badge display
+      const goalBadge = document.getElementById('goal-badge');
+      if (state.winCondition === 'race') {
+        goalBadge.classList.remove('hidden');
+        goalBadge.textContent = `🎯 Race to ${state.targetScore}`;
+      } else {
+        goalBadge.classList.add('hidden');
+      }
+
       if (state.currentPlayer === 1) {
         p1Card.classList.remove('opacity-50');
         p1Card.classList.add('border-cyan-400');
@@ -980,8 +1150,9 @@
         banner.textContent = state.mode === 'bot' ? 'Bot is picking a move...' : 'Player 2: Drag a piece or tap piece then board';
       }
 
-      document.getElementById('header-mode-badge').textContent = state.mode === 'pass' ? 'Pass & Play' : 'vs AI Bot';
-      document.getElementById('active-mode-label').textContent = state.mode === 'pass' ? 'Pass & Play' : 'vs AI Bot';
+      const modeLabels = { pass: 'Pass & Play', bot: 'vs AI Bot', online: '2 Phones Online' };
+      document.getElementById('header-mode-badge').textContent = modeLabels[state.mode] || 'Duel';
+      document.getElementById('active-mode-label').textContent = modeLabels[state.mode] || 'Duel';
       document.getElementById('p2-name-label').textContent = state.mode === 'bot' ? 'Bot 🤖' : 'P2 (Pink)';
     }
 
@@ -998,6 +1169,8 @@
       state.scores = { 1: 0, 2: 0 };
       state.currentPlayer = 1;
       state.gameOver = false;
+      state.mulliganUsed = { 1: false, 2: false };
+      state.lastTurnSnapshot = null;
       document.getElementById('gameover-modal').classList.add('hidden');
       initBoard();
       replenishTray();
@@ -1095,21 +1268,123 @@
         exitTVMode();
       });
 
-      // Settings Modal
+      // Settings Modal Open & Close Buttons (Top "X" and Bottom "Done/Close")
       const settingsModal = document.getElementById('settings-modal');
       document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
       document.getElementById('close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
+      document.getElementById('bottom-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
 
-      // Mode Selector buttons
+      // Mulligan / Takeback Buttons
+      document.getElementById('p1-mulligan-btn').addEventListener('click', () => useMulligan(1));
+      document.getElementById('p2-mulligan-btn').addEventListener('click', () => useMulligan(2));
+
+      // Main Screen Restart Button
+      document.getElementById('main-restart-btn').addEventListener('click', resetGame);
+
+      // Mode Selector buttons (Pass, Bot, 2 Phones Online)
       document.querySelectorAll('.mode-opt-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           state.mode = btn.dataset.mode;
           document.querySelectorAll('.mode-opt-btn').forEach(b => {
             b.className = b.dataset.mode === state.mode
-              ? 'mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold'
-              : 'mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700';
+              ? 'mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold text-center'
+              : 'mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-center';
           });
+
+          const onlinePanel = document.getElementById('online-connect-panel');
+          if (state.mode === 'online') {
+            onlinePanel.classList.remove('hidden');
+          } else {
+            onlinePanel.classList.add('hidden');
+          }
           resetGame();
+        });
+      });
+
+      // Online Duel Room Hosting & Joining
+      document.getElementById('host-room-btn').addEventListener('click', () => {
+        const roomCode = 'CLASH-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        const display = document.getElementById('room-code-display');
+        display.textContent = `Room Code: ${roomCode}`;
+        display.classList.remove('hidden');
+        try {
+          if (typeof Peer !== 'undefined') {
+            state.peer = new Peer(roomCode);
+            state.peer.on('connection', conn => {
+              state.conn = conn;
+              conn.on('data', data => {
+                if (data.type === 'MOVE') {
+                  state.grid = data.grid;
+                  state.scores = data.scores;
+                  state.trayPieces = data.tray;
+                  state.currentPlayer = data.nextPlayer;
+                  renderBoardDOM();
+                  renderTrayDOM();
+                  updateUI();
+                }
+              });
+            });
+          }
+        } catch(e) {}
+      });
+
+      document.getElementById('join-room-btn').addEventListener('click', () => {
+        const inputCode = prompt('Enter 4-character Room Code:');
+        if (!inputCode) return;
+        const code = inputCode.trim().toUpperCase();
+        try {
+          if (typeof Peer !== 'undefined') {
+            state.peer = new Peer();
+            state.conn = state.peer.connect(code.startsWith('CLASH-') ? code : `CLASH-${code}`);
+            state.conn.on('open', () => {
+              settingsModal.classList.add('hidden');
+            });
+            state.conn.on('data', data => {
+              if (data.type === 'MOVE') {
+                state.grid = data.grid;
+                state.scores = data.scores;
+                state.trayPieces = data.tray;
+                state.currentPlayer = data.nextPlayer;
+                renderBoardDOM();
+                renderTrayDOM();
+                updateUI();
+              }
+            });
+          }
+        } catch(e) {}
+      });
+
+      // Win Condition Toggles (Survival Trap vs Points Race)
+      const trapBtn = document.getElementById('winrule-trap-btn');
+      const raceBtn = document.getElementById('winrule-points-btn');
+      const ptsTargetBox = document.getElementById('points-target-box');
+
+      trapBtn.addEventListener('click', () => {
+        state.winCondition = 'trap';
+        trapBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold text-left';
+        raceBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-left';
+        ptsTargetBox.classList.add('hidden');
+        updateUI();
+      });
+
+      raceBtn.addEventListener('click', () => {
+        state.winCondition = 'race';
+        raceBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold text-left';
+        trapBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-left';
+        ptsTargetBox.classList.remove('hidden');
+        updateUI();
+      });
+
+      // Target Points Selection (1000, 2000, 3000)
+      document.querySelectorAll('.target-pts-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.targetScore = parseInt(btn.dataset.target, 10);
+          document.querySelectorAll('.target-pts-btn').forEach(b => {
+            b.className = parseInt(b.dataset.target, 10) === state.targetScore
+              ? 'target-pts-btn px-2 py-0.5 rounded border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold'
+              : 'target-pts-btn px-2 py-0.5 rounded border border-slate-700 bg-slate-800 text-slate-300 font-bold';
+          });
+          updateUI();
         });
       });
 
@@ -1155,10 +1430,6 @@
       });
 
       // Match Restarts
-      document.getElementById('reset-btn').addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
-        resetGame();
-      });
       document.getElementById('play-again-btn').addEventListener('click', resetGame);
     });
   </script>
