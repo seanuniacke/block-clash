@@ -3,24 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Block Clash Duel</title>
+  <title>Block Clash Duel v3.5</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#090d16">
+
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    * { box-sizing: border-box; }
-    body {
+    * {
       font-family: 'Fredoka', cursive, sans-serif;
+      box-sizing: border-box;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      touch-action: none;
       overscroll-behavior: none;
       transition: background-color 0.2s ease, color 0.2s ease;
+      height: 100dvh;
+      overflow: hidden;
     }
+
     /* Dark Theme (Default) */
     body.theme-dark {
       background-color: #090d16;
       color: #f1f5f9;
     }
-    body.theme-dark .panel-bg { background-color: rgba(15, 23, 42, 0.85); border-color: #1e293b; }
+    body.theme-dark .panel-bg { background-color: rgba(15, 23, 42, 0.9); border-color: #1e293b; }
     body.theme-dark .board-bg { background-color: #030712; border-color: #1e293b; }
     body.theme-dark .empty-cell { background-color: #0f172a; border: 1px solid #1e293b; }
     body.theme-dark .empty-cell:hover { background-color: #1e293b; }
@@ -35,7 +52,7 @@
     body.theme-light .empty-cell { background-color: #ffffff; border: 1px solid #cbd5e1; }
     body.theme-light .empty-cell:hover { background-color: #f8fafc; }
 
-    /* Active Footprint Hover (Shows exact piece shape) */
+    /* Dynamic Drop Preview (Exact Shape Only) */
     .cell-preview-valid {
       background-color: rgba(56, 189, 248, 0.55) !important;
       outline: 2px solid #38bdf8 !important;
@@ -47,11 +64,22 @@
       outline: 2px solid #f43f5e !important;
       outline-offset: -2px;
     }
+
+    /* Fixed equal 8x8 grid cells */
+    .board-grid-equal {
+      display: grid !important;
+      grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+      grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
+    }
+
+    /* Tray Highlight */
     .selected-tray-slot {
       border-color: #38bdf8 !important;
-      box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.55);
       transform: scale(1.04);
     }
+
+    /* Floating Drag Element */
     #floating-drag-ghost {
       position: fixed;
       pointer-events: none;
@@ -59,19 +87,30 @@
       transform: translate(-50%, -50%);
       display: none;
       opacity: 0.95;
-      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.4));
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
+      touch-action: none;
+    }
+
+    /* Line Clear Pop Animation */
+    @keyframes linePop {
+      0% { transform: scale(1); filter: brightness(2); }
+      50% { transform: scale(1.25); filter: brightness(2.8); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    .clearing-cell {
+      animation: linePop 0.32s ease-in-out forwards;
     }
   </style>
 </head>
 <body class="theme-dark w-full h-[100dvh] flex flex-col justify-between overflow-hidden">
 
-  <!-- Floating Drag Element -->
+  <!-- Floating Drag Element (Mouse & Touch) -->
   <div id="floating-drag-ghost"></div>
 
-  <!-- Header -->
-  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b panel-bg shrink-0">
+  <!-- TOP APP BAR: Simplified to Logo + TV + Settings -->
+  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b panel-bg shrink-0 z-30">
     <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shadow">
+      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shadow-md">
         ⚔️
       </div>
       <div>
@@ -79,92 +118,172 @@
           BLOCK CLASH
         </h1>
         <div class="flex items-center gap-1 mt-0.5">
-          <span id="badge-mode" class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800 font-semibold">Pass &amp; Play</span>
-          <span id="badge-lvl" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-medium">Lvl 1</span>
+          <span id="header-mode-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800 font-semibold">Pass &amp; Play</span>
+          <span id="header-lvl-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-medium">Lvl 1</span>
         </div>
       </div>
     </div>
 
-    <!-- Actions: Mode, Light/Dark, History, Settings -->
-    <div class="flex items-center gap-1.5">
-      <button id="theme-mode-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm transition" title="Toggle Light / Dark Mode">
-        ☀️
+    <!-- Right Header Controls: Launch TV & Settings -->
+    <div class="flex items-center gap-2">
+      <button id="tv-toggle-btn" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shadow transition active:scale-95">
+        <span>📺</span>
+        <span>TV</span>
       </button>
-      <button id="quick-mode-btn" class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-cyan-300 transition flex items-center gap-1">
-        <span>👥</span>
-        <span id="quick-mode-text">Pass</span>
-      </button>
-      <button id="history-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm transition" title="Match History">
-        📜
-      </button>
-      <button id="settings-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm transition" title="Settings">
+      <button id="settings-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm transition" title="Settings &amp; Modes">
         ⚙️
       </button>
     </div>
   </header>
 
-  <!-- Main Playing Arena -->
-  <main class="flex-1 w-full flex flex-col items-center justify-between px-2 py-1 max-w-md mx-auto">
+  <!-- =========================================================================
+       STANDARD MAIN VIEW (Mobile & Desktop Browser)
+       ========================================================================= -->
+  <main id="standard-view" class="w-full max-w-xl lg:max-w-2xl mx-auto flex-1 px-3 py-1 flex flex-col justify-between items-center overflow-hidden min-h-0">
     
-    <!-- Scoreboard -->
-    <section class="w-full grid grid-cols-2 gap-2 mt-1 shrink-0">
-      <div id="p1-card" class="panel-bg flex items-center justify-between px-3 py-1.5 rounded-xl border border-cyan-500/80 transition">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-lg">💎</span>
+    <!-- Scoreboard (Compact Low-Profile Bar) -->
+    <section class="w-full max-w-md grid grid-cols-2 gap-2 mt-0.5 shrink-0">
+      <div id="p1-card" class="panel-bg flex items-center justify-between px-2.5 py-1 rounded-xl border border-cyan-400 shadow-sm transition">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span id="p1-icon" class="text-base shrink-0">💎</span>
           <div class="truncate leading-tight">
-            <div class="text-xs font-bold text-cyan-400 truncate">P1 (Blue)</div>
-            <div id="p1-turn-text" class="text-[10px] text-cyan-300 font-semibold leading-none">YOUR TURN</div>
+            <div id="p1-name-label" class="text-xs font-bold text-cyan-400 truncate">P1 (Blue)</div>
+            <div id="p1-status" class="text-[9px] text-cyan-300 font-semibold leading-none">YOUR TURN</div>
           </div>
         </div>
-        <span id="p1-score" class="text-base font-bold text-cyan-400 ml-1">0</span>
+        <span id="p1-score" class="text-base font-bold text-cyan-300 ml-1">0</span>
       </div>
 
-      <div id="p2-card" class="panel-bg flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-700 transition opacity-50">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-lg">🔥</span>
+      <div id="p2-card" class="panel-bg flex items-center justify-between px-2.5 py-1 rounded-xl border border-slate-700 transition opacity-50">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span id="p2-icon" class="text-base shrink-0">🔥</span>
           <div class="truncate leading-tight">
-            <div id="p2-label" class="text-xs font-bold text-pink-400 truncate">P2 (Pink)</div>
-            <div id="p2-turn-text" class="text-[10px] text-slate-400 leading-none">Waiting...</div>
+            <div id="p2-name-label" class="text-xs font-bold text-pink-400 truncate">P2 (Pink)</div>
+            <div id="p2-status" class="text-[9px] text-slate-400 leading-none">Waiting...</div>
           </div>
         </div>
-        <span id="p2-score" class="text-base font-bold text-pink-400 ml-1">0</span>
+        <span id="p2-score" class="text-base font-bold text-pink-300 ml-1">0</span>
       </div>
     </section>
 
     <!-- Turn Banner -->
-    <div id="turn-banner" class="w-full text-center py-1 text-xs font-semibold shrink-0 opacity-80">
-      Drag a piece with mouse/touch or click piece then grid
+    <div id="turn-banner" class="w-full text-center py-1 text-xs font-semibold shrink-0 opacity-80 text-cyan-300">
+      Player 1: Drag a piece or tap piece then board
     </div>
 
-    <!-- 8x8 Board -->
-    <section class="w-full flex items-center justify-center flex-1 my-auto">
-      <div id="board" class="board-bg w-[88vw] max-w-[340px] max-h-[44dvh] aspect-square p-2 rounded-2xl border-2 shadow-xl grid grid-cols-8 gap-1 cursor-pointer"></div>
+    <!-- 8x8 Board Container: Responsive scaling for Mobile, Desktop & TV -->
+    <section class="w-full flex-1 flex items-center justify-center min-h-0 py-1">
+      <div id="board" class="board-bg board-grid-equal w-[min(94vw,56vh,540px)] aspect-square p-2.5 rounded-2xl border-2 shadow-2xl gap-1.5 cursor-pointer touch-none">
+        <!-- 64 cells generated by JS -->
+      </div>
     </section>
 
-    <!-- Tray -->
-    <section class="w-full shrink-0 flex flex-col items-center gap-1 pb-2">
-      <div class="w-full flex items-center justify-between px-2 text-[11px] opacity-70">
+    <!-- Piece Tray Section -->
+    <section class="w-full max-w-lg shrink-0 flex flex-col items-center gap-1 mb-1">
+      <div class="w-full flex items-center justify-between px-2 text-[10px] opacity-70">
         <span id="tray-msg">Drag piece to board:</span>
-        <button id="level-btn" class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 hover:text-white transition">Lvl 1</button>
+        <span id="active-mode-label" class="font-bold text-cyan-400">Pass &amp; Play</span>
       </div>
 
-      <div id="tray" class="panel-bg w-full flex items-center justify-around gap-2 p-2 rounded-2xl border min-h-[76px]">
-        <!-- 3 Slots populated via JS -->
+      <div id="tray" class="panel-bg w-full flex items-center justify-around gap-2 p-2 rounded-2xl border min-h-[76px] shadow-lg touch-none">
+        <!-- 3 Piece Slots -->
       </div>
     </section>
   </main>
 
-  <!-- Settings Modal -->
+  <!-- =========================================================================
+       TV / BIG SCREEN ARENA VIEW (Shown when TV Mode is toggled or opened with ?tv=1)
+       ========================================================================= -->
+  <main id="tv-arena-view" class="w-full max-w-6xl mx-auto flex-1 px-6 py-4 hidden flex-col justify-center items-center">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
+      
+      <!-- Left Column: TV Scoreboard & Player Status -->
+      <div class="lg:col-span-4 flex flex-col gap-4">
+        <!-- Player 1 Card -->
+        <div id="tv-card-p1" class="p-5 rounded-2xl bg-slate-900 border-2 border-cyan-400 shadow-xl transition-all">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span id="tv-p1-icon" class="text-3xl">💎</span>
+              <div>
+                <h3 class="text-base font-bold text-cyan-400">Player 1</h3>
+                <span id="tv-tag-p1" class="text-xs text-cyan-300 font-semibold">Active Turn</span>
+              </div>
+            </div>
+            <span id="tv-score-p1" class="text-4xl font-black text-white">0</span>
+          </div>
+        </div>
+
+        <!-- Player 2 Card -->
+        <div id="tv-card-p2" class="p-5 rounded-2xl bg-slate-900/60 border-2 border-slate-800 shadow-xl transition-all opacity-60">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span id="tv-p2-icon" class="text-3xl">🔥</span>
+              <div>
+                <h3 class="text-base font-bold text-pink-400">Player 2</h3>
+                <span id="tv-tag-p2" class="text-xs text-slate-500 font-semibold">Waiting...</span>
+              </div>
+            </div>
+            <span id="tv-score-p2" class="text-4xl font-black text-slate-400">0</span>
+          </div>
+        </div>
+
+        <!-- TV Status Banner -->
+        <div id="tv-turn-banner" class="p-4 rounded-xl bg-cyan-950/40 border border-cyan-700/50 text-center text-sm font-semibold text-cyan-300">
+          Scan QR with phones to play on TV!
+        </div>
+
+        <button id="exit-tv-btn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+          Exit TV View
+        </button>
+      </div>
+
+      <!-- Center Column: Large 8x8 Board for the Living Room TV -->
+      <div class="lg:col-span-5 flex items-center justify-center">
+        <div id="tv-board-container" class="relative p-4 rounded-3xl bg-slate-900 border-4 border-cyan-500/70 w-[75vw] max-w-[560px] aspect-square shadow-2xl transition-all">
+          <div id="tv-board" class="board-grid-equal gap-2 w-full h-full p-2 bg-slate-950 rounded-2xl overflow-hidden">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: QR Code & Connection Info -->
+      <div class="lg:col-span-3 flex flex-col items-center justify-center bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-xl text-center">
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
+          <span>📱</span> Scan with Phone Camera
+        </span>
+        
+        <div id="tv-qr-box" class="bg-white p-3 rounded-2xl shadow-inner mb-3 flex items-center justify-center min-h-[160px] min-w-[160px]"></div>
+
+        <div class="text-xs text-slate-300 space-y-1">
+          <p class="font-bold text-white">Join Room Code:</p>
+          <p id="tv-room-code" class="text-xl font-mono font-black text-cyan-400 tracking-wider">----</p>
+          <p class="text-[11px] text-slate-400 pt-1 leading-snug">
+            Scan to turn your phone into a handheld controller pad!
+          </p>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800 w-full flex items-center justify-between text-[11px] text-slate-400">
+          <span>Connected Phones:</span>
+          <span id="tv-players-count" class="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-full">0/2</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       SETTINGS & PREFERENCES MODAL
+       ========================================================================= -->
   <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="panel-bg w-full max-w-sm rounded-2xl p-5 border shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-700 pb-2">
         <h3 class="text-base font-bold flex items-center gap-1.5">
           <span>⚙️</span> Settings &amp; Modes
         </h3>
-        <button id="close-settings" class="text-lg font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
+        <button id="close-settings" class="text-xl font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
       </div>
 
-      <!-- Mode Selector -->
+      <!-- Game Mode Selection -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold uppercase tracking-wider opacity-60">Game Mode</label>
         <div class="grid grid-cols-2 gap-2 text-xs">
@@ -177,44 +296,68 @@
         </div>
       </div>
 
-      <!-- Appearance: Light / Dark -->
+      <!-- Level / Scenario Selection -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-bold uppercase tracking-wider opacity-60">Board Scenario / Level</label>
+        <div class="grid grid-cols-4 gap-1.5 text-xs">
+          <button class="lvl-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 font-bold" data-lvl="1">Lvl 1</button>
+          <button class="lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold" data-lvl="2">Lvl 2</button>
+          <button class="lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold" data-lvl="3">Lvl 3</button>
+          <button class="lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold" data-lvl="4">Lvl 4</button>
+        </div>
+      </div>
+
+      <!-- Appearance: Light / Dark Toggle -->
       <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
         <div>
-          <div class="text-sm font-semibold">Appearance</div>
-          <div class="text-xs opacity-60">Switch between Dark and Light display</div>
+          <div class="text-sm font-semibold">Theme Mode</div>
+          <div class="text-xs opacity-60">Switch Light or Dark display</div>
         </div>
         <button id="modal-theme-toggle" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition">
           ☀️ Light
         </button>
       </div>
 
-      <!-- Audio -->
+      <!-- Sound Effects Toggle -->
       <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
         <div>
-          <div class="text-sm font-semibold">Sound Effects</div>
-          <div class="text-xs opacity-60">Piece drop &amp; line clear chimes</div>
+          <div class="text-sm font-semibold">Sound FX</div>
+          <div class="text-xs opacity-60">Piece drop &amp; line clear audio</div>
         </div>
         <button id="sound-btn" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">
           🔊 ON
         </button>
       </div>
 
-      <!-- Restart Match -->
+      <!-- Match History Trigger -->
+      <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
+        <div>
+          <div class="text-sm font-semibold">Match Results</div>
+          <div class="text-xs opacity-60">View win / loss logs</div>
+        </div>
+        <button id="open-history-btn" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          <span>📜</span> History
+        </button>
+      </div>
+
+      <!-- Reset / Version -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs">
-        <span class="opacity-50">Block Clash v3.4</span>
+        <span class="opacity-50 font-mono">v3.5 TV Party</span>
         <button id="reset-btn" class="text-rose-400 hover:underline font-bold">Restart Match</button>
       </div>
     </div>
   </div>
 
-  <!-- Match History Modal -->
+  <!-- =========================================================================
+       MATCH HISTORY MODAL
+       ========================================================================= -->
   <div id="history-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="panel-bg w-full max-w-sm rounded-2xl p-5 border shadow-2xl flex flex-col gap-3 max-h-[80vh]">
       <div class="flex items-center justify-between border-b border-slate-700 pb-2">
         <h3 class="text-base font-bold flex items-center gap-1.5">
           <span>📜</span> Match History
         </h3>
-        <button id="close-history" class="text-lg font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
+        <button id="close-history" class="text-xl font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
       </div>
       <div id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-2 min-h-[160px] pr-1"></div>
       <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs">
@@ -224,12 +367,14 @@
     </div>
   </div>
 
-  <!-- Game Over Modal -->
+  <!-- =========================================================================
+       GAME OVER MODAL
+       ========================================================================= -->
   <div id="gameover-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="panel-bg border-2 border-cyan-500 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-3">
       <div class="text-5xl">🏆</div>
       <h2 id="winner-title" class="text-2xl font-black text-cyan-400">PLAYER 1 WINS!</h2>
-      <p id="winner-reason" class="text-xs opacity-70">No valid moves left on the board.</p>
+      <p id="winner-reason" class="text-xs opacity-70">Rival was trapped with no legal moves left.</p>
       <div class="w-full flex justify-around p-3 my-2 rounded-xl border border-slate-700 bg-slate-800/40">
         <div>
           <div class="text-[10px] opacity-60 font-bold">P1 SCORE</div>
@@ -247,8 +392,11 @@
     </div>
   </div>
 
+  <!-- =========================================================================
+       GAME SCRIPT
+       ========================================================================= -->
   <script>
-    // Audio Synthesizer
+    /* Audio Synthesizer (Zero External Assets) */
     class SoundFX {
       constructor() { this.ctx = null; this.enabled = true; }
       init() {
@@ -299,7 +447,7 @@
     }
     const sfx = new SoundFX();
 
-    // Shapes
+    /* Shapes */
     const SHAPES = [
       { name: 'dot', matrix: [[1]] },
       { name: 'h2', matrix: [[1, 1]] },
@@ -314,21 +462,30 @@
       { name: 't-up', matrix: [[1, 1, 1], [0, 1, 0]] }
     ];
 
-    // State
+    /* Levels & Obstacles */
+    const LEVELS = {
+      1: { title: "Classic Arena", obstacles: [] },
+      2: { title: "Stone Core", obstacles: [[3,3],[3,4],[4,3],[4,4]] },
+      3: { title: "Corner Traps", obstacles: [[0,0],[0,7],[7,0],[7,7]] },
+      4: { title: "Lightning Blitz", obstacles: [[2,2],[2,5],[5,2],[5,5]] }
+    };
+
+    /* State */
     const state = {
       grid: Array(8).fill(null).map(() => Array(8).fill(0)),
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
       mode: 'pass', // 'pass' or 'bot'
-      themeMode: 'dark', // 'dark' or 'light'
+      themeMode: 'dark',
       currentLevel: 1,
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
-      turnsCount: 0,
-      gameOver: false
+      gameOver: false,
+      peer: null,
+      tvCode: null
     };
 
-    // Pointer Drag Tracking
+    /* Robust Drag Engine */
     const drag = {
       active: false,
       piece: null,
@@ -336,20 +493,14 @@
       startX: 0,
       startY: 0,
       hasMoved: false,
-      ghostEl: document.getElementById('floating-drag-ghost')
+      ghostEl: document.getElementById('floating-drag-ghost'),
+      capturedPointerId: null
     };
 
     function initBoard() {
       state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
-      if (state.currentLevel === 2) {
-        state.grid[3][3] = 99; state.grid[3][4] = 99;
-        state.grid[4][3] = 99; state.grid[4][4] = 99;
-      } else if (state.currentLevel === 3) {
-        state.grid[0][0] = 99; state.grid[0][7] = 99;
-        state.grid[7][0] = 99; state.grid[7][7] = 99;
-      } else if (state.currentLevel === 4) {
-        [[2,2],[2,5],[5,2],[5,5]].forEach(([r,c]) => { state.grid[r][c] = 99; });
-      }
+      const config = LEVELS[state.currentLevel] || LEVELS[1];
+      config.obstacles.forEach(([r, c]) => { state.grid[r][c] = 99; });
     }
 
     function renderBoardDOM() {
@@ -362,7 +513,7 @@
           const cell = document.createElement('div');
           cell.dataset.r = r;
           cell.dataset.c = c;
-          cell.className = 'board-cell w-full h-full rounded-md flex items-center justify-center text-sm font-bold select-none transition-all ';
+          cell.className = 'board-cell w-full h-full min-h-0 min-w-0 rounded-md flex items-center justify-center text-sm sm:text-base font-bold select-none transition-all leading-none overflow-hidden ';
 
           if (val === 0) {
             cell.className += 'empty-cell';
@@ -377,12 +528,39 @@
             cell.textContent = '🗿';
           }
 
-          // Desktop Mouse Hover & Click handlers
           cell.addEventListener('mouseenter', () => handleCellHover(r, c));
           cell.addEventListener('mouseleave', () => clearCellHover());
           cell.addEventListener('click', () => handleCellClick(r, c));
 
           board.appendChild(cell);
+        }
+      }
+    }
+
+    function renderTVBoardDOM() {
+      const tvBoard = document.getElementById('tv-board');
+      if (!tvBoard) return;
+      tvBoard.innerHTML = '';
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const val = state.grid[r][c];
+          const cell = document.createElement('div');
+          cell.className = 'w-full h-full min-h-0 min-w-0 rounded-lg flex items-center justify-center text-xl font-bold select-none overflow-hidden ';
+
+          if (val === 0) {
+            cell.className += 'bg-slate-900 border border-slate-800';
+          } else if (val === 1) {
+            cell.className += 'bg-cyan-500/30 border border-cyan-400 text-cyan-300';
+            cell.textContent = '💎';
+          } else if (val === 2) {
+            cell.className += 'bg-pink-500/30 border border-pink-400 text-pink-300';
+            cell.textContent = '🔥';
+          } else if (val === 99) {
+            cell.className += 'bg-slate-700/60 border border-slate-600 text-slate-400';
+            cell.textContent = '🗿';
+          }
+          tvBoard.appendChild(cell);
         }
       }
     }
@@ -402,7 +580,7 @@
 
       state.trayPieces.forEach((piece, idx) => {
         const slot = document.createElement('div');
-        slot.className = `flex-1 h-14 rounded-xl border flex items-center justify-center cursor-grab active:cursor-grabbing transition p-1 ${
+        slot.className = `flex-1 h-14 rounded-xl border flex items-center justify-center cursor-grab active:cursor-grabbing transition p-1 touch-none ${
           state.themeMode === 'dark' ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-100 border-slate-300'
         } ${state.selectedPieceIdx === idx ? 'selected-tray-slot' : ''}`;
 
@@ -427,7 +605,6 @@
 
           slot.appendChild(container);
 
-          // Pointer Down for Desktop Drag + Click Selection
           slot.addEventListener('pointerdown', (e) => {
             if (state.gameOver) return;
             if (state.mode === 'bot' && state.currentPlayer === 2) return;
@@ -439,20 +616,26 @@
             drag.startY = e.clientY;
             drag.piece = piece;
             drag.slotIdx = idx;
+            drag.capturedPointerId = e.pointerId;
 
             state.selectedPieceIdx = idx;
             renderTrayDOM();
 
             buildGhost(piece);
-            window.addEventListener('pointermove', onWindowPointerMove);
-            window.addEventListener('pointerup', onWindowPointerUp);
+
+            try {
+              slot.setPointerCapture(e.pointerId);
+            } catch(err) {}
+
+            slot.addEventListener('pointermove', onPointerMove);
+            slot.addEventListener('pointerup', onPointerUp);
+            slot.addEventListener('pointercancel', onPointerCancel);
           });
         }
         tray.appendChild(slot);
       });
     }
 
-    // Floating Ghost for Dragging
     function buildGhost(piece) {
       const ghost = drag.ghostEl;
       ghost.innerHTML = '';
@@ -473,15 +656,19 @@
       ghost.appendChild(container);
     }
 
-    function onWindowPointerMove(e) {
+    function onPointerMove(e) {
       if (!drag.active) return;
+      e.preventDefault();
+
       const dist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
-      if (dist > 5) {
+      if (dist > 6) {
         drag.hasMoved = true;
         drag.ghostEl.style.display = 'block';
-        const isTouch = window.matchMedia('(pointer: coarse)').matches;
+        
+        const isTouch = (e.pointerType === 'touch' || window.matchMedia('(pointer: coarse)').matches);
+        const offsetY = isTouch ? -55 : 0;
         drag.ghostEl.style.left = `${e.clientX}px`;
-        drag.ghostEl.style.top = `${e.clientY + (isTouch ? -45 : 0)}px`;
+        drag.ghostEl.style.top = `${e.clientY + offsetY}px`;
 
         const cell = getCellUnderPoint(e.clientX, e.clientY);
         if (cell) {
@@ -492,16 +679,24 @@
       }
     }
 
-    function onWindowPointerUp(e) {
+    function onPointerUp(e) {
       if (!drag.active) return;
-      window.removeEventListener('pointermove', onWindowPointerMove);
-      window.removeEventListener('pointerup', onWindowPointerUp);
+      const targetSlot = e.currentTarget;
+
+      try {
+        if (drag.capturedPointerId !== null) {
+          targetSlot.releasePointerCapture(drag.capturedPointerId);
+        }
+      } catch(err) {}
+
+      targetSlot.removeEventListener('pointermove', onPointerMove);
+      targetSlot.removeEventListener('pointerup', onPointerUp);
+      targetSlot.removeEventListener('pointercancel', onPointerCancel);
 
       drag.ghostEl.style.display = 'none';
       clearCellHover();
 
       if (drag.hasMoved) {
-        // Drag release
         const cell = getCellUnderPoint(e.clientX, e.clientY);
         if (cell && drag.piece) {
           const best = findBestFit(drag.piece, cell.r, cell.c);
@@ -510,13 +705,31 @@
           }
         }
       }
+
       drag.active = false;
       drag.piece = null;
+      drag.capturedPointerId = null;
+    }
+
+    function onPointerCancel(e) {
+      const targetSlot = e.currentTarget;
+      try {
+        if (drag.capturedPointerId !== null) targetSlot.releasePointerCapture(drag.capturedPointerId);
+      } catch(err) {}
+      targetSlot.removeEventListener('pointermove', onPointerMove);
+      targetSlot.removeEventListener('pointerup', onPointerUp);
+      targetSlot.removeEventListener('pointercancel', onPointerCancel);
+
+      drag.ghostEl.style.display = 'none';
+      clearCellHover();
+      drag.active = false;
+      drag.piece = null;
+      drag.capturedPointerId = null;
     }
 
     function getCellUnderPoint(x, y) {
       const isTouch = window.matchMedia('(pointer: coarse)').matches;
-      const targetY = isTouch ? y - 45 : y;
+      const targetY = isTouch ? y - 55 : y;
       const els = document.elementsFromPoint(x, targetY);
       for (const el of els) {
         if (el && el.classList && el.classList.contains('board-cell')) {
@@ -526,7 +739,6 @@
       return null;
     }
 
-    // Hover footprint preview (Only highlights the exact piece shape, NOT a giant box)
     function handleCellHover(r, c, overridePiece = null) {
       clearCellHover();
       const piece = overridePiece || (state.selectedPieceIdx !== null ? state.trayPieces[state.selectedPieceIdx] : null);
@@ -544,9 +756,7 @@
             const tr = baseR + pr;
             const tc = baseC + pc;
             const el = document.querySelector(`.board-cell[data-r="${tr}"][data-c="${tc}"]`);
-            if (el) {
-              el.classList.add(isValid ? 'cell-preview-valid' : 'cell-preview-invalid');
-            }
+            if (el) el.classList.add(isValid ? 'cell-preview-valid' : 'cell-preview-invalid');
           }
         }
       }
@@ -588,14 +798,12 @@
     function findBestFit(piece, clickedR, clickedC) {
       if (canPlace(piece, clickedR, clickedC)) return { r: clickedR, c: clickedC };
 
-      // Centered offset search
       const rows = piece.matrix.length;
       const cols = piece.matrix[0].length;
       const centerR = clickedR - Math.floor(rows / 2);
       const centerC = clickedC - Math.floor(cols / 2);
       if (canPlace(piece, centerR, centerC)) return { r: centerR, c: centerC };
 
-      // Adjacent perimeter search
       const offsets = [
         [0, -1], [-1, 0], [0, 1], [1, 0],
         [-1, -1], [-1, 1], [1, -1], [1, 1],
@@ -620,7 +828,6 @@
 
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
-      state.turnsCount++;
 
       checkLines();
 
@@ -633,11 +840,12 @@
       state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
       updateUI();
       renderBoardDOM();
+      renderTVBoardDOM();
 
       checkGameOver();
 
       if (!state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
-        setTimeout(executeBot, 400);
+        setTimeout(executeBot, 450);
       }
     }
 
@@ -695,6 +903,10 @@
         document.getElementById('final-p1-score').textContent = state.scores[1];
         document.getElementById('final-p2-score').textContent = state.scores[2];
         modal.classList.remove('hidden');
+
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
       }
     }
 
@@ -720,46 +932,48 @@
       }
     }
 
-    // UI & Mode Updates
     function updateUI() {
       document.getElementById('p1-score').textContent = state.scores[1];
       document.getElementById('p2-score').textContent = state.scores[2];
 
+      const tvS1 = document.getElementById('tv-score-p1');
+      const tvS2 = document.getElementById('tv-score-p2');
+      if (tvS1) tvS1.textContent = state.scores[1];
+      if (tvS2) tvS2.textContent = state.scores[2];
+
       const p1Card = document.getElementById('p1-card');
       const p2Card = document.getElementById('p2-card');
-      const p1Text = document.getElementById('p1-turn-text');
-      const p2Text = document.getElementById('p2-turn-text');
+      const p1Status = document.getElementById('p1-status');
+      const p2Status = document.getElementById('p2-status');
       const banner = document.getElementById('turn-banner');
 
       if (state.currentPlayer === 1) {
         p1Card.classList.remove('opacity-50');
-        p1Card.classList.add('border-cyan-500/80');
+        p1Card.classList.add('border-cyan-400');
         p2Card.classList.add('opacity-50');
-        p2Card.classList.remove('border-pink-500/80');
-        p1Text.textContent = 'YOUR TURN';
-        p2Text.textContent = 'Waiting...';
-        banner.textContent = 'Player 1: Drag a piece or click to place';
+        p2Card.classList.remove('border-pink-400');
+        p1Status.textContent = 'YOUR TURN';
+        p2Status.textContent = 'Waiting...';
+        banner.textContent = 'Player 1: Drag a piece or tap piece then board';
       } else {
         p2Card.classList.remove('opacity-50');
-        p2Card.classList.add('border-pink-500/80');
+        p2Card.classList.add('border-pink-400');
         p1Card.classList.add('opacity-50');
-        p1Card.classList.remove('border-cyan-500/80');
-        p2Text.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
-        p1Text.textContent = 'Waiting...';
-        banner.textContent = state.mode === 'bot' ? 'Bot is picking a spot...' : 'Player 2: Drag a piece or click to place';
+        p1Card.classList.remove('border-cyan-400');
+        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
+        p1Status.textContent = 'Waiting...';
+        banner.textContent = state.mode === 'bot' ? 'Bot is picking a move...' : 'Player 2: Drag a piece or tap piece then board';
       }
 
-      document.getElementById('badge-mode').textContent = state.mode === 'pass' ? 'Pass & Play' : 'vs AI Bot';
-      document.getElementById('quick-mode-text').textContent = state.mode === 'pass' ? 'Pass' : 'Bot';
-      document.getElementById('p2-label').textContent = state.mode === 'bot' ? 'Bot 🤖' : 'P2 (Pink)';
+      document.getElementById('header-mode-badge').textContent = state.mode === 'pass' ? 'Pass & Play' : 'vs AI Bot';
+      document.getElementById('active-mode-label').textContent = state.mode === 'pass' ? 'Pass & Play' : 'vs AI Bot';
+      document.getElementById('p2-name-label').textContent = state.mode === 'bot' ? 'Bot 🤖' : 'P2 (Pink)';
     }
 
     function toggleTheme() {
       state.themeMode = state.themeMode === 'dark' ? 'light' : 'dark';
       document.body.className = `theme-${state.themeMode} w-full h-[100dvh] flex flex-col justify-between overflow-hidden`;
-      const btn = document.getElementById('theme-mode-btn');
       const modalBtn = document.getElementById('modal-theme-toggle');
-      btn.textContent = state.themeMode === 'dark' ? '☀️' : '🌙';
       modalBtn.textContent = state.themeMode === 'dark' ? '☀️ Light' : '🌙 Dark';
       renderBoardDOM();
       renderTrayDOM();
@@ -768,18 +982,18 @@
     function resetGame() {
       state.scores = { 1: 0, 2: 0 };
       state.currentPlayer = 1;
-      state.turnsCount = 0;
       state.gameOver = false;
       document.getElementById('gameover-modal').classList.add('hidden');
       initBoard();
       replenishTray();
       renderBoardDOM();
+      renderTVBoardDOM();
       updateUI();
     }
 
     function saveHistory(winnerNum) {
       try {
-        const history = JSON.parse(localStorage.getItem('clash_history') || '[]');
+        const history = JSON.parse(localStorage.getItem('clash_history_v35') || '[]');
         history.unshift({
           date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
           winner: winnerNum === 1 ? 'Player 1' : (state.mode === 'bot' ? 'Bot 🤖' : 'Player 2'),
@@ -787,14 +1001,14 @@
           p2: state.scores[2],
           level: `Lvl ${state.currentLevel}`
         });
-        if (history.length > 20) history.pop();
-        localStorage.setItem('clash_history', JSON.stringify(history));
+        if (history.length > 25) history.pop();
+        localStorage.setItem('clash_history_v35', JSON.stringify(history));
       } catch (e) {}
     }
 
     function renderHistory() {
       const container = document.getElementById('history-list');
-      const history = JSON.parse(localStorage.getItem('clash_history') || '[]');
+      const history = JSON.parse(localStorage.getItem('clash_history_v35') || '[]');
       if (!history.length) {
         container.innerHTML = `<div class="text-center text-xs opacity-50 py-8">No match records yet.</div>`;
         return;
@@ -810,21 +1024,60 @@
       `).join('');
     }
 
-    // Listeners
+    /* TV Host Arena Setup */
+    function initTVMode() {
+      document.getElementById('standard-view').classList.add('hidden');
+      document.getElementById('tv-arena-view').classList.remove('hidden');
+      document.getElementById('tv-arena-view').classList.add('flex');
+
+      // Random Room Code
+      const roomCode = 'TV-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+      state.tvCode = roomCode;
+      document.getElementById('tv-room-code').textContent = roomCode;
+
+      const qrBox = document.getElementById('tv-qr-box');
+      qrBox.innerHTML = '';
+      const controllerUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+      try {
+        new QRCode(qrBox, {
+          text: controllerUrl,
+          width: 160,
+          height: 160,
+          colorDark: "#020617",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch(e) {}
+
+      renderTVBoardDOM();
+    }
+
+    function exitTVMode() {
+      document.getElementById('tv-arena-view').classList.add('hidden');
+      document.getElementById('tv-arena-view').classList.remove('flex');
+      document.getElementById('standard-view').classList.remove('hidden');
+      renderBoardDOM();
+    }
+
+    /* Event Listeners */
     document.addEventListener('DOMContentLoaded', () => {
       initBoard();
       replenishTray();
       renderBoardDOM();
       updateUI();
 
-      // Theme Toggles
-      document.getElementById('theme-mode-btn').addEventListener('click', toggleTheme);
-      document.getElementById('modal-theme-toggle').addEventListener('click', toggleTheme);
+      // Check ?tv=1 parameter
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tv') === '1') {
+        initTVMode();
+      }
 
-      // Quick Mode Toggle
-      document.getElementById('quick-mode-btn').addEventListener('click', () => {
-        state.mode = state.mode === 'pass' ? 'bot' : 'pass';
-        resetGame();
+      // TV Mode Toggle in Header
+      document.getElementById('tv-toggle-btn').addEventListener('click', () => {
+        initTVMode();
+      });
+      document.getElementById('exit-tv-btn').addEventListener('click', () => {
+        exitTVMode();
       });
 
       // Settings Modal
@@ -832,6 +1085,7 @@
       document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
       document.getElementById('close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
 
+      // Mode Selector buttons
       document.querySelectorAll('.mode-opt-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           state.mode = btn.dataset.mode;
@@ -844,7 +1098,24 @@
         });
       });
 
-      // Sound
+      // Level Selector buttons
+      document.querySelectorAll('.lvl-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentLevel = parseInt(btn.dataset.lvl, 10);
+          document.querySelectorAll('.lvl-opt-btn').forEach(b => {
+            b.className = parseInt(b.dataset.lvl, 10) === state.currentLevel
+              ? 'lvl-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 font-bold'
+              : 'lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold';
+          });
+          document.getElementById('header-lvl-badge').textContent = `Lvl ${state.currentLevel}`;
+          resetGame();
+        });
+      });
+
+      // Appearance Light/Dark Toggle
+      document.getElementById('modal-theme-toggle').addEventListener('click', toggleTheme);
+
+      // Sound Toggle
       const soundBtn = document.getElementById('sound-btn');
       soundBtn.addEventListener('click', () => {
         sfx.enabled = !sfx.enabled;
@@ -854,28 +1125,21 @@
           : 'px-3 py-1 bg-slate-700 text-slate-400 rounded-lg text-xs font-bold transition';
       });
 
-      // History
+      // History Modal
       const histModal = document.getElementById('history-modal');
-      document.getElementById('history-btn').addEventListener('click', () => {
+      document.getElementById('open-history-btn').addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
         renderHistory();
         histModal.classList.remove('hidden');
       });
       document.getElementById('close-history').addEventListener('click', () => histModal.classList.add('hidden'));
       document.getElementById('history-done-btn').addEventListener('click', () => histModal.classList.add('hidden'));
       document.getElementById('clear-history-btn').addEventListener('click', () => {
-        localStorage.removeItem('clash_history');
+        localStorage.removeItem('clash_history_v35');
         renderHistory();
       });
 
-      // Levels & Reset
-      const levelBtn = document.getElementById('level-btn');
-      levelBtn.addEventListener('click', () => {
-        state.currentLevel = (state.currentLevel % 4) + 1;
-        levelBtn.textContent = `Lvl ${state.currentLevel}`;
-        document.getElementById('badge-lvl').textContent = `Lvl ${state.currentLevel}`;
-        resetGame();
-      });
-
+      // Match Restarts
       document.getElementById('reset-btn').addEventListener('click', () => {
         settingsModal.classList.add('hidden');
         resetGame();
