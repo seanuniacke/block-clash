@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Block Clash Duel</title>
+  <!-- Lightweight PeerJS for cross-household WebRTC play -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -69,7 +71,7 @@
       color: #f1f5f9;
       border: 1px solid #334155;
       border-radius: 8px;
-      padding: 4px 8px;
+      padding: 5px 10px;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
@@ -278,7 +280,7 @@
       opacity: 0.2;
     }
 
-    /* Floating Touch Drag Ghost (Matches Mobile Games) */
+    /* Floating Touch Drag Ghost */
     #drag-ghost {
       position: fixed;
       pointer-events: none;
@@ -351,6 +353,43 @@
       color: #22d3ee;
     }
 
+    /* PvP Remote Box */
+    .pvp-box {
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pvp-input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .pvp-input {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 6px 8px;
+      color: #ffffff;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .pvp-status {
+      font-size: 11px;
+      color: #22d3ee;
+      text-align: center;
+      font-weight: 600;
+      min-height: 16px;
+    }
+
     /* TV View */
     #tv-view {
       display: none;
@@ -410,7 +449,7 @@
     <div class="scoreboard">
       <div id="p1-card" class="score-card active-p1">
         <div>
-          <div class="player-tag" style="color: #22d3ee;">💎 Player 1</div>
+          <div class="player-tag" style="color: #22d3ee;" id="p1-title">💎 Player 1</div>
           <div class="turn-status" id="p1-status">YOUR TURN</div>
         </div>
         <div class="score-val" id="p1-score" style="color: #22d3ee;">0</div>
@@ -458,6 +497,20 @@
           <button id="opt-bot" class="mode-btn">🤖 Bot</button>
           <button id="opt-pvp" class="mode-btn">⚔️ PvP</button>
         </div>
+      </div>
+
+      <!-- Remote PvP Box (Shown when PvP is selected) -->
+      <div id="pvp-panel" class="pvp-box" style="display:none;">
+        <span class="setting-label" style="color:#22d3ee;">Remote Duel (Different Homes)</span>
+        <button id="pvp-create-btn" style="background:#065f46; border-color:#059669; color:#fff; padding:8px;">
+          🔗 Create Room &amp; Copy Link
+        </button>
+        <div style="font-size:10px; color:#94a3b8; text-align:center;">— OR ENTER FRIEND'S CODE —</div>
+        <div class="pvp-input-row">
+          <input type="text" id="pvp-room-input" class="pvp-input" placeholder="CODE (e.g. 7X4K)" maxlength="5" />
+          <button id="pvp-join-btn" style="background:#0284c7; border-color:#0ea5e9; color:#fff;">Join</button>
+        </div>
+        <div id="pvp-status-msg" class="pvp-status"></div>
       </div>
 
       <div class="setting-row">
@@ -530,11 +583,15 @@
       ],
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass',
+      mode: 'pass', // 'pass', 'bot', 'pvp'
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
       gameOver: false,
-      isTV: false
+      isTV: false,
+      // Remote PvP parameters
+      peer: null,
+      conn: null,
+      myPlayerNum: 1
     };
 
     // Mobile Drag Engine State
@@ -626,12 +683,10 @@
           });
           slot.appendChild(container);
 
-          // Native Touch Listeners (Cancels scroll and locks directly onto finger)
           slot.addEventListener('touchstart', function(e) {
             handleDragStart(e.touches[0].clientX, e.touches[0].clientY, piece, idx, slot);
           }, { passive: false });
 
-          // Desktop Mouse Fallback
           slot.addEventListener('mousedown', function(e) {
             handleDragStart(e.clientX, e.clientY, piece, idx, slot);
           });
@@ -640,7 +695,6 @@
       });
     }
 
-    // Compute actual board cell pixel size so the floating piece matches the grid exactly
     function updateCellSize() {
       var board = document.getElementById('board');
       if (board && board.firstElementChild) {
@@ -648,10 +702,10 @@
       }
     }
 
-    // Drag Initialization
     function handleDragStart(clientX, clientY, piece, idx, slotEl) {
       if (state.gameOver) return;
       if (state.mode === 'bot' && state.currentPlayer === 2) return;
+      if (state.mode === 'pvp' && state.currentPlayer !== state.myPlayerNum) return;
 
       updateCellSize();
       drag.active = true;
@@ -672,7 +726,6 @@
       window.addEventListener('mouseup', onMouseUp);
     }
 
-    // Floating Ghost that matches board dimensions exactly
     function buildScaledGhost(piece) {
       var ghost = drag.ghostEl;
       ghost.innerHTML = '';
@@ -713,7 +766,6 @@
           if (drag.slotEl) drag.slotEl.classList.add('dragging-source');
         }
 
-        // Lift piece 70px above fingertip on touch screen so the thumb never blocks vision
         var offsetY = isTouch ? -70 : 0;
         drag.ghostEl.style.left = x + 'px';
         drag.ghostEl.style.top = (y + offsetY) + 'px';
@@ -743,7 +795,6 @@
           }
         }
       } else {
-        // Simple tap: select slot for tap-to-place
         state.selectedPieceIdx = (state.selectedPieceIdx === drag.slotIdx) ? null : drag.slotIdx;
         renderTrayDOM();
       }
@@ -759,7 +810,6 @@
       window.removeEventListener('mouseup', onMouseUp);
     }
 
-    // Touch Event Handlers
     function onTouchMove(e) {
       if (!drag.active) return;
       e.preventDefault();
@@ -778,7 +828,6 @@
       processDragEnd(0, 0, true);
     }
 
-    // Mouse Handlers
     function onMouseMove(e) {
       processDragMove(e.clientX, e.clientY, false);
     }
@@ -787,7 +836,6 @@
       processDragEnd(e.clientX, e.clientY, false);
     }
 
-    // Accurate hit-testing on mobile
     function getCellAt(x, y) {
       var el = document.elementFromPoint(x, y);
       if (el && el.classList.contains('cell')) {
@@ -864,6 +912,7 @@
 
     function onCellClick(r, c) {
       if (state.gameOver) return;
+      if (state.mode === 'pvp' && state.currentPlayer !== state.myPlayerNum) return;
       if (state.selectedPieceIdx === null) return;
       var piece = state.trayPieces[state.selectedPieceIdx];
       if (!piece) return;
@@ -874,7 +923,7 @@
       commitDrop(piece, fit.r, fit.c, state.selectedPieceIdx);
     }
 
-    function commitDrop(piece, r, c, slotIdx) {
+    function commitDrop(piece, r, c, slotIdx, isRemote) {
       var m = piece.matrix;
       for (var pr = 0; pr < m.length; pr++) {
         for (var pc = 0; pc < m[pr].length; pc++) {
@@ -886,11 +935,26 @@
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
 
+      // Broadcast move to remote opponent if connected
+      if (!isRemote && state.conn && state.conn.open) {
+        state.conn.send({
+          type: 'move',
+          piece: piece,
+          r: r,
+          c: c,
+          slotIdx: slotIdx
+        });
+      }
+
       checkLines();
 
       var allUsed = state.trayPieces.every(function(p) { return p === null; });
       if (allUsed) {
         replenishTray();
+        // Sync new tray to remote player
+        if (!isRemote && state.conn && state.conn.open) {
+          state.conn.send({ type: 'syncTray', tray: state.trayPieces });
+        }
       } else {
         renderTrayDOM();
       }
@@ -970,7 +1034,7 @@
         for (var r = 0; r < 8; r++) {
           for (var c = 0; c < 8; c++) {
             if (canPlace(item.piece, r, c)) {
-              moves.push({ piece: item.piece, slot: item.idx, r, c: c });
+              moves.push({ piece: item.piece, slot: item.idx, r: r, c: c });
             }
           }
         }
@@ -992,6 +1056,7 @@
       var p2Card = document.getElementById('p2-card');
       var p1Status = document.getElementById('p1-status');
       var p2Status = document.getElementById('p2-status');
+      var banner = document.getElementById('banner');
 
       if (state.currentPlayer === 1) {
         p1Card.className = 'score-card active-p1';
@@ -1005,7 +1070,16 @@
         p1Status.textContent = 'WAITING';
       }
 
-      document.getElementById('p2-name').textContent = state.mode === 'bot' ? '🤖 Bot' : '🔥 Player 2';
+      if (state.mode === 'pvp') {
+        document.getElementById('p1-title').textContent = (state.myPlayerNum === 1 ? '💎 You (P1)' : '💎 Opponent');
+        document.getElementById('p2-name').textContent = (state.myPlayerNum === 2 ? '🔥 You (P2)' : '🔥 Opponent');
+        banner.textContent = (state.currentPlayer === state.myPlayerNum) ? "Your turn! Place your piece." : "Waiting for friend's move...";
+      } else {
+        document.getElementById('p1-title').textContent = '💎 Player 1';
+        document.getElementById('p2-name').textContent = state.mode === 'bot' ? '🤖 Bot' : '🔥 Player 2';
+        banner.textContent = 'Drag piece with finger, or tap piece then grid';
+      }
+
       var modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', pvp: 'PvP Duel' };
       document.getElementById('mode-label').textContent = modeNames[state.mode];
     }
@@ -1049,7 +1123,99 @@
       if (newMode === 'pass') document.getElementById('opt-pass').classList.add('active-opt');
       if (newMode === 'bot') document.getElementById('opt-bot').classList.add('active-opt');
       if (newMode === 'pvp') document.getElementById('opt-pvp').classList.add('active-opt');
+
+      var pvpPanel = document.getElementById('pvp-panel');
+      if (newMode === 'pvp') {
+        pvpPanel.style.display = 'flex';
+      } else {
+        pvpPanel.style.display = 'none';
+      }
       resetGame();
+    }
+
+    // --- Remote WebRTC Matchmaking Logic ---
+    function generateCleanRoomId() {
+      var chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+      var code = '';
+      for (var i = 0; i < 5; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    function createPvPRoom() {
+      var statusEl = document.getElementById('pvp-status-msg');
+      statusEl.textContent = 'Creating room...';
+
+      if (state.peer) try { state.peer.destroy(); } catch (e) {}
+
+      var code = generateCleanRoomId();
+      var fullId = 'BC-' + code;
+      state.peer = new Peer(fullId);
+
+      state.peer.on('open', function() {
+        state.myPlayerNum = 1;
+        var joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
+
+        // Automatically copy invite link to clipboard
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(joinUrl);
+        }
+
+        statusEl.innerHTML = 'Room: <b style="color:#fff; font-size:14px;">' + code + '</b><br><span style="color:#10b981;">✅ Link copied! Text it to your friend.</span>';
+
+        state.peer.on('connection', function(conn) {
+          state.conn = conn;
+          setupConnListeners(conn);
+          statusEl.textContent = 'Friend joined! Duel starting...';
+          setTimeout(function() {
+            document.getElementById('settings-modal').classList.remove('open');
+          }, 800);
+        });
+      });
+
+      state.peer.on('error', function(err) {
+        statusEl.textContent = 'Connection error. Please retry.';
+      });
+    }
+
+    function joinPvPRoom(code) {
+      if (!code) return;
+      var statusEl = document.getElementById('pvp-status-msg');
+      statusEl.textContent = 'Connecting to ' + code.toUpperCase() + '...';
+
+      if (state.peer) try { state.peer.destroy(); } catch (e) {}
+
+      state.peer = new Peer();
+      state.peer.on('open', function() {
+        state.myPlayerNum = 2;
+        var targetId = 'BC-' + code.toUpperCase().trim();
+        var conn = state.peer.connect(targetId, { reliable: true });
+        state.conn = conn;
+        setupConnListeners(conn);
+
+        conn.on('open', function() {
+          statusEl.textContent = 'Connected! Match starting...';
+          setTimeout(function() {
+            document.getElementById('settings-modal').classList.remove('open');
+          }, 800);
+        });
+      });
+
+      state.peer.on('error', function(err) {
+        statusEl.textContent = 'Room not found. Check the code.';
+      });
+    }
+
+    function setupConnListeners(conn) {
+      conn.on('data', function(data) {
+        if (data.type === 'move') {
+          commitDrop(data.piece, data.r, data.c, data.slotIdx, true);
+        } else if (data.type === 'syncTray') {
+          state.trayPieces = data.tray;
+          renderTrayDOM();
+        }
+      });
     }
 
     // Direct Boot Engine
@@ -1069,6 +1235,13 @@
       document.getElementById('opt-pass').onclick = function() { setMode('pass'); };
       document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
       document.getElementById('opt-pvp').onclick = function() { setMode('pvp'); };
+
+      // Remote PvP Buttons
+      document.getElementById('pvp-create-btn').onclick = createPvPRoom;
+      document.getElementById('pvp-join-btn').onclick = function() {
+        var code = document.getElementById('pvp-room-input').value;
+        joinPvPRoom(code);
+      };
 
       var sBtn = document.getElementById('sound-btn');
       sBtn.onclick = function() {
@@ -1090,6 +1263,16 @@
           tvBtn.textContent = '📺 TV';
         }
       };
+
+      // Check URL parameters for direct link joins (?room=CODE)
+      var params = new URLSearchParams(window.location.search);
+      var roomParam = params.get('room');
+      if (roomParam) {
+        setMode('pvp');
+        modal.classList.add('open');
+        document.getElementById('pvp-room-input').value = roomParam;
+        joinPvPRoom(roomParam);
+      }
     }
 
     bootGame();
