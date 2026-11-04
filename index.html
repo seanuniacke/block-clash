@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,6 +11,7 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     html, body {
@@ -21,6 +22,7 @@
       background-color: #090d16;
       color: #f1f5f9;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: none;
     }
 
     body {
@@ -83,13 +85,13 @@
       color: #ffffff;
     }
 
-    /* Main Container (Optimized for Mobile Viewport) */
+    /* Main Container */
     main {
       flex: 1;
       width: 100%;
-      max-width: 460px;
+      max-width: 440px;
       margin: 0 auto;
-      padding: 4px 10px 8px;
+      padding: 4px 8px 6px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -148,7 +150,6 @@
       font-weight: 800;
     }
 
-    /* Banner */
     #banner {
       font-size: 11px;
       font-weight: 600;
@@ -166,12 +167,11 @@
       justify-content: center;
       flex: 1;
       min-height: 0;
-      padding: 2px 0;
     }
 
     #board {
-      width: min(84vw, 42dvh, 380px);
-      height: min(84vw, 42dvh, 380px);
+      width: min(84vw, 42dvh, 360px);
+      height: min(84vw, 42dvh, 360px);
       aspect-ratio: 1 / 1;
       background: #030712;
       border: 2px solid #1e293b;
@@ -182,7 +182,6 @@
       grid-template-rows: repeat(8, 1fr);
       gap: 3px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      touch-action: none;
     }
 
     .cell {
@@ -196,7 +195,6 @@
       align-items: center;
       justify-content: center;
       font-size: 13px;
-      cursor: pointer;
       pointer-events: auto;
     }
 
@@ -210,9 +208,14 @@
       border-color: #ec4899;
     }
 
-    .cell.preview {
-      background: rgba(34, 211, 238, 0.55) !important;
+    .cell.preview-valid {
+      background: rgba(34, 211, 238, 0.6) !important;
       outline: 2px solid #22d3ee;
+    }
+
+    .cell.preview-invalid {
+      background: rgba(244, 63, 94, 0.5) !important;
+      outline: 2px solid #f43f5e;
     }
 
     /* Piece Tray */
@@ -222,7 +225,7 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      touch-action: none;
+      padding-bottom: 6px;
     }
 
     .tray-bar {
@@ -236,7 +239,7 @@
 
     #tray {
       width: 100%;
-      height: 70px;
+      height: 76px;
       background: #0f172a;
       border: 1px solid #1e293b;
       border-radius: 12px;
@@ -245,7 +248,6 @@
       align-items: center;
       gap: 6px;
       padding: 6px;
-      touch-action: none;
     }
 
     .slot {
@@ -258,7 +260,6 @@
       align-items: center;
       justify-content: center;
       cursor: grab;
-      touch-action: none;
       transition: border-color 0.15s, transform 0.15s;
     }
 
@@ -273,19 +274,22 @@
       cursor: default;
     }
 
-    /* Floating Touch / Mouse Drag Avatar */
+    .slot.dragging-source {
+      opacity: 0.2;
+    }
+
+    /* Floating Touch Drag Ghost (Matches Mobile Games) */
     #drag-ghost {
       position: fixed;
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
       display: none;
-      opacity: 0.9;
-      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6));
-      touch-action: none;
+      opacity: 0.95;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.75));
     }
 
-    /* Settings Modal */
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -379,7 +383,7 @@
 </head>
 <body>
 
-  <!-- Floating Drag Piece -->
+  <!-- Floating Touch Ghost Avatar -->
   <div id="drag-ghost"></div>
 
   <!-- Top Bar -->
@@ -466,7 +470,7 @@
   </div>
 
   <script>
-    // Audio Engine
+    // Audio Synthesizer
     var soundEnabled = true;
     var audioCtx = null;
     function playSfx(type) {
@@ -480,7 +484,7 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         if (type === 'place') {
-          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.setValueAtTime(320, now);
           osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
           gain.gain.setValueAtTime(0.2, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
@@ -490,7 +494,7 @@
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(523, now);
           osc.frequency.setValueAtTime(659, now + 0.08);
-          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.setValueAtTime(0.25, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
           osc.start(now);
           osc.stop(now + 0.25);
@@ -498,7 +502,7 @@
       } catch (e) {}
     }
 
-    // Shapes
+    // Standard Shapes
     var SHAPES = [
       { matrix: [[1]] },
       { matrix: [[1, 1]] },
@@ -512,7 +516,7 @@
       { matrix: [[1, 1, 1], [0, 1, 0]] }
     ];
 
-    // Master State
+    // Master Game State
     var state = {
       grid: [
         [0,0,0,0,0,0,0,0],
@@ -533,7 +537,7 @@
       isTV: false
     };
 
-    // Touch & Pointer Drag Tracker
+    // Mobile Drag Engine State
     var drag = {
       active: false,
       piece: null,
@@ -541,6 +545,8 @@
       startX: 0,
       startY: 0,
       hasMoved: false,
+      slotEl: null,
+      cellSize: 38,
       ghostEl: document.getElementById('drag-ghost')
     };
 
@@ -595,6 +601,7 @@
       state.trayPieces.forEach(function(piece, idx) {
         var slot = document.createElement('div');
         slot.className = 'slot' + (state.selectedPieceIdx === idx ? ' selected' : '');
+        slot.dataset.idx = idx;
 
         if (!piece) {
           slot.className += ' used';
@@ -619,52 +626,76 @@
           });
           slot.appendChild(container);
 
-          // Pointer Down for Touch Drag & Click Placement
-          slot.addEventListener('pointerdown', function(e) {
-            if (state.gameOver) return;
-            if (state.mode === 'bot' && state.currentPlayer === 2) return;
-            e.preventDefault();
+          // Native Touch Listeners (Cancels scroll and locks directly onto finger)
+          slot.addEventListener('touchstart', function(e) {
+            handleDragStart(e.touches[0].clientX, e.touches[0].clientY, piece, idx, slot);
+          }, { passive: false });
 
-            drag.active = true;
-            drag.hasMoved = false;
-            drag.startX = e.clientX;
-            drag.startY = e.clientY;
-            drag.piece = piece;
-            drag.slotIdx = idx;
-
-            state.selectedPieceIdx = idx;
-            renderTrayDOM();
-
-            buildGhost(piece);
-            window.addEventListener('pointermove', onPointerMove, { passive: false });
-            window.addEventListener('pointerup', onPointerUp);
-            window.addEventListener('pointercancel', onPointerCancel);
+          // Desktop Mouse Fallback
+          slot.addEventListener('mousedown', function(e) {
+            handleDragStart(e.clientX, e.clientY, piece, idx, slot);
           });
         }
         tray.appendChild(slot);
       });
     }
 
-    // Build Floating Ghost for Touch/Mouse Drag
-    function buildGhost(piece) {
+    // Compute actual board cell pixel size so the floating piece matches the grid exactly
+    function updateCellSize() {
+      var board = document.getElementById('board');
+      if (board && board.firstElementChild) {
+        drag.cellSize = board.firstElementChild.getBoundingClientRect().width;
+      }
+    }
+
+    // Drag Initialization
+    function handleDragStart(clientX, clientY, piece, idx, slotEl) {
+      if (state.gameOver) return;
+      if (state.mode === 'bot' && state.currentPlayer === 2) return;
+
+      updateCellSize();
+      drag.active = true;
+      drag.hasMoved = false;
+      drag.startX = clientX;
+      drag.startY = clientY;
+      drag.piece = piece;
+      drag.slotIdx = idx;
+      drag.slotEl = slotEl;
+
+      buildScaledGhost(piece);
+
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', onTouchEnd, { passive: false });
+      window.addEventListener('touchcancel', onTouchCancel, { passive: false });
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    }
+
+    // Floating Ghost that matches board dimensions exactly
+    function buildScaledGhost(piece) {
       var ghost = drag.ghostEl;
       ghost.innerHTML = '';
       var rows = piece.matrix.length;
       var cols = piece.matrix[0].length;
+      var cs = Math.max(drag.cellSize, 28);
+
       var container = document.createElement('div');
       container.style.display = 'grid';
       container.style.gap = '3px';
-      container.style.padding = '6px';
+      container.style.padding = '4px';
       container.style.background = 'rgba(15, 23, 42, 0.9)';
-      container.style.borderRadius = '10px';
-      container.style.border = '1px solid #22d3ee';
-      container.style.gridTemplateRows = 'repeat(' + rows + ', 22px)';
-      container.style.gridTemplateColumns = 'repeat(' + cols + ', 22px)';
+      container.style.borderRadius = '8px';
+      container.style.border = '2px solid #22d3ee';
+      container.style.gridTemplateRows = 'repeat(' + rows + ', ' + cs + 'px)';
+      container.style.gridTemplateColumns = 'repeat(' + cols + ', ' + cs + 'px)';
 
       piece.matrix.forEach(function(row) {
         row.forEach(function(val) {
           var c = document.createElement('div');
-          c.style.borderRadius = '3px';
+          c.style.borderRadius = '4px';
+          c.style.width = cs + 'px';
+          c.style.height = cs + 'px';
           c.style.background = val ? (state.currentPlayer === 1 ? '#22d3ee' : '#ec4899') : 'transparent';
           container.appendChild(c);
         });
@@ -672,63 +703,91 @@
       ghost.appendChild(container);
     }
 
-    function onPointerMove(e) {
+    function processDragMove(x, y, isTouch) {
       if (!drag.active) return;
-      e.preventDefault();
-      var dist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
-      if (dist > 6) {
-        drag.hasMoved = true;
-        drag.ghostEl.style.display = 'block';
+      var dist = Math.hypot(x - drag.startX, y - drag.startY);
+      if (dist > 8) {
+        if (!drag.hasMoved) {
+          drag.hasMoved = true;
+          drag.ghostEl.style.display = 'block';
+          if (drag.slotEl) drag.slotEl.classList.add('dragging-source');
+        }
 
-        // Offset upward on touch screen so the user's thumb does not hide the drop location
-        var isTouch = e.pointerType === 'touch';
-        var offsetY = isTouch ? -55 : 0;
-        drag.ghostEl.style.left = e.clientX + 'px';
-        drag.ghostEl.style.top = (e.clientY + offsetY) + 'px';
+        // Lift piece 70px above fingertip on touch screen so the thumb never blocks vision
+        var offsetY = isTouch ? -70 : 0;
+        drag.ghostEl.style.left = x + 'px';
+        drag.ghostEl.style.top = (y + offsetY) + 'px';
 
-        var cell = getCellAt(e.clientX, e.clientY + offsetY);
+        var cell = getCellAt(x, y + offsetY);
         if (cell) {
-          previewHover(cell.r, cell.c);
+          previewHover(cell.r, cell.c, drag.piece);
         } else {
           clearHover();
         }
       }
     }
 
-    function onPointerUp(e) {
+    function processDragEnd(x, y, isTouch) {
       if (!drag.active) return;
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerCancel);
-
       drag.ghostEl.style.display = 'none';
+      if (drag.slotEl) drag.slotEl.classList.remove('dragging-source');
       clearHover();
 
       if (drag.hasMoved) {
-        var isTouch = e.pointerType === 'touch';
-        var offsetY = isTouch ? -55 : 0;
-        var cell = getCellAt(e.clientX, e.clientY + offsetY);
+        var offsetY = isTouch ? -70 : 0;
+        var cell = getCellAt(x, y + offsetY);
         if (cell && drag.piece) {
           var fit = findFit(drag.piece, cell.r, cell.c);
           if (fit) {
             commitDrop(drag.piece, fit.r, fit.c, drag.slotIdx);
           }
         }
+      } else {
+        // Simple tap: select slot for tap-to-place
+        state.selectedPieceIdx = (state.selectedPieceIdx === drag.slotIdx) ? null : drag.slotIdx;
+        renderTrayDOM();
       }
+
       drag.active = false;
       drag.piece = null;
+      drag.slotEl = null;
+
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchCancel);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     }
 
-    function onPointerCancel() {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerCancel);
-      drag.ghostEl.style.display = 'none';
-      clearHover();
-      drag.active = false;
-      drag.piece = null;
+    // Touch Event Handlers
+    function onTouchMove(e) {
+      if (!drag.active) return;
+      e.preventDefault();
+      var t = e.touches[0];
+      processDragMove(t.clientX, t.clientY, true);
     }
 
+    function onTouchEnd(e) {
+      if (!drag.active) return;
+      e.preventDefault();
+      var t = e.changedTouches[0];
+      processDragEnd(t.clientX, t.clientY, true);
+    }
+
+    function onTouchCancel(e) {
+      processDragEnd(0, 0, true);
+    }
+
+    // Mouse Handlers
+    function onMouseMove(e) {
+      processDragMove(e.clientX, e.clientY, false);
+    }
+
+    function onMouseUp(e) {
+      processDragEnd(e.clientX, e.clientY, false);
+    }
+
+    // Accurate hit-testing on mobile
     function getCellAt(x, y) {
       var el = document.elementFromPoint(x, y);
       if (el && el.classList.contains('cell')) {
@@ -770,31 +829,36 @@
       return null;
     }
 
-    function previewHover(r, c) {
+    function previewHover(r, c, overridePiece) {
       clearHover();
-      if (state.selectedPieceIdx === null) return;
-      var piece = state.trayPieces[state.selectedPieceIdx];
+      var piece = overridePiece || (state.selectedPieceIdx !== null ? state.trayPieces[state.selectedPieceIdx] : null);
       if (!piece) return;
 
       var fit = findFit(piece, r, c);
-      if (!fit) return;
-
       var m = piece.matrix;
+      var baseR = fit ? fit.r : r;
+      var baseC = fit ? fit.c : c;
+      var isValid = fit !== null;
+
       for (var pr = 0; pr < m.length; pr++) {
         for (var pc = 0; pc < m[pr].length; pc++) {
           if (m[pr][pc]) {
-            var idx = (fit.r + pr) * 8 + (fit.c + pc);
-            var el = document.getElementById('board').children[idx];
-            if (el) el.classList.add('preview');
+            var tr = baseR + pr;
+            var tc = baseC + pc;
+            if (tr >= 0 && tr < 8 && tc >= 0 && tc < 8) {
+              var idx = tr * 8 + tc;
+              var el = document.getElementById('board').children[idx];
+              if (el) el.classList.add(isValid ? 'preview-valid' : 'preview-invalid');
+            }
           }
         }
       }
     }
 
     function clearHover() {
-      var previews = document.querySelectorAll('.cell.preview');
-      for (var i = 0; i < previews.length; i++) {
-        previews[i].classList.remove('preview');
+      var cells = document.querySelectorAll('.cell');
+      for (var i = 0; i < cells.length; i++) {
+        cells[i].classList.remove('preview-valid', 'preview-invalid');
       }
     }
 
@@ -906,7 +970,7 @@
         for (var r = 0; r < 8; r++) {
           for (var c = 0; c < 8; c++) {
             if (canPlace(item.piece, r, c)) {
-              moves.push({ piece: item.piece, slot: item.idx, r: r, c: c });
+              moves.push({ piece: item.piece, slot: item.idx, r, c: c });
             }
           }
         }
@@ -988,7 +1052,7 @@
       resetGame();
     }
 
-    // Direct Boot
+    // Direct Boot Engine
     function bootGame() {
       initBoard();
       replenishTray();
