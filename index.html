@@ -51,14 +51,14 @@
     body.theme-light .panel-box { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
     body.theme-light .inner-box { background: #f8fafc; border: 1px solid #cbd5e1; }
     body.theme-light .cell { background: #ffffff; border: 1px solid #cbd5e1; }
-    body.theme-light .cell:hover { background: #f1f5f9; }
+    body.theme-light .cell:hover { background: #f8fafc; }
     body.theme-light .cell.obstacle { background: #94a3b8; border: 1px solid #64748b; color: #1e293b; }
     body.theme-light button { background: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; }
     body.theme-light button:hover { background: #cbd5e1; }
     body.theme-light .input-field { background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; }
-    body.theme-light .brand-sub { color: #64748b; }
-    body.theme-light .turn-status { color: #64748b; }
-    body.theme-light .tray-bar { color: #64748b; }
+    body.theme-light .brand-sub, 
+    body.theme-light .turn-status, 
+    body.theme-light .tray-bar, 
     body.theme-light .setting-label { color: #64748b; }
 
     body {
@@ -67,10 +67,10 @@
       justify-content: space-between;
     }
 
-    /* Top Navigation Bar */
+    /* Top Bar */
     header {
       width: 100%;
-      height: 46px;
+      height: 44px;
       padding: 0 14px;
       display: flex;
       align-items: center;
@@ -115,8 +115,8 @@
 
     button {
       border-radius: 8px;
-      padding: 6px 11px;
-      font-size: 12px;
+      padding: 5px 11px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       transition: transform 0.1s ease, background 0.15s ease;
@@ -132,25 +132,26 @@
       color: #ffffff !important;
     }
 
-    /* Main Container (Uncapped for desktop & large displays) */
+    /* Main Container: dynamically scales cleanly across phones, tablets, and large 4K/desktop screens */
     main {
       flex: 1;
       width: 100%;
-      max-width: 680px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 4px 10px 8px;
+      padding: 4px 12px 6px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       min-height: 0;
       overflow: hidden;
-      gap: 4px;
+      gap: 6px;
     }
 
     /* Scoreboard */
     .scoreboard {
       width: 100%;
+      max-width: 600px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -159,7 +160,7 @@
 
     .score-card {
       border-radius: 12px;
-      padding: 6px 12px;
+      padding: 5px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -183,7 +184,7 @@
     .player-tag {
       font-size: 12px;
       font-weight: 800;
-      max-width: 130px;
+      max-width: 140px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -197,20 +198,21 @@
     }
 
     .score-val {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 900;
     }
 
-    /* Status Banner (Used strictly for network state and alerts) */
+    /* Banner for network / PvP alerts */
     #banner {
       display: none;
       font-size: 11px;
       font-weight: 700;
       text-align: center;
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: 8px;
       flex-shrink: 0;
       width: 100%;
+      max-width: 600px;
       align-items: center;
       justify-content: center;
       gap: 8px;
@@ -230,27 +232,30 @@
       color: #34d399 !important;
     }
 
-    /* Maximized Responsive 8x8 Board Frame */
+    /* ================= MAXIMIZED BOARD FRAME ================= */
     .board-frame {
       width: 100%;
+      flex: 1 1 0;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex: 1;
-      min-height: 0;
     }
 
+    /* Board expands to 100% of the available height between top and bottom trays */
     #board {
-      width: min(94vw, calc(100dvh - 210px), 620px);
-      height: min(94vw, calc(100dvh - 210px), 620px);
-      aspect-ratio: 1 / 1;
+      height: 100% !important;
+      max-height: 80vh !important;
+      width: auto !important;
+      max-width: 95vw !important;
+      aspect-ratio: 1 / 1 !important;
       border-radius: 16px;
       padding: 6px;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
       gap: 4px;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
       cursor: pointer;
     }
 
@@ -258,11 +263,11 @@
       width: 100%;
       height: 100%;
       aspect-ratio: 1 / 1;
-      border-radius: 6px;
+      border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(14px, 3.2vw, 24px);
+      font-size: clamp(14px, 2.5vmin, 26px);
       line-height: 1;
       overflow: hidden;
       transition: background-color 0.1s ease;
@@ -291,9 +296,10 @@
       outline-offset: -2px;
     }
 
-    /* Piece Tray (Directly under board) */
+    /* Piece Tray (Directly Below Board) */
     .tray-wrap {
       width: 100%;
+      max-width: 600px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
@@ -312,7 +318,7 @@
 
     #tray {
       width: 100%;
-      height: 74px;
+      height: 76px;
       border-radius: 14px;
       display: flex;
       justify-content: space-around;
@@ -347,13 +353,14 @@
       opacity: 0.2;
     }
 
-    /* Bottom Quick Join Bar (Under Tray) */
+    /* Bottom Quick Join Bar (Under Piece Tray) */
     .quick-join-bar {
       width: 100%;
+      max-width: 600px;
       display: flex;
       gap: 8px;
       flex-shrink: 0;
-      padding-top: 2px;
+      padding-top: 1px;
     }
 
     .input-field {
@@ -412,7 +419,7 @@
       padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 13px;
+      gap: 12px;
       max-height: 90vh;
       overflow-y: auto;
     }
@@ -439,23 +446,9 @@
       letter-spacing: 0.5px;
     }
 
-    .btn-group-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .btn-group-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
-    }
-
-    .btn-group-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-    }
+    .btn-group-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .btn-group-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .btn-group-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 
     .opt-btn.active-opt {
       background: #083344 !important;
@@ -508,8 +501,8 @@
     }
 
     #tv-board-grid {
-      width: min(84vmin, 580px);
-      height: min(84vmin, 580px);
+      width: min(84vmin, 600px);
+      height: min(84vmin, 600px);
       background: #030712;
       border: 4px solid #4f46e5;
       border-radius: 20px;
@@ -550,7 +543,7 @@
 
   <!-- Main Game Arena -->
   <main id="game-view">
-    <!-- Scoreboard (Tap name to edit) -->
+    <!-- Scoreboard -->
     <div class="scoreboard">
       <div id="p1-card" class="panel-box score-card active-p1">
         <div>
@@ -569,13 +562,13 @@
       </div>
     </div>
 
-    <!-- Status Banner (Shows waiting/connected status in PvP) -->
+    <!-- Status Banner for PvP Notifications -->
     <div id="banner" class="panel-box">
       <span id="banner-text">Connecting...</span>
       <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 7px; font-size:10px;">📲 Share Link</button>
     </div>
 
-    <!-- 8x8 Maximized Board -->
+    <!-- Maximized 8x8 Board Frame -->
     <div class="board-frame">
       <div id="board" class="inner-box"></div>
     </div>
@@ -925,7 +918,7 @@
       startY: 0,
       hasMoved: false,
       slotEl: null,
-      cellSize: 42,
+      cellSize: 46,
       ghostEl: document.getElementById('drag-ghost')
     };
 
@@ -950,7 +943,7 @@
       }
       var lvl = LEVELS[state.currentLevel] || LEVELS[1];
       lvl.obstacles.forEach(function(coord) {
-        state.grid[coord[0]][coord[1]] = 99; // 99 = Unbreakable Bedrock Stone
+        state.grid[coord[0]][coord[1]] = 99; // 99 = Bedrock Obstacle
       });
     }
 
@@ -1086,8 +1079,8 @@
       var container = document.createElement('div');
       container.style.display = 'grid';
       container.style.gap = '3px';
-      container.style.padding = '4px';
-      container.style.background = 'rgba(15, 23, 42, 0.9)';
+      container.style.padding = '5px';
+      container.style.background = 'rgba(15, 23, 42, 0.92)';
       container.style.borderRadius = '8px';
       container.style.border = '2px solid #22d3ee';
       container.style.gridTemplateRows = 'repeat(' + rows + ', ' + cs + 'px)';
@@ -1205,7 +1198,7 @@
             var br = targetR + r;
             var bc = targetC + c;
             if (br < 0 || br >= 8 || bc < 0 || bc >= 8) return false;
-            if (state.grid[br][bc] !== 0) return false; // Blocked if occupied or bedrock (99)
+            if (state.grid[br][bc] !== 0) return false;
           }
         }
       }
@@ -1789,6 +1782,11 @@
       renderBoardDOM();
       updateUI();
 
+      // Recalculate cell bounds on window resize
+      window.addEventListener('resize', function() {
+        updateCellSize();
+      });
+
       var settingsModal = document.getElementById('settings-modal');
       var inviteModal = document.getElementById('join-invite-modal');
       var historyModal = document.getElementById('history-modal');
@@ -1964,4 +1962,3 @@
   </script>
 </body>
 </html>
-
