@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Block Clash Duel</title>
+  <title>Clash of Lorna</title>
+  
+  <!-- Fierce Female Warrior SVG Tab Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧝‍♀️</text></svg>">
+
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
@@ -26,40 +30,42 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* ================= THEMES ================= */
-    /* Dark Theme (Default) */
+    /* ================= BALANCED NEUTRAL THEMES ================= */
+    /* Dark Theme: Deep Charcoal / Slate Graphite */
     body.theme-dark {
-      background-color: #090d16;
-      color: #f1f5f9;
+      background-color: #0d1117;
+      color: #e6edf3;
     }
-    body.theme-dark header { background: #0f172a; border-bottom: 1px solid #1e293b; }
-    body.theme-dark .panel-box { background: #0f172a; border: 1px solid #1e293b; }
-    body.theme-dark .inner-box { background: #090d16; border: 1px solid #1e293b; }
-    body.theme-dark .cell { background: #0f172a; border: 1px solid #1e293b; }
-    body.theme-dark .cell:hover { background: #1e293b; }
-    body.theme-dark .cell.obstacle { background: #334155; border: 1px solid #475569; color: #94a3b8; }
-    body.theme-dark button { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; }
-    body.theme-dark button:hover { background: #334155; }
-    body.theme-dark .input-field { background: #090d16; border: 1px solid #334155; color: #f1f5f9; }
+    body.theme-dark header { background: #161b22; border-bottom: 1px solid #30363d; }
+    body.theme-dark .panel-box { background: #161b22; border: 1px solid #30363d; }
+    body.theme-dark .inner-box { background: #0b0e14; border: 1px solid #30363d; }
+    body.theme-dark .cell { background: #161b22; border: 1px solid #282e38; }
+    body.theme-dark .cell:hover { background: #21262d; }
+    body.theme-dark .cell.obstacle { background: #484f58; border: 1px solid #6e7681; color: #c9d1d9; }
+    body.theme-dark button { background: #21262d; color: #e6edf3; border: 1px solid #363b42; }
+    body.theme-dark button:hover { background: #30363d; }
+    body.theme-dark .input-field { background: #0d1117; border: 1px solid #30363d; color: #f0f6fc; }
+    body.theme-dark .avatar-pillar { background: #161b22; border: 1px solid #30363d; }
 
-    /* Light Theme */
+    /* Light Theme: Warm Slate Gray & Clean Paper Contrast */
     body.theme-light {
-      background-color: #f1f5f9;
-      color: #0f172a;
+      background-color: #eef2f6;
+      color: #1e293b;
     }
     body.theme-light header { background: #ffffff; border-bottom: 1px solid #cbd5e1; }
-    body.theme-light .panel-box { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
-    body.theme-light .inner-box { background: #f8fafc; border: 1px solid #cbd5e1; }
-    body.theme-light .cell { background: #ffffff; border: 1px solid #cbd5e1; }
+    body.theme-light .panel-box { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
+    body.theme-light .inner-box { background: #e2e8f0; border: 1px solid #cbd5e1; }
+    body.theme-light .cell { background: #ffffff; border: 1.5px solid #cbd5e1; }
     body.theme-light .cell:hover { background: #f8fafc; }
-    body.theme-light .cell.obstacle { background: #94a3b8; border: 1px solid #64748b; color: #1e293b; }
-    body.theme-light button { background: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; }
-    body.theme-light button:hover { background: #cbd5e1; }
-    body.theme-light .input-field { background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; }
+    body.theme-light .cell.obstacle { background: #94a3b8; border: 1.5px solid #64748b; color: #0f172a; }
+    body.theme-light button { background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; }
+    body.theme-light button:hover { background: #e2e8f0; }
+    body.theme-light .input-field { background: #ffffff; border: 1.5px solid #cbd5e1; color: #0f172a; }
     body.theme-light .brand-sub, 
     body.theme-light .turn-status, 
     body.theme-light .tray-bar, 
     body.theme-light .setting-label { color: #64748b; }
+    body.theme-light .avatar-pillar { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
 
     body {
       display: flex;
@@ -70,7 +76,7 @@
     /* Top Bar */
     header {
       width: 100%;
-      height: 44px;
+      height: 46px;
       padding: 0 14px;
       display: flex;
       align-items: center;
@@ -79,18 +85,29 @@
       z-index: 20;
     }
 
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .warrior-logo {
+      font-size: 22px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
     .brand-title {
       font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      background: linear-gradient(to right, #22d3ee, #f43f5e);
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      background: linear-gradient(to right, #06b6d4, #f43f5e);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .brand-sub {
       font-size: 10px;
-      color: #94a3b8;
       display: flex;
       gap: 5px;
       align-items: center;
@@ -101,10 +118,13 @@
       font-size: 9px;
       padding: 1px 5px;
       border-radius: 4px;
-      background: rgba(34, 211, 238, 0.12);
-      border: 1px solid rgba(34, 211, 238, 0.35);
-      color: #22d3ee;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #0891b2;
       font-weight: 700;
+    }
+    body.theme-dark .badge-sub {
+      color: #22d3ee;
     }
 
     .header-btns {
@@ -136,7 +156,7 @@
     main {
       flex: 1;
       width: 100%;
-      max-width: 600px;
+      max-width: 780px;
       margin: 0 auto;
       padding: 4px 12px 10px;
       display: flex;
@@ -145,11 +165,13 @@
       justify-content: space-between;
       min-height: 0;
       overflow: hidden;
+      position: relative;
     }
 
     /* Scoreboard */
     .scoreboard {
       width: 100%;
+      max-width: 600px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -158,22 +180,26 @@
 
     .score-card {
       border-radius: 12px;
-      padding: 5px 12px;
+      padding: 6px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      transition: border-color 0.2s, opacity 0.2s;
+      transition: border-color 0.2s, opacity 0.2s, transform 0.2s;
     }
 
     .score-card.active-p1 {
-      border: 2px solid #06b6d4 !important;
+      border: 2px solid #0891b2 !important;
       opacity: 1;
+      transform: translateY(-1px);
     }
+    body.theme-dark .score-card.active-p1 { border-color: #06b6d4 !important; }
 
     .score-card.active-p2 {
-      border: 2px solid #ec4899 !important;
+      border: 2px solid #e11d48 !important;
       opacity: 1;
+      transform: translateY(-1px);
     }
+    body.theme-dark .score-card.active-p2 { border-color: #ec4899 !important; }
 
     .score-card.waiting {
       opacity: 0.45;
@@ -187,16 +213,18 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .turn-status {
       font-size: 9px;
       font-weight: 700;
-      color: #94a3b8;
     }
 
     .score-val {
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 900;
     }
 
@@ -220,31 +248,98 @@
       display: flex !important;
       background: rgba(234, 179, 8, 0.15) !important;
       border: 1px solid rgba(234, 179, 8, 0.4) !important;
-      color: #facc15 !important;
+      color: #b45309 !important;
     }
+    body.theme-dark .banner-waiting { color: #facc15 !important; }
 
     .banner-connected {
       display: flex !important;
       background: rgba(16, 185, 129, 0.15) !important;
       border: 1px solid rgba(16, 185, 129, 0.4) !important;
-      color: #34d399 !important;
+      color: #059669 !important;
     }
+    body.theme-dark .banner-connected { color: #34d399 !important; }
 
-    /* ================= BALANCED RESPONSIVE BOARD ================= */
-    .board-frame {
+    /* Arena & Drop-Down Warrior Pedestals */
+    .arena-row {
       width: 100%;
       flex: 1 1 auto;
       min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 4px 0;
+      gap: 12px;
+      position: relative;
     }
 
-    /* Sized cleanly against viewport height minus UI elements (header, scores, tray, join bar) */
+    .avatar-flank {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 62px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 640px) {
+      .avatar-flank { display: none; } /* Focus on board on compact phones */
+    }
+
+    .avatar-pillar {
+      border-radius: 14px;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      text-align: center;
+      transform: translateY(-500px);
+      opacity: 0;
+    }
+
+    /* Epic Drop & Ground Slam Keyframes */
+    @keyframes dropAndSlam {
+      0% {
+        transform: translateY(-450px) scale(0.9);
+        opacity: 0;
+      }
+      70% {
+        transform: translateY(10px) scale(1.05);
+        opacity: 1;
+      }
+      85% {
+        transform: translateY(-6px) scale(0.98);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .avatar-pillar.drop-in {
+      animation: dropAndSlam 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .avatar-icon-large {
+      font-size: 30px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+    }
+
+    .avatar-name-label {
+      font-size: 10px;
+      font-weight: 800;
+      max-width: 54px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Balanced Responsive Board */
     #board {
-      width: min(92vw, calc(100dvh - 275px), 520px);
-      height: min(92vw, calc(100dvh - 275px), 520px);
+      width: min(90vw, calc(100dvh - 275px), 520px);
+      height: min(90vw, calc(100dvh - 275px), 520px);
       aspect-ratio: 1 / 1;
       border-radius: 16px;
       padding: 6px;
@@ -252,7 +347,7 @@
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
       gap: 4px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
       cursor: pointer;
       flex-shrink: 0;
     }
@@ -277,8 +372,8 @@
     }
 
     .cell.p2 {
-      background: rgba(236, 72, 153, 0.35) !important;
-      border-color: #ec4899 !important;
+      background: rgba(244, 63, 94, 0.35) !important;
+      border-color: #f43f5e !important;
     }
 
     .cell.preview-valid {
@@ -294,9 +389,10 @@
       outline-offset: -2px;
     }
 
-    /* Piece Tray (Directly Below Board) */
+    /* Piece Tray */
     .tray-wrap {
       width: 100%;
+      max-width: 600px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
@@ -309,7 +405,6 @@
       align-items: center;
       font-size: 11px;
       font-weight: 700;
-      color: #94a3b8;
       padding: 0 4px;
     }
 
@@ -350,9 +445,10 @@
       opacity: 0.2;
     }
 
-    /* Bottom Quick Join Bar (Spaced cleanly underneath tray) */
+    /* Bottom Quick Join Bar */
     .quick-join-bar {
       width: 100%;
+      max-width: 600px;
       display: flex;
       gap: 8px;
       flex-shrink: 0;
@@ -411,7 +507,7 @@
 
     .modal-box {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       border-radius: 18px;
       padding: 18px;
       display: flex;
@@ -438,7 +534,6 @@
     .setting-label {
       font-size: 11px;
       font-weight: 800;
-      color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -446,8 +541,17 @@
     .btn-group-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .btn-group-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
     .btn-group-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 
-    .opt-btn.active-opt {
+    .avatar-opt-btn {
+      font-size: 20px;
+      padding: 6px 0;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .opt-btn.active-opt, .avatar-opt-btn.active-opt {
       background: #083344 !important;
       border-color: #06b6d4 !important;
       color: #22d3ee !important;
@@ -515,14 +619,17 @@
 
   <div id="drag-ghost"></div>
 
-  <!-- Top Bar -->
+  <!-- Top Bar with Fierce Female Warrior Branding -->
   <header>
-    <div>
-      <div class="brand-title">BLOCK CLASH DUEL</div>
-      <div class="brand-sub">
-        <span id="mode-label">Pass &amp; Play</span> •
-        <span id="level-label" class="badge-sub">Lvl 1</span> •
-        <span id="winrule-label" class="badge-sub">🪤 Survival</span>
+    <div class="brand-wrap">
+      <span class="warrior-logo">🧝‍♀️</span>
+      <div>
+        <div class="brand-title">CLASH OF LORNA</div>
+        <div class="brand-sub">
+          <span id="mode-label">Pass &amp; Play</span> •
+          <span id="level-label" class="badge-sub">Lvl 1</span> •
+          <span id="winrule-label" class="badge-sub">🪤 Survival</span>
+        </div>
       </div>
     </div>
     <div class="header-btns">
@@ -544,18 +651,18 @@
     <div class="scoreboard">
       <div id="p1-card" class="panel-box score-card active-p1">
         <div>
-          <div class="player-tag" style="color: #22d3ee;" id="p1-title">💎 Player 1 ✏️</div>
+          <div class="player-tag" style="color: #0891b2;" id="p1-title"><span id="p1-display-avatar">🧝‍♀️</span> Player 1 ✏️</div>
           <div class="turn-status" id="p1-status">YOUR TURN</div>
         </div>
-        <div class="score-val" id="p1-score" style="color: #22d3ee;">0</div>
+        <div class="score-val" id="p1-score" style="color: #0891b2;">0</div>
       </div>
 
       <div id="p2-card" class="panel-box score-card waiting">
         <div>
-          <div class="player-tag" id="p2-name" style="color: #ec4899;">🔥 Player 2 ✏️</div>
+          <div class="player-tag" id="p2-name" style="color: #e11d48;"><span id="p2-display-avatar">⚔️</span> Player 2 ✏️</div>
           <div class="turn-status" id="p2-status">WAITING</div>
         </div>
-        <div class="score-val" id="p2-score" style="color: #ec4899;">0</div>
+        <div class="score-val" id="p2-score" style="color: #e11d48;">0</div>
       </div>
     </div>
 
@@ -565,9 +672,28 @@
       <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 7px; font-size:10px;">📲 Share Link</button>
     </div>
 
-    <!-- Maximized 8x8 Board Frame -->
-    <div class="board-frame">
-      <div id="board" class="inner-box"></div>
+    <!-- Arena with Animated Drop-Down Flanks Beside Board -->
+    <div class="arena-row">
+      <!-- Player 1 Flank Pedestal -->
+      <div class="avatar-flank">
+        <div id="p1-pillar" class="avatar-pillar drop-in">
+          <span class="avatar-icon-large" id="p1-flank-avatar">🧝‍♀️</span>
+          <span class="avatar-name-label" id="p1-flank-name">P1</span>
+        </div>
+      </div>
+
+      <!-- Maximized 8x8 Board Frame -->
+      <div class="board-frame">
+        <div id="board" class="inner-box"></div>
+      </div>
+
+      <!-- Player 2 Flank Pedestal -->
+      <div class="avatar-flank">
+        <div id="p2-pillar" class="avatar-pillar drop-in">
+          <span class="avatar-icon-large" id="p2-flank-avatar">⚔️</span>
+          <span class="avatar-name-label" id="p2-flank-name">P2</span>
+        </div>
+      </div>
     </div>
 
     <!-- Piece Tray (Directly Below Board) -->
@@ -589,9 +715,9 @@
   <!-- Guest Match Invite Prompt -->
   <div id="join-invite-modal" class="modal">
     <div class="modal-box panel-box" style="text-align: center; align-items: center; border: 2px solid #06b6d4;">
-      <div style="font-size: 34px;">⚔️</div>
+      <div style="font-size: 34px;">🧝‍♀️</div>
       <h3 style="font-size: 16px; font-weight: 800; color: #22d3ee;">Match Invite Received!</h3>
-      <p style="font-size: 12px; color: #94a3b8;">You've been invited to duel.</p>
+      <p style="font-size: 12px; color: #94a3b8;">You've been challenged to duel in Clash of Lorna.</p>
 
       <div style="width:100%; display:flex; flex-direction:column; gap:4px; text-align:left;">
         <span class="setting-label">Your Name</span>
@@ -604,7 +730,7 @@
       </div>
 
       <button id="accept-join-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px;">
-        🎮 Tap to Join Match
+        ⚔️ Enter Arena
       </button>
     </div>
   </div>
@@ -621,6 +747,37 @@
       <div class="setting-row">
         <span class="setting-label">Your Player Name</span>
         <input type="text" id="host-name-input" class="input-field" placeholder="Player 1" maxlength="14" />
+      </div>
+
+      <!-- Avatar Selector -->
+      <div class="setting-row">
+        <span class="setting-label">Choose Your Avatar</span>
+        <div class="avatar-grid" id="avatar-picker-grid">
+          <button class="avatar-opt-btn active-opt" data-avatar="🧝‍♀️">🧝‍♀️</button>
+          <button class="avatar-opt-btn" data-avatar="⚔️">⚔️</button>
+          <button class="avatar-opt-btn" data-avatar="🧙‍♀️">🧙‍♀️</button>
+          <button class="avatar-opt-btn" data-avatar="🛡️">🛡️</button>
+          <button class="avatar-opt-btn" data-avatar="🐉">🐉</button>
+          <button class="avatar-opt-btn" data-avatar="🦅">🦅</button>
+          <button class="avatar-opt-btn" data-avatar="🦁">🦁</button>
+          <button class="avatar-opt-btn" data-avatar="🐺">🐺</button>
+          <button class="avatar-opt-btn" data-avatar="🐯">🐯</button>
+          <button class="avatar-opt-btn" data-avatar="🦊">🦊</button>
+          <button class="avatar-opt-btn" data-avatar="👑">👑</button>
+          <button class="avatar-opt-btn" data-avatar="💎">💎</button>
+        </div>
+      </div>
+
+      <!-- Piece Type Selection -->
+      <div class="setting-row">
+        <span class="setting-label">Piece Appearance / Icons</span>
+        <div class="btn-group-3" style="grid-template-columns: repeat(3, 1fr);">
+          <button class="piece-theme-btn opt-btn active-opt" data-theme="gems">💎 Gems</button>
+          <button class="piece-theme-btn opt-btn" data-theme="runes">🛡️ Runes</button>
+          <button class="piece-theme-btn opt-btn" data-theme="celestial">⭐ Stars</button>
+          <button class="piece-theme-btn opt-btn" data-theme="elements">⚡ Elements</button>
+          <button class="piece-theme-btn opt-btn" data-theme="minimal">🟦 Minimal</button>
+        </div>
       </div>
 
       <!-- Theme Switcher -->
@@ -822,14 +979,14 @@
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
           osc.start(now);
           osc.stop(now + 0.25);
-        } else if (type === 'connect') {
+        } else if (type === 'connect' || type === 'slam') {
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(440, now);
-          osc.frequency.setValueAtTime(880, now + 0.15);
-          gain.gain.setValueAtTime(0.3, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(60, now + 0.2);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
           osc.start(now);
-          osc.stop(now + 0.3);
+          osc.stop(now + 0.2);
         } else if (type === 'win') {
           osc.type = 'sine';
           osc.frequency.setValueAtTime(440, now);
@@ -864,6 +1021,14 @@
       6: { title: "Gauntlet", obstacles: [[1,1],[1,6],[6,1],[6,6],[3,3],[3,4],[4,3],[4,4]] }
     };
 
+    var PIECE_THEMES = {
+      gems: { 1: '💎', 2: '🔥' },
+      runes: { 1: '🛡️', 2: '⚔️' },
+      celestial: { 1: '⭐', 2: '🌙' },
+      elements: { 1: '⚡', 2: '💧' },
+      minimal: { 1: '', 2: '' }
+    };
+
     var state = {
       grid: [
         [0,0,0,0,0,0,0,0],
@@ -878,7 +1043,8 @@
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
       mode: 'pass', // 'pass', 'bot', 'pvp'
-      theme: localStorage.getItem('blockclash_theme') || 'dark',
+      theme: localStorage.getItem('lorna_theme') || 'dark',
+      pieceTheme: localStorage.getItem('lorna_piece_theme') || 'gems',
       winCondition: 'trap', // 'trap' (survival outlast) or 'race' (points target)
       targetScore: 2000,
       currentLevel: 1,
@@ -886,15 +1052,18 @@
       trayPieces: [null, null, null],
       gameOver: false,
       isTV: false,
-      isTouchDevice: false,
       peer: null,
       conn: null,
       myPlayerNum: 1,
       activeRoomCode: null,
       isConnected: false,
       playerNames: {
-        1: localStorage.getItem('blockclash_name_1') || 'Player 1',
-        2: localStorage.getItem('blockclash_name_2') || 'Player 2'
+        1: localStorage.getItem('lorna_name_1') || 'Player 1',
+        2: localStorage.getItem('lorna_name_2') || 'Player 2'
+      },
+      playerAvatars: {
+        1: localStorage.getItem('lorna_avatar_1') || '🧝‍♀️',
+        2: localStorage.getItem('lorna_avatar_2') || '⚔️'
       }
     };
 
@@ -915,21 +1084,30 @@
       startY: 0,
       hasMoved: false,
       slotEl: null,
-      cellSize: 42,
+      cellSize: 46,
       ghostEl: document.getElementById('drag-ghost')
     };
 
-    function detectDeviceType() {
-      state.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
-    }
-
     function applyTheme(theme) {
       state.theme = theme;
-      localStorage.setItem('blockclash_theme', theme);
+      localStorage.setItem('lorna_theme', theme);
       document.body.className = 'theme-' + theme;
       document.getElementById('theme-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
       document.getElementById('theme-dark-opt').classList.toggle('active-opt', theme === 'dark');
       document.getElementById('theme-light-opt').classList.toggle('active-opt', theme === 'light');
+    }
+
+    function triggerIntroDropAnimation() {
+      var p1 = document.getElementById('p1-pillar');
+      var p2 = document.getElementById('p2-pillar');
+      if (p1 && p2) {
+        p1.classList.remove('drop-in');
+        p2.classList.remove('drop-in');
+        void p1.offsetWidth; // Trigger reflow
+        p1.classList.add('drop-in');
+        p2.classList.add('drop-in');
+        playSfx('slam');
+      }
     }
 
     function initBoard() {
@@ -940,7 +1118,7 @@
       }
       var lvl = LEVELS[state.currentLevel] || LEVELS[1];
       lvl.obstacles.forEach(function(coord) {
-        state.grid[coord[0]][coord[1]] = 99; // 99 = Unbreakable Bedrock Obstacle
+        state.grid[coord[0]][coord[1]] = 99; // 99 = Bedrock Obstacle
       });
     }
 
@@ -948,6 +1126,8 @@
       var board = document.getElementById('board');
       if (!board) return;
       board.innerHTML = '';
+      var iconMap = PIECE_THEMES[state.pieceTheme] || PIECE_THEMES.gems;
+
       for (var r = 0; r < 8; r++) {
         for (var c = 0; c < 8; c++) {
           var val = state.grid[r][c];
@@ -957,10 +1137,10 @@
           cell.dataset.c = c;
           if (val === 1) {
             cell.className += ' p1';
-            cell.textContent = '💎';
+            cell.textContent = iconMap[1];
           } else if (val === 2) {
             cell.className += ' p2';
-            cell.textContent = '🔥';
+            cell.textContent = iconMap[2];
           } else if (val === 99) {
             cell.className += ' obstacle';
             cell.textContent = '🗿';
@@ -1002,7 +1182,7 @@
 
         if (!piece) {
           slot.className += ' used';
-          slot.innerHTML = '<span style="font-size:10px; color:#475569; font-weight:800;">USED</span>';
+          slot.innerHTML = '<span style="font-size:10px; color:#64748b; font-weight:800;">USED</span>';
         } else {
           var rows = piece.matrix.length;
           var cols = piece.matrix[0].length;
@@ -1017,7 +1197,7 @@
             row.forEach(function(val) {
               var b = document.createElement('div');
               b.style.borderRadius = '2px';
-              b.style.background = val ? (state.currentPlayer === 1 ? '#22d3ee' : '#ec4899') : 'transparent';
+              b.style.background = val ? (state.currentPlayer === 1 ? '#06b6d4' : '#f43f5e') : 'transparent';
               container.appendChild(b);
             });
           });
@@ -1072,14 +1252,16 @@
       var rows = piece.matrix.length;
       var cols = piece.matrix[0].length;
       var cs = Math.max(drag.cellSize, 28);
+      var iconMap = PIECE_THEMES[state.pieceTheme] || PIECE_THEMES.gems;
+      var activeIcon = iconMap[state.currentPlayer] || '';
 
       var container = document.createElement('div');
       container.style.display = 'grid';
       container.style.gap = '3px';
       container.style.padding = '5px';
-      container.style.background = 'rgba(15, 23, 42, 0.92)';
+      container.style.background = state.theme === 'dark' ? 'rgba(22, 27, 34, 0.95)' : 'rgba(255, 255, 255, 0.95)';
       container.style.borderRadius = '8px';
-      container.style.border = '2px solid #22d3ee';
+      container.style.border = '2px solid #06b6d4';
       container.style.gridTemplateRows = 'repeat(' + rows + ', ' + cs + 'px)';
       container.style.gridTemplateColumns = 'repeat(' + cols + ', ' + cs + 'px)';
 
@@ -1089,7 +1271,12 @@
           c.style.borderRadius = '4px';
           c.style.width = cs + 'px';
           c.style.height = cs + 'px';
-          c.style.background = val ? (state.currentPlayer === 1 ? '#22d3ee' : '#ec4899') : 'transparent';
+          c.style.display = 'flex';
+          c.style.alignItems = 'center';
+          c.style.justifyContent = 'center';
+          c.style.fontSize = Math.floor(cs * 0.55) + 'px';
+          c.style.background = val ? (state.currentPlayer === 1 ? 'rgba(6, 182, 212, 0.45)' : 'rgba(244, 63, 94, 0.45)') : 'transparent';
+          if (val && activeIcon) c.textContent = activeIcon;
           container.appendChild(c);
         });
       });
@@ -1195,7 +1382,7 @@
             var br = targetR + r;
             var bc = targetC + c;
             if (br < 0 || br >= 8 || bc < 0 || bc >= 8) return false;
-            if (state.grid[br][bc] !== 0) return false; // Blocked if occupied or bedrock (99)
+            if (state.grid[br][bc] !== 0) return false;
           }
         }
       }
@@ -1370,7 +1557,7 @@
 
     function recordMatchHistory(winnerNum) {
       try {
-        var history = JSON.parse(localStorage.getItem('blockclash_history') || '[]');
+        var history = JSON.parse(localStorage.getItem('lorna_history') || '[]');
         var winnerName = state.playerNames[winnerNum] || ('Player ' + winnerNum);
         var p1Name = state.playerNames[1] || 'Player 1';
         var p2Name = state.mode === 'bot' ? 'Bot' : (state.playerNames[2] || 'Player 2');
@@ -1387,22 +1574,22 @@
         });
 
         if (history.length > 20) history.pop();
-        localStorage.setItem('blockclash_history', JSON.stringify(history));
+        localStorage.setItem('lorna_history', JSON.stringify(history));
       } catch (e) {}
     }
 
     function renderHistoryList() {
       var container = document.getElementById('history-list');
-      var history = JSON.parse(localStorage.getItem('blockclash_history') || '[]');
+      var history = JSON.parse(localStorage.getItem('lorna_history') || '[]');
       if (!history.length) {
-        container.innerHTML = '<div style="text-align:center; font-size:11px; color:#94a3b8; padding:16px;">No matches recorded yet.</div>';
+        container.innerHTML = '<div style="text-align:center; font-size:11px; color:#64748b; padding:16px;">No matches recorded yet.</div>';
         return;
       }
       container.innerHTML = history.map(function(m) {
         return '<div class="history-card inner-box">' +
           '<div>' +
-            '<div style="font-weight:700; color:#22d3ee;">🏆 ' + m.winner + ' Won</div>' +
-            '<div style="font-size:9px; color:#94a3b8;">' + m.p1 + ' vs ' + m.p2 + ' • ' + (m.mode || 'Duel') + ' • ' + m.date + '</div>' +
+            '<div style="font-weight:700; color:#06b6d4;">🏆 ' + m.winner + ' Won</div>' +
+            '<div style="font-size:9px; color:#64748b;">' + m.p1 + ' vs ' + m.p2 + ' • ' + (m.mode || 'Duel') + ' • ' + m.date + '</div>' +
           '</div>' +
           '<div style="font-weight:800; font-size:13px;">' + m.score1 + ' - ' + m.score2 + '</div>' +
         '</div>';
@@ -1417,7 +1604,7 @@
       var modal = document.getElementById('gameover-modal');
       var winnerName = state.playerNames[winnerNum] || ('Player ' + winnerNum);
       document.getElementById('winner-title').textContent = winnerName.toUpperCase() + ' WINS!';
-      document.getElementById('winner-title').style.color = winnerNum === 1 ? '#22d3ee' : '#ec4899';
+      document.getElementById('winner-title').style.color = winnerNum === 1 ? '#0891b2' : '#e11d48';
       document.getElementById('winner-reason').textContent = reason;
       document.getElementById('final-p1-name').textContent = state.playerNames[1];
       document.getElementById('final-p2-name').textContent = state.mode === 'bot' ? 'Bot 🤖' : state.playerNames[2];
@@ -1515,8 +1702,16 @@
         p1Status.textContent = 'WAITING';
       }
 
-      document.getElementById('p1-title').innerHTML = '💎 ' + state.playerNames[1] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
-      document.getElementById('p2-name').innerHTML = '🔥 ' + (state.mode === 'bot' ? 'Bot 🤖' : state.playerNames[2] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>');
+      // Display Player Names & Avatars
+      document.getElementById('p1-display-avatar').textContent = state.playerAvatars[1];
+      document.getElementById('p2-display-avatar').textContent = state.mode === 'bot' ? '🤖' : state.playerAvatars[2];
+      document.getElementById('p1-flank-avatar').textContent = state.playerAvatars[1];
+      document.getElementById('p2-flank-avatar').textContent = state.mode === 'bot' ? '🤖' : state.playerAvatars[2];
+      document.getElementById('p1-flank-name').textContent = state.playerNames[1];
+      document.getElementById('p2-flank-name').textContent = state.mode === 'bot' ? 'Bot' : state.playerNames[2];
+
+      document.getElementById('p1-title').innerHTML = state.playerAvatars[1] + ' ' + state.playerNames[1] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
+      document.getElementById('p2-name').innerHTML = (state.mode === 'bot' ? '🤖 Bot' : state.playerAvatars[2] + ' ' + state.playerNames[2]) + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
 
       var settingsRoomBox = document.getElementById('settings-room-status');
       var settingsActiveCode = document.getElementById('settings-active-code');
@@ -1529,14 +1724,14 @@
 
         if (!state.isConnected) {
           banner.className = 'panel-box banner-waiting';
-          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for player)';
+          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for rival)';
           shareAgainBtn.style.display = 'inline-block';
         } else {
           banner.className = 'panel-box banner-connected';
           if (state.currentPlayer === state.myPlayerNum) {
-            bannerText.textContent = '🟢 Duel Live! YOUR TURN (' + state.playerNames[state.myPlayerNum] + ')';
+            bannerText.textContent = '🟢 Arena Live! YOUR TURN (' + state.playerNames[state.myPlayerNum] + ')';
           } else {
-            bannerText.textContent = '🟢 Duel Live! ' + state.playerNames[state.currentPlayer] + "'s turn...";
+            bannerText.textContent = '🟢 Arena Live! ' + state.playerNames[state.currentPlayer] + "'s turn...";
           }
           shareAgainBtn.style.display = 'none';
         }
@@ -1560,6 +1755,7 @@
       replenishTray();
       renderBoardDOM();
       updateUI();
+      triggerIntroDropAnimation();
       if (state.isTV) renderTVBoard();
     }
 
@@ -1567,18 +1763,20 @@
       var tvGrid = document.getElementById('tv-board-grid');
       if (!tvGrid) return;
       tvGrid.innerHTML = '';
+      var iconMap = PIECE_THEMES[state.pieceTheme] || PIECE_THEMES.gems;
+
       for (var r = 0; r < 8; r++) {
         for (var c = 0; c < 8; c++) {
           var val = state.grid[r][c];
           var cell = document.createElement('div');
-          cell.style.background = '#0f172a';
+          cell.style.background = '#161b22';
           cell.style.borderRadius = '6px';
           cell.style.display = 'flex';
           cell.style.alignItems = 'center';
           cell.style.justifyContent = 'center';
           cell.style.fontSize = '22px';
-          if (val === 1) cell.textContent = '💎';
-          else if (val === 2) cell.textContent = '🔥';
+          if (val === 1) cell.textContent = iconMap[1];
+          else if (val === 2) cell.textContent = iconMap[2];
           else if (val === 99) cell.textContent = '🗿';
           tvGrid.appendChild(cell);
         }
@@ -1611,15 +1809,15 @@
       var joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
       if (navigator.share) {
         navigator.share({
-          title: 'Block Clash Duel',
-          text: 'Join my Block Clash match! Room Code: ' + code,
+          title: 'Clash of Lorna',
+          text: 'Challenge me in Clash of Lorna! Room Code: ' + code,
           url: joinUrl
         }).catch(function() {});
       } else if (navigator.clipboard) {
         navigator.clipboard.writeText(joinUrl);
-        alert('Room Link Copied!\n\nCode: ' + code + '\n' + joinUrl);
+        alert('Arena Link Copied!\n\nCode: ' + code + '\n' + joinUrl);
       } else {
-        prompt('Copy room link:', joinUrl);
+        prompt('Copy arena link:', joinUrl);
       }
     }
 
@@ -1668,7 +1866,7 @@
       var bannerText = document.getElementById('banner-text');
       var banner = document.getElementById('banner');
       banner.className = 'panel-box banner-waiting';
-      bannerText.textContent = 'Connecting to room...';
+      bannerText.textContent = 'Entering arena...';
 
       if (state.peer) {
         try { state.peer.destroy(); } catch (e) {}
@@ -1690,7 +1888,7 @@
       });
 
       state.peer.on('error', function() {
-        alert('Could not connect to room. Check code and retry.');
+        alert('Could not connect to arena. Check code and retry.');
         updateUI();
       });
     }
@@ -1704,6 +1902,8 @@
           type: 'handshake',
           playerNum: state.myPlayerNum,
           name: state.playerNames[state.myPlayerNum],
+          avatar: state.playerAvatars[state.myPlayerNum],
+          pieceTheme: state.pieceTheme,
           level: state.currentLevel,
           winCondition: state.winCondition,
           targetScore: state.targetScore
@@ -1714,6 +1914,7 @@
         }
 
         updateUI();
+        triggerIntroDropAnimation();
       });
 
       conn.on('data', function(data) {
@@ -1726,60 +1927,78 @@
           renderTrayDOM();
         } else if (data.type === 'handshake') {
           state.playerNames[data.playerNum] = data.name;
+          state.playerAvatars[data.playerNum] = data.avatar;
           if (state.myPlayerNum === 2) {
             state.currentLevel = data.level;
             state.winCondition = data.winCondition;
             state.targetScore = data.targetScore;
+            state.pieceTheme = data.pieceTheme;
             initBoard();
             renderBoardDOM();
           }
           updateUI();
+          triggerIntroDropAnimation();
         } else if (data.type === 'nameSync') {
           state.playerNames[data.playerNum] = data.name;
+          state.playerAvatars[data.playerNum] = data.avatar;
           updateUI();
         }
       });
 
       conn.on('close', function() {
         state.isConnected = false;
-        alert('Opponent disconnected.');
+        alert('Opponent has left the arena.');
         updateUI();
       });
     }
 
     function promptPlayerName(playerNum) {
       var current = state.playerNames[playerNum];
-      var next = prompt('Enter name for ' + (playerNum === 1 ? 'Player 1 (💎 Cyan)' : 'Player 2 (🔥 Pink)'), current);
+      var next = prompt('Enter name for ' + (playerNum === 1 ? 'Player 1' : 'Player 2'), current);
       if (next && next.trim()) {
         var cleanName = next.trim().slice(0, 14);
         state.playerNames[playerNum] = cleanName;
-        localStorage.setItem('blockclash_name_' + playerNum, cleanName);
+        localStorage.setItem('lorna_name_' + playerNum, cleanName);
         if (playerNum === 1) document.getElementById('host-name-input').value = cleanName;
         updateUI();
 
         if (state.conn && state.conn.open) {
-          state.conn.send({ type: 'nameSync', playerNum: playerNum, name: cleanName });
+          state.conn.send({
+            type: 'nameSync',
+            playerNum: playerNum,
+            name: cleanName,
+            avatar: state.playerAvatars[playerNum]
+          });
         }
       }
     }
 
     // Direct Boot Engine
     function bootGame() {
-      detectDeviceType();
       applyTheme(state.theme);
 
-      var savedName1 = localStorage.getItem('blockclash_name_1') || 'Player 1';
-      var savedName2 = localStorage.getItem('blockclash_name_2') || 'Player 2';
+      var savedName1 = localStorage.getItem('lorna_name_1') || 'Player 1';
+      var savedName2 = localStorage.getItem('lorna_name_2') || 'Player 2';
       state.playerNames[1] = savedName1;
       state.playerNames[2] = savedName2;
       document.getElementById('host-name-input').value = savedName1;
+
+      // Select active piece theme button
+      document.querySelectorAll('.piece-theme-btn').forEach(function(b) {
+        b.classList.toggle('active-opt', b.dataset.theme === state.pieceTheme);
+      });
+
+      // Select active avatar button
+      document.querySelectorAll('.avatar-opt-btn').forEach(function(b) {
+        b.classList.toggle('active-opt', b.dataset.avatar === state.playerAvatars[1]);
+      });
 
       initBoard();
       replenishTray();
       renderBoardDOM();
       updateUI();
+      triggerIntroDropAnimation();
 
-      // Recalculate cell bounds on window resize
       window.addEventListener('resize', function() {
         updateCellSize();
       });
@@ -1799,6 +2018,38 @@
       document.getElementById('theme-dark-opt').onclick = function() { applyTheme('dark'); };
       document.getElementById('theme-light-opt').onclick = function() { applyTheme('light'); };
 
+      // Avatar picker
+      document.querySelectorAll('.avatar-opt-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          var avatar = btn.dataset.avatar;
+          state.playerAvatars[1] = avatar;
+          localStorage.setItem('lorna_avatar_1', avatar);
+          document.querySelectorAll('.avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+          btn.classList.add('active-opt');
+          updateUI();
+          if (state.conn && state.conn.open) {
+            state.conn.send({
+              type: 'nameSync',
+              playerNum: 1,
+              name: state.playerNames[1],
+              avatar: avatar
+            });
+          }
+        };
+      });
+
+      // Piece Theme selector
+      document.querySelectorAll('.piece-theme-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          state.pieceTheme = btn.dataset.theme;
+          localStorage.setItem('lorna_piece_theme', state.pieceTheme);
+          document.querySelectorAll('.piece-theme-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+          btn.classList.add('active-opt');
+          renderBoardDOM();
+          if (state.isTV) renderTVBoard();
+        };
+      });
+
       document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
       document.getElementById('p2-card').onclick = function() {
         if (state.mode !== 'bot') promptPlayerName(2);
@@ -1816,10 +2067,15 @@
       document.getElementById('host-name-input').onchange = function(e) {
         var val = e.target.value.trim() || 'Player 1';
         state.playerNames[1] = val;
-        localStorage.setItem('blockclash_name_1', val);
+        localStorage.setItem('lorna_name_1', val);
         updateUI();
         if (state.conn && state.conn.open) {
-          state.conn.send({ type: 'nameSync', playerNum: 1, name: val });
+          state.conn.send({
+            type: 'nameSync',
+            playerNum: 1,
+            name: val,
+            avatar: state.playerAvatars[1]
+          });
         }
       };
 
@@ -1908,7 +2164,7 @@
       document.getElementById('close-history-x').onclick = function() { historyModal.classList.remove('open'); };
       document.getElementById('close-history-btn').onclick = function() { historyModal.classList.remove('open'); };
       document.getElementById('clear-history-btn').onclick = function() {
-        localStorage.removeItem('blockclash_history');
+        localStorage.removeItem('lorna_history');
         renderHistoryList();
       };
 
@@ -1942,13 +2198,13 @@
         document.getElementById('invite-room-code-display').textContent = roomParam;
 
         var guestInput = document.getElementById('guest-name-input');
-        guestInput.value = localStorage.getItem('blockclash_name_2') || 'Player 2';
+        guestInput.value = localStorage.getItem('lorna_name_2') || 'Player 2';
         inviteModal.classList.add('open');
 
         document.getElementById('accept-join-btn').onclick = function() {
           var chosenName = guestInput.value.trim() || 'Player 2';
           state.playerNames[2] = chosenName;
-          localStorage.setItem('blockclash_name_2', chosenName);
+          localStorage.setItem('lorna_name_2', chosenName);
           playSfx('place');
           joinPvPRoom(roomParam);
         };
