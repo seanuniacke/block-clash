@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Block Clash Duel</title>
-  <!-- PeerJS with WebRTC STUN support -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     * {
@@ -144,13 +143,6 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-    }
-
-    .player-tag:hover {
-      text-decoration: underline;
     }
 
     .turn-status {
@@ -164,7 +156,7 @@
       font-weight: 800;
     }
 
-    /* Direct Join Bar on Main Screen */
+    /* Direct Join Bar */
     .quick-join-bar {
       width: 100%;
       display: flex;
@@ -178,7 +170,7 @@
       background: #0f172a;
       border: 1px solid #334155;
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 5px 8px;
       color: #ffffff;
       font-size: 11px;
       text-transform: uppercase;
@@ -190,7 +182,7 @@
       background: #0284c7;
       border-color: #0ea5e9;
       color: #ffffff;
-      padding: 4px 10px;
+      padding: 5px 12px;
     }
 
     /* Status Banner */
@@ -207,17 +199,19 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
     }
 
     .banner-waiting {
-      background: rgba(234, 179, 8, 0.15);
-      border: 1px solid rgba(234, 179, 8, 0.4);
+      background: rgba(234, 179, 8, 0.15) !important;
+      border-color: rgba(234, 179, 8, 0.4) !important;
       color: #facc15 !important;
     }
 
     .banner-connected {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.15) !important;
+      border-color: rgba(16, 185, 129, 0.4) !important;
       color: #34d399 !important;
     }
 
@@ -232,13 +226,13 @@
     }
 
     #board {
-      width: min(84vw, 40dvh, 360px);
-      height: min(84vw, 40dvh, 360px);
+      width: min(84vw, 38dvh, 340px);
+      height: min(84vw, 38dvh, 340px);
       aspect-ratio: 1 / 1;
       background: #030712;
       border: 2px solid #1e293b;
       border-radius: 14px;
-      padding: 5px;
+      padding: 4px;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
@@ -257,7 +251,6 @@
       align-items: center;
       justify-content: center;
       font-size: 13px;
-      pointer-events: auto;
     }
 
     .cell.p1 {
@@ -301,7 +294,7 @@
 
     #tray {
       width: 100%;
-      height: 76px;
+      height: 74px;
       background: #0f172a;
       border: 1px solid #1e293b;
       border-radius: 12px;
@@ -309,7 +302,7 @@
       justify-content: space-around;
       align-items: center;
       gap: 6px;
-      padding: 6px;
+      padding: 5px;
     }
 
     .slot {
@@ -441,32 +434,6 @@
       gap: 8px;
     }
 
-    .pvp-input-row {
-      display: flex;
-      gap: 6px;
-    }
-
-    .pvp-input {
-      flex: 1;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 6px 8px;
-      color: #ffffff;
-      font-size: 12px;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .pvp-status {
-      font-size: 11px;
-      color: #22d3ee;
-      text-align: center;
-      font-weight: 600;
-      min-height: 16px;
-    }
-
     .active-room-display {
       background: #030712;
       border: 1px dashed #06b6d4;
@@ -479,7 +446,6 @@
       color: #94a3b8;
     }
 
-    /* History Log Rows */
     .history-card {
       background: #090d16;
       border: 1px solid #1e293b;
@@ -491,7 +457,6 @@
       font-size: 11px;
     }
 
-    /* Dedicated Join Invite Card */
     #join-invite-modal .modal-box {
       border: 2px solid #06b6d4;
       box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);
@@ -531,7 +496,6 @@
 </head>
 <body>
 
-  <!-- Floating Touch Ghost Avatar -->
   <div id="drag-ghost"></div>
 
   <!-- Top Bar -->
@@ -554,11 +518,11 @@
 
   <!-- Handheld Main Game Arena -->
   <main id="game-view">
-    <!-- Scoreboard (Tap Name to Edit) -->
+    <!-- Scoreboard (Tap name to edit) -->
     <div class="scoreboard">
       <div id="p1-card" class="score-card active-p1">
         <div>
-          <div class="player-tag" style="color: #22d3ee;" id="p1-title" title="Tap to change name">💎 Player 1 ✏️</div>
+          <div class="player-tag" style="color: #22d3ee;" id="p1-title">💎 Player 1 ✏️</div>
           <div class="turn-status" id="p1-status">YOUR TURN</div>
         </div>
         <div class="score-val" id="p1-score" style="color: #22d3ee;">0</div>
@@ -566,26 +530,26 @@
 
       <div id="p2-card" class="score-card waiting">
         <div>
-          <div class="player-tag" id="p2-name" style="color: #ec4899;" title="Tap to change name">🔥 Player 2 ✏️</div>
+          <div class="player-tag" id="p2-name" style="color: #ec4899;">🔥 Player 2 ✏️</div>
           <div class="turn-status" id="p2-status">WAITING</div>
         </div>
         <div class="score-val" id="p2-score" style="color: #ec4899;">0</div>
       </div>
     </div>
 
-    <!-- Quick Join Bar Right on Main Screen -->
+    <!-- Quick Join Bar -->
     <div class="quick-join-bar">
-      <input type="text" id="main-room-input" class="quick-input" placeholder="ENTER 5-DIGIT CODE" maxlength="6" />
+      <input type="text" id="main-room-input" class="quick-input" placeholder="ENTER ROOM CODE" maxlength="12" />
       <button id="main-join-btn" class="btn-quick-join">Join Code</button>
     </div>
 
-    <!-- Live Instruction / Lobby Banner -->
+    <!-- Status Banner -->
     <div id="banner">
       <span id="banner-text">Drag piece with finger, or tap piece then grid</span>
       <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; padding:2px 6px; font-size:10px;">📲 Share</button>
     </div>
 
-    <!-- 8x8 Board -->
+    <!-- 8x8 Board Frame -->
     <div class="board-frame">
       <div id="board"></div>
     </div>
@@ -600,7 +564,7 @@
     </div>
   </main>
 
-  <!-- Dedicated 1-Tap Join Invite Popup -->
+  <!-- Dedicated Direct Join Prompt (Guest) -->
   <div id="join-invite-modal" class="modal">
     <div class="modal-box">
       <div style="font-size: 32px;">⚔️</div>
@@ -609,12 +573,12 @@
 
       <div style="width:100%; display:flex; flex-direction:column; gap:4px; text-align:left;">
         <span style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Your Name</span>
-        <input type="text" id="guest-name-input" class="name-input" placeholder="Enter your name" maxlength="14" />
+        <input type="text" id="guest-name-input" class="name-input" placeholder="Player 2" maxlength="14" />
       </div>
 
       <div style="background: #090d16; border: 1px solid #1e293b; border-radius: 8px; padding: 6px 12px; width: 100%;">
         <span style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Room Code</span>
-        <div id="invite-room-code-display" style="font-size: 18px; font-weight: 800; letter-spacing: 2px; color: #ffffff;">------</div>
+        <div id="invite-room-code-display" style="font-size: 16px; font-weight: 800; color: #ffffff; word-break: break-all;">------</div>
       </div>
 
       <button id="accept-join-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px;">
@@ -632,19 +596,16 @@
         <button id="close-modal-x">✕</button>
       </div>
 
-      <!-- Player Name -->
       <div class="setting-row">
         <span class="setting-label">Your Player Name</span>
         <input type="text" id="host-name-input" class="name-input" placeholder="Player 1" maxlength="14" />
       </div>
 
-      <!-- Active Room Status Display in Settings -->
       <div id="settings-room-status" class="active-room-display" style="display:none;">
-        <span>Active Room: <b id="settings-active-code" style="color:#22d3ee; font-size:13px;">NONE</b></span>
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">Room: <b id="settings-active-code" style="color:#22d3ee;">NONE</b></span>
         <button id="settings-re-share" style="padding:2px 6px; font-size:10px; background:#065f46; color:#fff;">Copy Link</button>
       </div>
 
-      <!-- Game Mode -->
       <div class="setting-row">
         <span class="setting-label">Game Mode</span>
         <div class="btn-group-3">
@@ -654,28 +615,19 @@
         </div>
       </div>
 
-      <!-- Remote PvP Box -->
       <div id="pvp-panel" class="pvp-box" style="display:none;">
         <span class="setting-label" style="color:#22d3ee;">Remote Duel (Different Homes)</span>
         <button id="pvp-create-btn" style="background:#065f46; border-color:#059669; color:#fff; padding:8px; font-size:12px;">
           🔗 Create Room &amp; Share Link
         </button>
-        <div style="font-size:10px; color:#94a3b8; text-align:center;">— OR ENTER FRIEND'S CODE —</div>
-        <div class="pvp-input-row">
-          <input type="text" id="pvp-room-input" class="pvp-input" placeholder="CODE (e.g. 7X4K)" maxlength="6" />
-          <button id="pvp-join-btn" style="background:#0284c7; border-color:#0ea5e9; color:#fff;">Join</button>
-        </div>
-        <div id="pvp-status-msg" class="pvp-status"></div>
       </div>
 
-      <!-- Match History Toggle -->
       <div class="setting-row">
         <button id="open-history-btn" style="background: #1e1b4b; border-color: #4338ca; color: #a5b4fc; padding: 7px;">
           📜 View Match History
         </button>
       </div>
 
-      <!-- Sound Effects -->
       <div class="setting-row">
         <span class="setting-label">Sound Effects</span>
         <button id="sound-btn" style="background:#083344; border-color:#06b6d4; color:#22d3ee;">🔊 Sound: ON</button>
@@ -692,9 +644,7 @@
         <h3 style="font-size: 13px; font-weight: 800;">📜 Match History</h3>
         <button id="close-history-x">✕</button>
       </div>
-
       <div id="history-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto;"></div>
-
       <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 6px;">
         <button id="clear-history-btn" style="background: #881337; border-color: #be123c; color: #fecdd3;">Clear History</button>
         <button id="close-history-btn" style="background: #334155; color: #fff;">Close</button>
@@ -743,7 +693,6 @@
       } catch (e) {}
     }
 
-    // Standard Shapes
     var SHAPES = [
       { matrix: [[1]] },
       { matrix: [[1, 1]] },
@@ -757,7 +706,6 @@
       { matrix: [[1, 1, 1], [0, 1, 0]] }
     ];
 
-    // Master Game State
     var state = {
       grid: [
         [0,0,0,0,0,0,0,0],
@@ -776,7 +724,6 @@
       trayPieces: [null, null, null],
       gameOver: false,
       isTV: false,
-      // Remote PvP & Custom Names
       peer: null,
       conn: null,
       myPlayerNum: 1,
@@ -788,13 +735,11 @@
       }
     };
 
-    // Google Public STUN Configuration
-    var peerConfig = {
+    var peerIceConfig = {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
+          { urls: 'stun:stun1.l.google.com:19302' }
         ]
       }
     };
@@ -807,7 +752,7 @@
       startY: 0,
       hasMoved: false,
       slotEl: null,
-      cellSize: 38,
+      cellSize: 36,
       ghostEl: document.getElementById('drag-ghost')
     };
 
@@ -935,7 +880,7 @@
       ghost.innerHTML = '';
       var rows = piece.matrix.length;
       var cols = piece.matrix[0].length;
-      var cs = Math.max(drag.cellSize, 28);
+      var cs = Math.max(drag.cellSize, 26);
 
       var container = document.createElement('div');
       container.style.display = 'grid';
@@ -1406,16 +1351,6 @@
       resetGame();
     }
 
-    // --- Clean 5-Letter Codes & WebRTC Handshake ---
-    function generateCleanRoomId() {
-      var chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-      var code = '';
-      for (var i = 0; i < 5; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
-    }
-
     function shareRoomInvite(code) {
       var joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
       if (navigator.share) {
@@ -1433,29 +1368,28 @@
     }
 
     function createPvPRoom() {
-      var statusEl = document.getElementById('pvp-status-msg');
-      statusEl.textContent = 'Opening public room...';
+      if (typeof Peer === 'undefined') {
+        alert('Multiplayer script is loading. Please check internet connection.');
+        return;
+      }
 
       if (state.peer) {
         try { state.peer.destroy(); } catch (e) {}
       }
 
-      var code = generateCleanRoomId();
-      var peerId = 'BC-' + code;
+      // Safe clean peer broker initialization
+      state.peer = new Peer(peerIceConfig);
 
-      state.peer = new Peer(peerId, peerConfig);
-
-      state.peer.on('open', function() {
+      state.peer.on('open', function(id) {
         state.mode = 'pvp';
         state.myPlayerNum = 1;
         state.isConnected = false;
-        state.activeRoomCode = code;
+        state.activeRoomCode = id;
 
-        // Auto-close settings modal and update main screen
         document.getElementById('settings-modal').classList.remove('open');
         updateUI();
 
-        shareRoomInvite(code);
+        shareRoomInvite(id);
 
         state.peer.on('connection', function(conn) {
           state.conn = conn;
@@ -1464,30 +1398,33 @@
       });
 
       state.peer.on('error', function(err) {
-        statusEl.textContent = 'Server busy. Tap again.';
+        alert('Multiplayer network issue: ' + (err.type || 'Connection failed'));
       });
     }
 
     function joinPvPRoom(codeOrId) {
       if (!codeOrId) return;
-      var clean = codeOrId.trim().toUpperCase();
-      var targetPeerId = clean.length <= 6 ? ('BC-' + clean) : clean;
-      var statusEl = document.getElementById('invite-status-msg');
-      if (statusEl) statusEl.textContent = 'Connecting to room ' + clean + '...';
+      var targetId = codeOrId.trim();
 
-      document.getElementById('banner-text').textContent = 'Connecting to ' + clean + '...';
+      if (typeof Peer === 'undefined') {
+        alert('Multiplayer script is loading. Please check internet connection.');
+        return;
+      }
+
+      var bannerText = document.getElementById('banner-text');
+      bannerText.textContent = 'Connecting to room...';
 
       if (state.peer) {
         try { state.peer.destroy(); } catch (e) {}
       }
 
-      state.peer = new Peer(peerConfig);
+      state.peer = new Peer(peerIceConfig);
       state.peer.on('open', function() {
         state.mode = 'pvp';
         state.myPlayerNum = 2;
-        state.activeRoomCode = clean;
+        state.activeRoomCode = targetId;
 
-        var conn = state.peer.connect(targetPeerId, { reliable: true });
+        var conn = state.peer.connect(targetId, { reliable: true });
         state.conn = conn;
         setupConnListeners(conn);
 
@@ -1497,7 +1434,7 @@
       });
 
       state.peer.on('error', function(err) {
-        alert('Could not connect to room ' + clean + '. Check the code.');
+        alert('Could not connect to room. Check code and retry.');
         updateUI();
       });
     }
@@ -1507,14 +1444,12 @@
         state.isConnected = true;
         playSfx('connect');
 
-        // Exchange custom player names
         conn.send({
           type: 'nameSync',
           playerNum: state.myPlayerNum,
           name: state.playerNames[state.myPlayerNum]
         });
 
-        // Host synchronizes starting tray
         if (state.myPlayerNum === 1) {
           conn.send({ type: 'syncTray', tray: state.trayPieces });
         }
@@ -1557,9 +1492,8 @@
       }
     }
 
-    // Direct Boot Engine
+    // Direct Boot Engine (Paints UI immediately)
     function bootGame() {
-      // Load saved names
       var savedName1 = localStorage.getItem('blockclash_name_1') || 'Player 1';
       var savedName2 = localStorage.getItem('blockclash_name_2') || 'Player 2';
       state.playerNames[1] = savedName1;
@@ -1579,24 +1513,20 @@
       document.getElementById('close-modal-x').onclick = function() { settingsModal.classList.remove('open'); };
       document.getElementById('close-modal-bottom').onclick = function() { settingsModal.classList.remove('open'); };
 
-      // Tap player names on screen to rename
       document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
       document.getElementById('p2-card').onclick = function() {
         if (state.mode !== 'bot') promptPlayerName(2);
       };
 
-      // Quick Join directly on Main Screen
       document.getElementById('main-join-btn').onclick = function() {
         var code = document.getElementById('main-room-input').value.trim();
         if (code) joinPvPRoom(code);
       };
 
-      // Re-share / copy link from Settings
       document.getElementById('settings-re-share').onclick = function() {
         if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
       };
 
-      // Host Name Input in Settings
       document.getElementById('host-name-input').onchange = function(e) {
         var val = e.target.value.trim() || 'Player 1';
         state.playerNames[1] = val;
@@ -1613,7 +1543,6 @@
       document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
       document.getElementById('opt-pvp').onclick = function() { setMode('pvp'); };
 
-      // Remote PvP Handlers
       document.getElementById('pvp-create-btn').onclick = createPvPRoom;
       document.getElementById('share-again-btn').onclick = function() {
         if (state.activeRoomCode) {
@@ -1621,12 +1550,6 @@
         }
       };
 
-      document.getElementById('pvp-join-btn').onclick = function() {
-        var inputVal = document.getElementById('pvp-room-input').value;
-        if (inputVal) joinPvPRoom(inputVal);
-      };
-
-      // History Handlers
       document.getElementById('open-history-btn').onclick = function() {
         settingsModal.classList.remove('open');
         renderHistoryList();
@@ -1660,5 +1583,30 @@
         }
       };
 
-      // Handle Direct Link Joins (?room=CODE)
+      // Handle Direct Link Joins (?room=ID)
       var params = new URLSearchParams(window.location.search);
+      var roomParam = params.get('room');
+      if (roomParam) {
+        setMode('pvp');
+        settingsModal.classList.remove('open');
+        document.getElementById('invite-room-code-display').textContent = roomParam;
+        
+        var guestInput = document.getElementById('guest-name-input');
+        guestInput.value = localStorage.getItem('blockclash_name_2') || 'Player 2';
+        
+        inviteModal.classList.add('open');
+
+        document.getElementById('accept-join-btn').onclick = function() {
+          var chosenName = guestInput.value.trim() || 'Player 2';
+          state.playerNames[2] = chosenName;
+          localStorage.setItem('blockclash_name_2', chosenName);
+          playSfx('place');
+          joinPvPRoom(roomParam);
+        };
+      }
+    }
+
+    bootGame();
+  </script>
+</body>
+</html>
