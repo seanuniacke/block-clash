@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Block Clash Duel</title>
-  <!-- Lightweight PeerJS for cross-household WebRTC play -->
+  <!-- Bulletproof WebRTC Peer Library -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     * {
@@ -152,13 +152,32 @@
       font-weight: 800;
     }
 
+    /* Status Banner */
     #banner {
       font-size: 11px;
       font-weight: 600;
       color: #94a3b8;
       text-align: center;
-      padding: 2px 0;
+      padding: 3px 6px;
+      border-radius: 6px;
       flex-shrink: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .banner-waiting {
+      background: rgba(234, 179, 8, 0.15);
+      border: 1px solid rgba(234, 179, 8, 0.4);
+      color: #facc15 !important;
+    }
+
+    .banner-connected {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399 !important;
     }
 
     /* 8x8 Board Container */
@@ -291,7 +310,7 @@
       filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.75));
     }
 
-    /* Modal */
+    /* Modals & Overlays */
     .modal {
       display: none;
       position: fixed;
@@ -390,6 +409,14 @@
       min-height: 16px;
     }
 
+    /* Dedicated Join Invite Card (Never shows settings menu to the guest) */
+    #join-invite-modal .modal-box {
+      border: 2px solid #06b6d4;
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);
+      text-align: center;
+      align-items: center;
+    }
+
     /* TV View */
     #tv-view {
       display: none;
@@ -464,8 +491,11 @@
       </div>
     </div>
 
-    <!-- Instruction Banner -->
-    <div id="banner">Drag piece with finger, or tap piece then grid</div>
+    <!-- Live Instruction / Lobby Banner -->
+    <div id="banner">
+      <span id="banner-text">Drag piece with finger, or tap piece then grid</span>
+      <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; padding:2px 6px; font-size:10px;">📲 Share Link</button>
+    </div>
 
     <!-- 8x8 Board -->
     <div class="board-frame">
@@ -482,7 +512,26 @@
     </div>
   </main>
 
-  <!-- Settings Modal -->
+  <!-- Dedicated 1-Tap Join Invite Popup (For Guest/Friend) -->
+  <div id="join-invite-modal" class="modal">
+    <div class="modal-box">
+      <div style="font-size: 32px;">⚔️</div>
+      <h3 style="font-size: 16px; font-weight: 800; color: #22d3ee;">Match Invite Received!</h3>
+      <p style="font-size: 12px; color: #94a3b8;">You've been invited to duel Player 1.</p>
+      
+      <div style="background: #090d16; border: 1px solid #1e293b; border-radius: 8px; padding: 6px 12px; width: 100%;">
+        <span style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Room Code</span>
+        <div id="invite-room-code-display" style="font-size: 18px; font-weight: 800; letter-spacing: 2px; color: #ffffff;">------</div>
+      </div>
+
+      <button id="accept-join-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px;">
+        🎮 Tap to Join Match
+      </button>
+      <div id="invite-status-msg" style="font-size: 11px; color: #f59e0b; min-height: 14px;"></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal (For Host/User) -->
   <div id="settings-modal" class="modal">
     <div class="modal-box">
       <div class="modal-header">
@@ -499,11 +548,11 @@
         </div>
       </div>
 
-      <!-- Remote PvP Box (Shown when PvP is selected) -->
+      <!-- Remote PvP Box -->
       <div id="pvp-panel" class="pvp-box" style="display:none;">
         <span class="setting-label" style="color:#22d3ee;">Remote Duel (Different Homes)</span>
-        <button id="pvp-create-btn" style="background:#065f46; border-color:#059669; color:#fff; padding:8px;">
-          🔗 Create Room &amp; Copy Link
+        <button id="pvp-create-btn" style="background:#065f46; border-color:#059669; color:#fff; padding:8px; font-size:12px;">
+          🔗 Create Room &amp; Share Link
         </button>
         <div style="font-size:10px; color:#94a3b8; text-align:center;">— OR ENTER FRIEND'S CODE —</div>
         <div class="pvp-input-row">
@@ -551,6 +600,14 @@
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
           osc.start(now);
           osc.stop(now + 0.25);
+        } else if (type === 'connect') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(880, now + 0.15);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
         }
       } catch (e) {}
     }
@@ -583,18 +640,19 @@
       ],
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass', // 'pass', 'bot', 'pvp'
+      mode: 'pass',
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
       gameOver: false,
       isTV: false,
-      // Remote PvP parameters
+      // Remote PvP
       peer: null,
       conn: null,
-      myPlayerNum: 1
+      myPlayerNum: 1,
+      activeRoomCode: null,
+      isConnected: false
     };
 
-    // Mobile Drag Engine State
     var drag = {
       active: false,
       piece: null,
@@ -705,7 +763,7 @@
     function handleDragStart(clientX, clientY, piece, idx, slotEl) {
       if (state.gameOver) return;
       if (state.mode === 'bot' && state.currentPlayer === 2) return;
-      if (state.mode === 'pvp' && state.currentPlayer !== state.myPlayerNum) return;
+      if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
 
       updateCellSize();
       drag.active = true;
@@ -912,7 +970,7 @@
 
     function onCellClick(r, c) {
       if (state.gameOver) return;
-      if (state.mode === 'pvp' && state.currentPlayer !== state.myPlayerNum) return;
+      if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
       if (state.selectedPieceIdx === null) return;
       var piece = state.trayPieces[state.selectedPieceIdx];
       if (!piece) return;
@@ -935,7 +993,6 @@
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
 
-      // Broadcast move to remote opponent if connected
       if (!isRemote && state.conn && state.conn.open) {
         state.conn.send({
           type: 'move',
@@ -951,7 +1008,6 @@
       var allUsed = state.trayPieces.every(function(p) { return p === null; });
       if (allUsed) {
         replenishTray();
-        // Sync new tray to remote player
         if (!isRemote && state.conn && state.conn.open) {
           state.conn.send({ type: 'syncTray', tray: state.trayPieces });
         }
@@ -1057,6 +1113,8 @@
       var p1Status = document.getElementById('p1-status');
       var p2Status = document.getElementById('p2-status');
       var banner = document.getElementById('banner');
+      var bannerText = document.getElementById('banner-text');
+      var shareAgainBtn = document.getElementById('share-again-btn');
 
       if (state.currentPlayer === 1) {
         p1Card.className = 'score-card active-p1';
@@ -1070,14 +1128,29 @@
         p1Status.textContent = 'WAITING';
       }
 
+      banner.className = '';
+      shareAgainBtn.style.display = 'none';
+
       if (state.mode === 'pvp') {
         document.getElementById('p1-title').textContent = (state.myPlayerNum === 1 ? '💎 You (P1)' : '💎 Opponent');
         document.getElementById('p2-name').textContent = (state.myPlayerNum === 2 ? '🔥 You (P2)' : '🔥 Opponent');
-        banner.textContent = (state.currentPlayer === state.myPlayerNum) ? "Your turn! Place your piece." : "Waiting for friend's move...";
+
+        if (!state.isConnected) {
+          banner.className = 'banner-waiting';
+          bannerText.textContent = '⏳ Waiting for friend... (Room: ' + state.activeRoomCode + ')';
+          shareAgainBtn.style.display = 'inline-block';
+        } else {
+          banner.className = 'banner-connected';
+          if (state.currentPlayer === state.myPlayerNum) {
+            bannerText.textContent = '🟢 Duel Live! YOUR TURN — place a piece!';
+          } else {
+            bannerText.textContent = "🟢 Duel Live! Opponent's turn...";
+          }
+        }
       } else {
         document.getElementById('p1-title').textContent = '💎 Player 1';
         document.getElementById('p2-name').textContent = state.mode === 'bot' ? '🤖 Bot' : '🔥 Player 2';
-        banner.textContent = 'Drag piece with finger, or tap piece then grid';
+        bannerText.textContent = 'Drag piece with finger, or tap piece then grid';
       }
 
       var modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', pvp: 'PvP Duel' };
@@ -1129,11 +1202,16 @@
         pvpPanel.style.display = 'flex';
       } else {
         pvpPanel.style.display = 'none';
+        state.isConnected = false;
+        if (state.peer) {
+          try { state.peer.destroy(); } catch(e) {}
+          state.peer = null;
+        }
       }
       resetGame();
     }
 
-    // --- Remote WebRTC Matchmaking Logic ---
+    // --- Clean 5-Letter Room Codes & WebRTC Handshake ---
     function generateCleanRoomId() {
       var chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
       var code = '';
@@ -1143,71 +1221,115 @@
       return code;
     }
 
+    function shareRoomInvite(code) {
+      var joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Block Clash Duel',
+          text: 'Join my Block Clash duel! Room Code: ' + code,
+          url: joinUrl
+        }).catch(function() {});
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(joinUrl);
+        alert('Invite link copied! Send it to your friend: \n\n' + joinUrl);
+      } else {
+        prompt('Copy this link to send to your friend:', joinUrl);
+      }
+    }
+
     function createPvPRoom() {
       var statusEl = document.getElementById('pvp-status-msg');
-      statusEl.textContent = 'Creating room...';
+      statusEl.textContent = 'Connecting to network...';
 
-      if (state.peer) try { state.peer.destroy(); } catch (e) {}
+      if (state.peer) {
+        try { state.peer.destroy(); } catch (e) {}
+      }
 
       var code = generateCleanRoomId();
-      var fullId = 'BC-' + code;
-      state.peer = new Peer(fullId);
+      var peerId = 'BC-' + code;
+
+      state.peer = new Peer(peerId);
 
       state.peer.on('open', function() {
         state.myPlayerNum = 1;
-        var joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
+        state.isConnected = false;
+        state.activeRoomCode = code;
 
-        // Automatically copy invite link to clipboard
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(joinUrl);
-        }
+        // Auto-close settings modal and return to board immediately
+        document.getElementById('settings-modal').classList.remove('open');
+        updateUI();
 
-        statusEl.innerHTML = 'Room: <b style="color:#fff; font-size:14px;">' + code + '</b><br><span style="color:#10b981;">✅ Link copied! Text it to your friend.</span>';
+        // Trigger native mobile share sheet
+        shareRoomInvite(code);
 
         state.peer.on('connection', function(conn) {
           state.conn = conn;
           setupConnListeners(conn);
-          statusEl.textContent = 'Friend joined! Duel starting...';
-          setTimeout(function() {
-            document.getElementById('settings-modal').classList.remove('open');
-          }, 800);
         });
       });
 
       state.peer.on('error', function(err) {
-        statusEl.textContent = 'Connection error. Please retry.';
+        // Fallback retry with random peer if collision occurs
+        state.peer = new Peer();
+        state.peer.on('open', function(id) {
+          state.myPlayerNum = 1;
+          state.isConnected = false;
+          var altCode = id.slice(-5).toUpperCase();
+          state.activeRoomCode = altCode;
+          document.getElementById('settings-modal').classList.remove('open');
+          updateUI();
+          shareRoomInvite(id);
+
+          state.peer.on('connection', function(conn) {
+            state.conn = conn;
+            setupConnListeners(conn);
+          });
+        });
       });
     }
 
-    function joinPvPRoom(code) {
-      if (!code) return;
-      var statusEl = document.getElementById('pvp-status-msg');
-      statusEl.textContent = 'Connecting to ' + code.toUpperCase() + '...';
+    function joinPvPRoom(codeOrId) {
+      if (!codeOrId) return;
+      var clean = codeOrId.trim();
+      var targetPeerId = clean.length <= 6 ? ('BC-' + clean.toUpperCase()) : clean;
+      var statusEl = document.getElementById('invite-status-msg');
+      if (statusEl) statusEl.textContent = 'Connecting to host...';
 
-      if (state.peer) try { state.peer.destroy(); } catch (e) {}
+      if (state.peer) {
+        try { state.peer.destroy(); } catch (e) {}
+      }
 
       state.peer = new Peer();
       state.peer.on('open', function() {
         state.myPlayerNum = 2;
-        var targetId = 'BC-' + code.toUpperCase().trim();
-        var conn = state.peer.connect(targetId, { reliable: true });
+        state.activeRoomCode = clean.toUpperCase();
+
+        var conn = state.peer.connect(targetPeerId, { reliable: true });
         state.conn = conn;
         setupConnListeners(conn);
 
-        conn.on('open', function() {
-          statusEl.textContent = 'Connected! Match starting...';
-          setTimeout(function() {
-            document.getElementById('settings-modal').classList.remove('open');
-          }, 800);
-        });
+        // Auto-close invite modal
+        document.getElementById('join-invite-modal').classList.remove('open');
+        document.getElementById('settings-modal').classList.remove('open');
+        updateUI();
       });
 
       state.peer.on('error', function(err) {
-        statusEl.textContent = 'Room not found. Check the code.';
+        if (statusEl) statusEl.textContent = 'Could not find that room. Please retry.';
       });
     }
 
     function setupConnListeners(conn) {
+      conn.on('open', function() {
+        state.isConnected = true;
+        playSfx('connect');
+        updateUI();
+
+        if (state.myPlayerNum === 1) {
+          conn.send({ type: 'syncTray', tray: state.trayPieces });
+        }
+      });
+
       conn.on('data', function(data) {
         if (data.type === 'move') {
           commitDrop(data.piece, data.r, data.c, data.slotIdx, true);
@@ -1215,6 +1337,12 @@
           state.trayPieces = data.tray;
           renderTrayDOM();
         }
+      });
+
+      conn.on('close', function() {
+        state.isConnected = false;
+        alert('Opponent disconnected.');
+        updateUI();
       });
     }
 
@@ -1225,10 +1353,12 @@
       renderBoardDOM();
       updateUI();
 
-      var modal = document.getElementById('settings-modal');
-      document.getElementById('settings-btn').onclick = function() { modal.classList.add('open'); };
-      document.getElementById('close-modal-x').onclick = function() { modal.classList.remove('open'); };
-      document.getElementById('close-modal-bottom').onclick = function() { modal.classList.remove('open'); };
+      var settingsModal = document.getElementById('settings-modal');
+      var inviteModal = document.getElementById('join-invite-modal');
+
+      document.getElementById('settings-btn').onclick = function() { settingsModal.classList.add('open'); };
+      document.getElementById('close-modal-x').onclick = function() { settingsModal.classList.remove('open'); };
+      document.getElementById('close-modal-bottom').onclick = function() { settingsModal.classList.remove('open'); };
 
       document.getElementById('restart-btn').onclick = resetGame;
 
@@ -1236,11 +1366,17 @@
       document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
       document.getElementById('opt-pvp').onclick = function() { setMode('pvp'); };
 
-      // Remote PvP Buttons
+      // Remote PvP Handlers
       document.getElementById('pvp-create-btn').onclick = createPvPRoom;
+      document.getElementById('share-again-btn').onclick = function() {
+        if (state.activeRoomCode) {
+          shareRoomInvite(state.activeRoomCode);
+        }
+      };
+
       document.getElementById('pvp-join-btn').onclick = function() {
-        var code = document.getElementById('pvp-room-input').value;
-        joinPvPRoom(code);
+        var inputVal = document.getElementById('pvp-room-input').value;
+        if (inputVal) joinPvPRoom(inputVal);
       };
 
       var sBtn = document.getElementById('sound-btn');
@@ -1264,14 +1400,20 @@
         }
       };
 
-      // Check URL parameters for direct link joins (?room=CODE)
+      // Handle Direct Link Joins (?room=CODE)
       var params = new URLSearchParams(window.location.search);
       var roomParam = params.get('room');
       if (roomParam) {
         setMode('pvp');
-        modal.classList.add('open');
-        document.getElementById('pvp-room-input').value = roomParam;
-        joinPvPRoom(roomParam);
+        // Do NOT open the settings menu. Instead, show the 1-tap join card directly.
+        settingsModal.classList.remove('open');
+        document.getElementById('invite-room-code-display').textContent = roomParam.toUpperCase();
+        inviteModal.classList.add('open');
+
+        document.getElementById('accept-join-btn').onclick = function() {
+          playSfx('place'); // primes audio context on mobile tap
+          joinPvPRoom(roomParam);
+        };
       }
     }
 
