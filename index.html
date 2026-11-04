@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Block Clash Duel</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -20,11 +21,36 @@
       height: 100%;
       height: 100dvh;
       overflow: hidden;
-      background-color: #090d16;
-      color: #f1f5f9;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       touch-action: none;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
+
+    /* Dark Theme (Default) */
+    body.theme-dark {
+      background-color: #090d16;
+      color: #f1f5f9;
+    }
+    body.theme-dark header { background: #0f172a; border-bottom: 1px solid #1e293b; }
+    body.theme-dark .panel-box { background: #0f172a; border-color: #1e293b; }
+    body.theme-dark .inner-box { background: #090d16; border-color: #1e293b; }
+    body.theme-dark .cell { background: #0f172a; border: 1px solid #1e293b; }
+    body.theme-dark .cell.obstacle { background: #334155; border-color: #475569; color: #94a3b8; }
+    body.theme-dark button { background: #1e293b; color: #f1f5f9; border-color: #334155; }
+    body.theme-dark .input-field { background: #090d16; border-color: #334155; color: #f1f5f9; }
+
+    /* Light Theme */
+    body.theme-light {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    body.theme-light header { background: #ffffff; border-bottom: 1px solid #cbd5e1; }
+    body.theme-light .panel-box { background: #ffffff; border-color: #cbd5e1; }
+    body.theme-light .inner-box { background: #f8fafc; border-color: #cbd5e1; }
+    body.theme-light .cell { background: #ffffff; border: 1px solid #cbd5e1; }
+    body.theme-light .cell.obstacle { background: #94a3b8; border-color: #64748b; color: #1e293b; }
+    body.theme-light button { background: #e2e8f0; color: #0f172a; border-color: #cbd5e1; }
+    body.theme-light .input-field { background: #ffffff; border-color: #cbd5e1; color: #0f172a; }
 
     body {
       display: flex;
@@ -40,9 +66,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #0f172a;
-      border-bottom: 1px solid #1e293b;
       flex-shrink: 0;
+      z-index: 20;
     }
 
     .brand-title {
@@ -57,6 +82,18 @@
     .brand-sub {
       font-size: 10px;
       color: #94a3b8;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .badge-sub {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(34, 211, 238, 0.1);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      color: #22d3ee;
     }
 
     .header-btns {
@@ -66,14 +103,14 @@
     }
 
     button {
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #334155;
       border-radius: 8px;
+      border-width: 1px;
+      border-style: solid;
       padding: 5px 10px;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
+      transition: transform 0.1s ease;
     }
 
     button:active {
@@ -81,9 +118,9 @@
     }
 
     .btn-tv {
-      background: #4f46e5;
-      border-color: #6366f1;
-      color: #ffffff;
+      background: #4f46e5 !important;
+      border-color: #6366f1 !important;
+      color: #ffffff !important;
     }
 
     /* Main Container */
@@ -111,8 +148,7 @@
     }
 
     .score-card {
-      background: #0f172a;
-      border: 2px solid #1e293b;
+      border: 2px solid transparent;
       border-radius: 10px;
       padding: 4px 8px;
       display: flex;
@@ -122,17 +158,17 @@
     }
 
     .score-card.active-p1 {
-      border-color: #06b6d4;
+      border-color: #06b6d4 !important;
       opacity: 1;
     }
 
     .score-card.active-p2 {
-      border-color: #ec4899;
+      border-color: #ec4899 !important;
       opacity: 1;
     }
 
     .score-card.waiting {
-      opacity: 0.5;
+      opacity: 0.45;
     }
 
     .player-tag {
@@ -165,23 +201,26 @@
       flex-shrink: 0;
     }
 
+    .input-field {
+      border-radius: 6px;
+      border-width: 1px;
+      border-style: solid;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      outline: none;
+    }
+
     .quick-input {
       flex: 1;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 5px 8px;
-      color: #ffffff;
-      font-size: 11px;
       text-transform: uppercase;
-      font-weight: 700;
       letter-spacing: 1px;
     }
 
     .btn-quick-join {
-      background: #0284c7;
-      border-color: #0ea5e9;
-      color: #ffffff;
+      background: #0284c7 !important;
+      border-color: #0ea5e9 !important;
+      color: #ffffff !important;
       padding: 5px 12px;
     }
 
@@ -199,8 +238,6 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
     }
 
     .banner-waiting {
@@ -229,15 +266,13 @@
       width: min(84vw, 38dvh, 340px);
       height: min(84vw, 38dvh, 340px);
       aspect-ratio: 1 / 1;
-      background: #030712;
-      border: 2px solid #1e293b;
       border-radius: 14px;
       padding: 4px;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
       gap: 3px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
     }
 
     .cell {
@@ -245,22 +280,22 @@
       height: 100%;
       aspect-ratio: 1 / 1;
       border-radius: 4px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 13px;
+      line-height: 1;
+      overflow: hidden;
     }
 
     .cell.p1 {
-      background: rgba(6, 182, 212, 0.35);
-      border-color: #06b6d4;
+      background: rgba(6, 182, 212, 0.35) !important;
+      border-color: #06b6d4 !important;
     }
 
     .cell.p2 {
-      background: rgba(236, 72, 153, 0.35);
-      border-color: #ec4899;
+      background: rgba(236, 72, 153, 0.35) !important;
+      border-color: #ec4899 !important;
     }
 
     .cell.preview-valid {
@@ -295,8 +330,6 @@
     #tray {
       width: 100%;
       height: 74px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
       border-radius: 12px;
       display: flex;
       justify-content: space-around;
@@ -308,8 +341,6 @@
     .slot {
       flex: 1;
       height: 100%;
-      background: #090d16;
-      border: 1px solid #1e293b;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -319,7 +350,7 @@
     }
 
     .slot.selected {
-      border-color: #22d3ee;
+      border-color: #22d3ee !important;
       transform: scale(1.04);
       box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
     }
@@ -341,7 +372,7 @@
       transform: translate(-50%, -50%);
       display: none;
       opacity: 0.95;
-      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.75));
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6));
     }
 
     /* Modals & Overlays */
@@ -363,10 +394,10 @@
 
     .modal-box {
       width: 100%;
-      max-width: 340px;
-      background: #0f172a;
-      border: 1px solid #334155;
+      max-width: 360px;
       border-radius: 16px;
+      border-width: 1px;
+      border-style: solid;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -379,7 +410,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
       padding-bottom: 6px;
     }
 
@@ -396,38 +427,34 @@
       text-transform: uppercase;
     }
 
+    .btn-group-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
     .btn-group-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 6px;
     }
 
-    .mode-btn.active-opt {
-      background: #083344;
-      border-color: #06b6d4;
-      color: #22d3ee;
+    .btn-group-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
     }
 
-    .name-input {
-      background: #090d16;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 6px 10px;
-      color: #f1f5f9;
-      font-size: 12px;
-      font-weight: 600;
-      outline: none;
+    .opt-btn.active-opt {
+      background: #083344 !important;
+      border-color: #06b6d4 !important;
+      color: #22d3ee !important;
     }
 
-    .name-input:focus {
-      border-color: #06b6d4;
-    }
-
-    /* PvP Remote Box */
     .pvp-box {
-      background: #090d16;
-      border: 1px solid #1e293b;
       border-radius: 10px;
+      border-width: 1px;
+      border-style: solid;
       padding: 10px;
       display: flex;
       flex-direction: column;
@@ -435,7 +462,6 @@
     }
 
     .active-room-display {
-      background: #030712;
       border: 1px dashed #06b6d4;
       border-radius: 8px;
       padding: 6px 10px;
@@ -447,21 +473,14 @@
     }
 
     .history-card {
-      background: #090d16;
-      border: 1px solid #1e293b;
       border-radius: 8px;
+      border-width: 1px;
+      border-style: solid;
       padding: 8px 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 11px;
-    }
-
-    #join-invite-modal .modal-box {
-      border: 2px solid #06b6d4;
-      box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);
-      text-align: center;
-      align-items: center;
     }
 
     /* TV View */
@@ -494,17 +513,22 @@
     }
   </style>
 </head>
-<body>
+<body class="theme-dark">
 
   <div id="drag-ghost"></div>
 
   <!-- Top Bar -->
   <header>
     <div>
-      <div class="brand-title">BLOCK CLASH</div>
-      <div class="brand-sub"><span id="mode-label">Pass &amp; Play</span> • Lvl 1</div>
+      <div class="brand-title">BLOCK CLASH DUEL</div>
+      <div class="brand-sub">
+        <span id="mode-label">Pass &amp; Play</span> •
+        <span id="level-label" class="badge-sub">Lvl 1</span> •
+        <span id="winrule-label" class="badge-sub">🪤 Survival</span>
+      </div>
     </div>
     <div class="header-btns">
+      <button id="theme-btn" title="Toggle Light / Dark Theme">☀️</button>
       <button id="tv-btn" class="btn-tv">📺 TV</button>
       <button id="settings-btn">⚙️</button>
     </div>
@@ -520,7 +544,7 @@
   <main id="game-view">
     <!-- Scoreboard (Tap name to edit) -->
     <div class="scoreboard">
-      <div id="p1-card" class="score-card active-p1">
+      <div id="p1-card" class="panel-box score-card active-p1">
         <div>
           <div class="player-tag" style="color: #22d3ee;" id="p1-title">💎 Player 1 ✏️</div>
           <div class="turn-status" id="p1-status">YOUR TURN</div>
@@ -528,7 +552,7 @@
         <div class="score-val" id="p1-score" style="color: #22d3ee;">0</div>
       </div>
 
-      <div id="p2-card" class="score-card waiting">
+      <div id="p2-card" class="panel-box score-card waiting">
         <div>
           <div class="player-tag" id="p2-name" style="color: #ec4899;">🔥 Player 2 ✏️</div>
           <div class="turn-status" id="p2-status">WAITING</div>
@@ -539,58 +563,57 @@
 
     <!-- Quick Join Bar -->
     <div class="quick-join-bar">
-      <input type="text" id="main-room-input" class="quick-input" placeholder="ENTER ROOM CODE" maxlength="12" />
+      <input type="text" id="main-room-input" class="input-field quick-input" placeholder="ENTER ROOM CODE" maxlength="12" />
       <button id="main-join-btn" class="btn-quick-join">Join Code</button>
     </div>
 
     <!-- Status Banner -->
-    <div id="banner">
-      <span id="banner-text">Drag piece with finger, or tap piece then grid</span>
-      <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; padding:2px 6px; font-size:10px;">📲 Share</button>
+    <div id="banner" class="panel-box">
+      <span id="banner-text">Drag piece or tap piece then grid</span>
+      <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 6px; font-size:10px;">📲 Share</button>
     </div>
 
     <!-- 8x8 Board Frame -->
     <div class="board-frame">
-      <div id="board"></div>
+      <div id="board" class="inner-box"></div>
     </div>
 
     <!-- Bottom Tray -->
     <div class="tray-wrap">
       <div class="tray-bar">
-        <span>Piece Selection:</span>
+        <span>Piece Tray:</span>
         <button id="restart-btn" style="background:#881337; border-color:#be123c; color:#fecdd3; padding:2px 8px;">🔄 Restart</button>
       </div>
-      <div id="tray"></div>
+      <div id="tray" class="panel-box"></div>
     </div>
   </main>
-
+  
   <!-- Dedicated Direct Join Prompt (Guest) -->
   <div id="join-invite-modal" class="modal">
-    <div class="modal-box">
+    <div class="modal-box panel-box" style="text-align: center; align-items: center; border: 2px solid #06b6d4;">
       <div style="font-size: 32px;">⚔️</div>
       <h3 style="font-size: 16px; font-weight: 800; color: #22d3ee;">Match Invite Received!</h3>
       <p style="font-size: 12px; color: #94a3b8;">You've been invited to duel.</p>
 
       <div style="width:100%; display:flex; flex-direction:column; gap:4px; text-align:left;">
-        <span style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Your Name</span>
-        <input type="text" id="guest-name-input" class="name-input" placeholder="Player 2" maxlength="14" />
+        <span class="setting-label">Your Name</span>
+        <input type="text" id="guest-name-input" class="input-field" placeholder="Player 2" maxlength="14" />
       </div>
 
-      <div style="background: #090d16; border: 1px solid #1e293b; border-radius: 8px; padding: 6px 12px; width: 100%;">
-        <span style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Room Code</span>
+      <div class="inner-box" style="border-radius: 8px; padding: 6px 12px; width: 100%;">
+        <span class="setting-label">Room Code</span>
         <div id="invite-room-code-display" style="font-size: 16px; font-weight: 800; color: #ffffff; word-break: break-all;">------</div>
       </div>
 
       <button id="accept-join-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px;">
         🎮 Tap to Join Match
       </button>
-      <div id="invite-status-msg" style="font-size: 11px; color: #f59e0b; min-height: 14px;"></div>
     </div>
   </div>
 
   <!-- Settings Modal -->
   <div id="settings-modal" class="modal">
-    <div class="modal-box">
+    <div class="modal-box panel-box">
       <div class="modal-header">
         <h3 style="font-size: 13px; font-weight: 800;">⚙️ Game Settings</h3>
         <button id="close-modal-x">✕</button>
@@ -598,7 +621,72 @@
 
       <div class="setting-row">
         <span class="setting-label">Your Player Name</span>
-        <input type="text" id="host-name-input" class="name-input" placeholder="Player 1" maxlength="14" />
+        <input type="text" id="host-name-input" class="input-field" placeholder="Player 1" maxlength="14" />
+      </div>
+
+      <!-- Theme Switcher -->
+      <div class="setting-row">
+        <span class="setting-label">Theme Mode</span>
+        <div class="btn-group-2">
+          <button id="theme-dark-opt" class="opt-btn active-opt">🌙 Dark</button>
+          <button id="theme-light-opt" class="opt-btn">☀️ Light</button>
+        </div>
+      </div>
+
+      <!-- Mode Selection -->
+      <div class="setting-row">
+        <span class="setting-label">Game Mode</span>
+        <div class="btn-group-3">
+          <button id="opt-pass" class="mode-btn opt-btn active-opt">👥 Pass</button>
+          <button id="opt-bot" class="mode-btn opt-btn">🤖 Bot</button>
+          <button id="opt-pvp" class="mode-btn opt-btn">⚔️ PvP</button>
+        </div>
+      </div>
+
+      <!-- Win Condition Selection -->
+      <div class="setting-row">
+        <span class="setting-label">Win Condition</span>
+        <div class="btn-group-2">
+          <button id="winrule-trap-opt" class="win-btn opt-btn active-opt">
+            🪤 Survival
+            <div style="font-size: 8px; opacity: 0.7;">Outlast Opponent</div>
+          </button>
+          <button id="winrule-points-opt" class="win-btn opt-btn">
+            🎯 Points Race
+            <div style="font-size: 8px; opacity: 0.7;">Hit Goal Score</div>
+          </button>
+        </div>
+
+        <!-- Target Points Configuration -->
+        <div id="points-target-box" style="display:none; flex-direction:column; gap:4px; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:#94a3b8;">
+            <span>Target Goal:</span>
+            <b id="target-pts-display" style="color:#facc15;">2000 pts</b>
+          </div>
+          <div class="btn-group-4">
+            <button class="target-chip-btn opt-btn" data-pts="1000">1k</button>
+            <button class="target-chip-btn opt-btn active-opt" data-pts="2000">2k</button>
+            <button class="target-chip-btn opt-btn" data-pts="5000">5k</button>
+            <button class="target-chip-btn opt-btn" data-pts="10000">10k</button>
+          </div>
+          <div style="display:flex; gap:4px; margin-top:2px;">
+            <input type="number" id="custom-target-input" class="input-field" placeholder="Custom (e.g. 7500)" style="flex:1; padding:4px 6px; font-size:11px;" />
+            <button id="apply-custom-target" style="padding:4px 8px; background:#0284c7; color:#fff;">Set</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Board Scenario / Level Selection -->
+      <div class="setting-row">
+        <span class="setting-label">Board Scenario / Level</span>
+        <div class="btn-group-3" style="grid-template-columns: repeat(3, 1fr);">
+          <button class="lvl-btn opt-btn active-opt" data-lvl="1">Lvl 1: Open</button>
+          <button class="lvl-btn opt-btn" data-lvl="2">Lvl 2: Core</button>
+          <button class="lvl-btn opt-btn" data-lvl="3">Lvl 3: Corners</button>
+          <button class="lvl-btn opt-btn" data-lvl="4">Lvl 4: Cross</button>
+          <button class="lvl-btn opt-btn" data-lvl="5">Lvl 5: Moat</button>
+          <button class="lvl-btn opt-btn" data-lvl="6">Lvl 6: Gauntlet</button>
+        </div>
       </div>
 
       <div id="settings-room-status" class="active-room-display" style="display:none;">
@@ -606,17 +694,8 @@
         <button id="settings-re-share" style="padding:2px 6px; font-size:10px; background:#065f46; color:#fff;">Copy Link</button>
       </div>
 
-      <div class="setting-row">
-        <span class="setting-label">Game Mode</span>
-        <div class="btn-group-3">
-          <button id="opt-pass" class="mode-btn active-opt">👥 Pass</button>
-          <button id="opt-bot" class="mode-btn">🤖 Bot</button>
-          <button id="opt-pvp" class="mode-btn">⚔️ PvP</button>
-        </div>
-      </div>
-
-      <div id="pvp-panel" class="pvp-box" style="display:none;">
-        <span class="setting-label" style="color:#22d3ee;">Remote Duel (Different Homes)</span>
+      <div id="pvp-panel" class="pvp-box inner-box" style="display:none;">
+        <span class="setting-label" style="color:#22d3ee;">Remote Duel (Across 2 Phones)</span>
         <button id="pvp-create-btn" style="background:#065f46; border-color:#059669; color:#fff; padding:8px; font-size:12px;">
           🔗 Create Room &amp; Share Link
         </button>
@@ -639,7 +718,7 @@
 
   <!-- Match History Modal -->
   <div id="history-modal" class="modal">
-    <div class="modal-box">
+    <div class="modal-box panel-box">
       <div class="modal-header">
         <h3 style="font-size: 13px; font-weight: 800;">📜 Match History</h3>
         <button id="close-history-x">✕</button>
@@ -647,11 +726,36 @@
       <div id="history-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto;"></div>
       <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 6px;">
         <button id="clear-history-btn" style="background: #881337; border-color: #be123c; color: #fecdd3;">Clear History</button>
-        <button id="close-history-btn" style="background: #334155; color: #fff;">Close</button>
+        <button id="close-history-btn">Close</button>
       </div>
     </div>
   </div>
 
+  <!-- Game Over Modal -->
+  <div id="gameover-modal" class="modal">
+    <div class="modal-box panel-box" style="text-align: center; align-items: center; border: 2px solid #06b6d4;">
+      <div style="font-size: 40px;">🏆</div>
+      <h2 id="winner-title" style="font-size: 20px; font-weight: 900; color: #22d3ee;">PLAYER 1 WINS!</h2>
+      <p id="winner-reason" style="font-size: 12px; color: #94a3b8;">Opponent has no legal moves left.</p>
+      
+      <div class="inner-box" style="width: 100%; border-radius: 10px; padding: 8px; display: flex; justify-content: space-around; margin: 4px 0;">
+        <div>
+          <div style="font-size: 9px; color: #94a3b8;" id="final-p1-name">Player 1</div>
+          <div id="final-p1-score" style="font-size: 18px; font-weight: 800; color: #22d3ee;">0</div>
+        </div>
+        <div style="border-right: 1px solid rgba(148, 163, 184, 0.2);"></div>
+        <div>
+          <div style="font-size: 9px; color: #94a3b8;" id="final-p2-name">Player 2</div>
+          <div id="final-p2-score" style="font-size: 18px; font-weight: 800; color: #ec4899;">0</div>
+        </div>
+      </div>
+
+      <button id="gameover-restart-btn" style="width: 100%; background: #4f46e5; border-color: #6366f1; color: #fff; padding: 10px; font-size: 13px; font-weight: 800;">
+        Play Next Match
+      </button>
+    </div>
+  </div>
+  
   <script>
     // Audio Synthesizer
     var soundEnabled = true;
@@ -689,6 +793,14 @@
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
           osc.start(now);
           osc.stop(now + 0.3);
+        } else if (type === 'win') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+          osc.start(now);
+          osc.stop(now + 0.45);
         }
       } catch (e) {}
     }
@@ -706,6 +818,15 @@
       { matrix: [[1, 1, 1], [0, 1, 0]] }
     ];
 
+    var LEVELS = {
+      1: { title: "Classic Open", obstacles: [] },
+      2: { title: "Stone Core", obstacles: [[3,3],[3,4],[4,3],[4,4]] },
+      3: { title: "Corner Traps", obstacles: [[0,0],[0,7],[7,0],[7,7]] },
+      4: { title: "Crossfire", obstacles: [[1,3],[1,4],[6,3],[6,4],[3,1],[4,1],[3,6],[4,6]] },
+      5: { title: "Moat Fortress", obstacles: [[2,2],[2,3],[2,4],[2,5],[5,2],[5,3],[5,4],[5,5]] },
+      6: { title: "Gauntlet", obstacles: [[1,1],[1,6],[6,1],[6,6],[3,3],[3,4],[4,3],[4,4]] }
+    };
+
     var state = {
       grid: [
         [0,0,0,0,0,0,0,0],
@@ -719,7 +840,11 @@
       ],
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass',
+      mode: 'pass', // 'pass', 'bot', 'pvp'
+      theme: localStorage.getItem('blockclash_theme') || 'dark',
+      winCondition: 'trap', // 'trap' (survival outlast) or 'race' (points target)
+      targetScore: 2000,
+      currentLevel: 1,
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
       gameOver: false,
@@ -756,12 +881,25 @@
       ghostEl: document.getElementById('drag-ghost')
     };
 
+    function applyTheme(theme) {
+      state.theme = theme;
+      localStorage.setItem('blockclash_theme', theme);
+      document.body.className = 'theme-' + theme;
+      document.getElementById('theme-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
+      document.getElementById('theme-dark-opt').classList.toggle('active-opt', theme === 'dark');
+      document.getElementById('theme-light-opt').classList.toggle('active-opt', theme === 'light');
+    }
+
     function initBoard() {
       for (var r = 0; r < 8; r++) {
         for (var c = 0; c < 8; c++) {
           state.grid[r][c] = 0;
         }
       }
+      var lvl = LEVELS[state.currentLevel] || LEVELS[1];
+      lvl.obstacles.forEach(function(coord) {
+        state.grid[coord[0]][coord[1]] = 99; // 99 = Bedrock Obstacle
+      });
     }
 
     function renderBoardDOM() {
@@ -781,6 +919,9 @@
           } else if (val === 2) {
             cell.className += ' p2';
             cell.textContent = '🔥';
+          } else if (val === 99) {
+            cell.className += ' obstacle';
+            cell.textContent = '🗿';
           }
           (function(row, col) {
             cell.addEventListener('click', function() { onCellClick(row, col); });
@@ -806,7 +947,7 @@
 
       state.trayPieces.forEach(function(piece, idx) {
         var slot = document.createElement('div');
-        slot.className = 'slot' + (state.selectedPieceIdx === idx ? ' selected' : '');
+        slot.className = 'slot inner-box' + (state.selectedPieceIdx === idx ? ' selected' : '');
         slot.dataset.idx = idx;
 
         if (!piece) {
@@ -973,7 +1114,7 @@
       processDragEnd(t.clientX, t.clientY, true);
     }
 
-    function onTouchCancel(e) {
+    function onTouchCancel() {
       processDragEnd(0, 0, true);
     }
 
@@ -1073,16 +1214,42 @@
     }
 
     function commitDrop(piece, r, c, slotIdx, isRemote) {
+      var placedBlocks = 0;
       var m = piece.matrix;
       for (var pr = 0; pr < m.length; pr++) {
         for (var pc = 0; pc < m[pr].length; pc++) {
-          if (m[pr][pc]) state.grid[r + pr][c + pc] = state.currentPlayer;
+          if (m[pr][pc]) {
+            state.grid[r + pr][c + pc] = state.currentPlayer;
+            placedBlocks++;
+          }
         }
       }
       playSfx('place');
 
+      // Accumulate score for placed blocks (10 pts per cell)
+      state.scores[state.currentPlayer] += placedBlocks * 10;
+
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
+
+      checkLines();
+
+      // Check points race target immediately
+      if (state.winCondition === 'race' && state.scores[state.currentPlayer] >= state.targetScore) {
+        if (!isRemote && state.conn && state.conn.open) {
+          state.conn.send({
+            type: 'move',
+            piece: piece,
+            r: r,
+            c: c,
+            slotIdx: slotIdx,
+            grid: state.grid,
+            scores: state.scores
+          });
+        }
+        triggerWin(state.currentPlayer, 'Reached the target goal of ' + state.targetScore + ' points!');
+        return;
+      }
 
       if (!isRemote && state.conn && state.conn.open) {
         state.conn.send({
@@ -1090,11 +1257,11 @@
           piece: piece,
           r: r,
           c: c,
-          slotIdx: slotIdx
+          slotIdx: slotIdx,
+          grid: state.grid,
+          scores: state.scores
         });
       }
-
-      checkLines();
 
       var allUsed = state.trayPieces.every(function(p) { return p === null; });
       if (allUsed) {
@@ -1140,8 +1307,16 @@
       if (total > 0) {
         playSfx('clear');
         state.scores[state.currentPlayer] += total * 100;
-        rows.forEach(function(r) { for (var c = 0; c < 8; c++) state.grid[r][c] = 0; });
-        cols.forEach(function(c) { for (var r = 0; r < 8; r++) state.grid[r][c] = 0; });
+        rows.forEach(function(r) {
+          for (var c = 0; c < 8; c++) {
+            if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
+          }
+        });
+        cols.forEach(function(c) {
+          for (var r = 0; r < 8; r++) {
+            if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
+          }
+        });
       }
     }
 
@@ -1158,6 +1333,8 @@
           p2: p2Name,
           score1: state.scores[1],
           score2: state.scores[2],
+          level: 'Lvl ' + state.currentLevel,
+          mode: state.winCondition === 'race' ? ('Race (' + state.targetScore + ' pts)') : 'Survival',
           date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
         });
 
@@ -1174,17 +1351,49 @@
         return;
       }
       container.innerHTML = history.map(function(m) {
-        return '<div class="history-card">' +
+        return '<div class="history-card inner-box">' +
           '<div>' +
             '<div style="font-weight:700; color:#22d3ee;">🏆 ' + m.winner + ' Won</div>' +
-            '<div style="font-size:9px; color:#94a3b8;">' + m.p1 + ' vs ' + m.p2 + ' • ' + m.date + '</div>' +
+            '<div style="font-size:9px; color:#94a3b8;">' + m.p1 + ' vs ' + m.p2 + ' • ' + (m.mode || 'Duel') + ' • ' + m.date + '</div>' +
           '</div>' +
           '<div style="font-weight:800; font-size:13px;">' + m.score1 + ' - ' + m.score2 + '</div>' +
         '</div>';
       }).join('');
     }
 
+    function triggerWin(winnerNum, reason) {
+      state.gameOver = true;
+      playSfx('win');
+      recordMatchHistory(winnerNum);
+
+      var modal = document.getElementById('gameover-modal');
+      var winnerName = state.playerNames[winnerNum] || ('Player ' + winnerNum);
+      document.getElementById('winner-title').textContent = winnerName.toUpperCase() + ' WINS!';
+      document.getElementById('winner-title').style.color = winnerNum === 1 ? '#22d3ee' : '#ec4899';
+      document.getElementById('winner-reason').textContent = reason;
+      document.getElementById('final-p1-name').textContent = state.playerNames[1];
+      document.getElementById('final-p2-name').textContent = state.mode === 'bot' ? 'Bot 🤖' : state.playerNames[2];
+      document.getElementById('final-p1-score').textContent = state.scores[1];
+      document.getElementById('final-p2-score').textContent = state.scores[2];
+      modal.classList.add('open');
+
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 110, spread: 75, origin: { y: 0.6 } });
+      }
+    }
+
     function checkEnd() {
+      if (state.winCondition === 'race') {
+        if (state.scores[1] >= state.targetScore) {
+          triggerWin(1, 'Hit the target goal of ' + state.targetScore + ' points!');
+          return;
+        }
+        if (state.scores[2] >= state.targetScore) {
+          triggerWin(2, 'Hit the target goal of ' + state.targetScore + ' points!');
+          return;
+        }
+      }
+
       var available = state.trayPieces.filter(function(p) { return p !== null; });
       if (available.length === 0) return;
 
@@ -1201,11 +1410,9 @@
       }
 
       if (!canMove) {
-        state.gameOver = true;
         var winner = state.currentPlayer === 1 ? 2 : 1;
-        var winnerName = state.playerNames[winner];
-        recordMatchHistory(winner);
-        alert('MATCH OVER!\n\n🏆 ' + winnerName + ' WINS!\n' + state.playerNames[1] + ': ' + state.scores[1] + ' pts\n' + state.playerNames[2] + ': ' + state.scores[2] + ' pts');
+        var loserName = state.playerNames[state.currentPlayer];
+        triggerWin(winner, loserName + ' was trapped with no legal moves left.');
       }
     }
 
@@ -1249,18 +1456,18 @@
       var shareAgainBtn = document.getElementById('share-again-btn');
 
       if (state.currentPlayer === 1) {
-        p1Card.className = 'score-card active-p1';
-        p2Card.className = 'score-card waiting';
+        p1Card.className = 'panel-box score-card active-p1';
+        p2Card.className = 'panel-box score-card waiting';
         p1Status.textContent = 'YOUR TURN';
         p2Status.textContent = 'WAITING';
       } else {
-        p2Card.className = 'score-card active-p2';
-        p1Card.className = 'score-card waiting';
+        p2Card.className = 'panel-box score-card active-p2';
+        p1Card.className = 'panel-box score-card waiting';
         p2Status.textContent = state.mode === 'bot' ? 'THINKING' : 'YOUR TURN';
         p1Status.textContent = 'WAITING';
       }
 
-      banner.className = '';
+      banner.className = 'panel-box';
       shareAgainBtn.style.display = 'none';
 
       document.getElementById('p1-title').innerHTML = '💎 ' + state.playerNames[1] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
@@ -1276,11 +1483,11 @@
         }
 
         if (!state.isConnected) {
-          banner.className = 'banner-waiting';
+          banner.className = 'panel-box banner-waiting';
           bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for player)';
           shareAgainBtn.style.display = 'inline-block';
         } else {
-          banner.className = 'banner-connected';
+          banner.className = 'panel-box banner-connected';
           if (state.currentPlayer === state.myPlayerNum) {
             bannerText.textContent = '🟢 Duel Live! YOUR TURN (' + state.playerNames[state.myPlayerNum] + ')';
           } else {
@@ -1289,17 +1496,22 @@
         }
       } else {
         settingsRoomBox.style.display = 'none';
-        bannerText.textContent = 'Drag piece with finger, or tap piece then grid';
+        bannerText.textContent = state.winCondition === 'race'
+          ? '🎯 Race to ' + state.targetScore + ' pts! Place pieces or clear lines'
+          : '🪤 Survival: Outlast opponent by avoiding getting trapped';
       }
 
       var modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', pvp: 'PvP Duel' };
       document.getElementById('mode-label').textContent = modeNames[state.mode];
+      document.getElementById('level-label').textContent = 'Lvl ' + state.currentLevel;
+      document.getElementById('winrule-label').textContent = state.winCondition === 'race' ? ('🎯 ' + state.targetScore) : '🪤 Survival';
     }
 
     function resetGame() {
       state.scores = { 1: 0, 2: 0 };
       state.currentPlayer = 1;
       state.gameOver = false;
+      document.getElementById('gameover-modal').classList.remove('open');
       initBoard();
       replenishTray();
       renderBoardDOM();
@@ -1323,15 +1535,15 @@
           cell.style.fontSize = '20px';
           if (val === 1) cell.textContent = '💎';
           else if (val === 2) cell.textContent = '🔥';
+          else if (val === 99) cell.textContent = '🗿';
           tvGrid.appendChild(cell);
         }
       }
     }
-
-    function setMode(newMode) {
+	
+	function setMode(newMode) {
       state.mode = newMode;
-      var buttons = document.querySelectorAll('.mode-btn');
-      for (var i = 0; i < buttons.length; i++) buttons[i].classList.remove('active-opt');
+      document.querySelectorAll('.mode-btn').forEach(function(btn) { btn.classList.remove('active-opt'); });
       if (newMode === 'pass') document.getElementById('opt-pass').classList.add('active-opt');
       if (newMode === 'bot') document.getElementById('opt-bot').classList.add('active-opt');
       if (newMode === 'pvp') document.getElementById('opt-pvp').classList.add('active-opt');
@@ -1377,7 +1589,6 @@
         try { state.peer.destroy(); } catch (e) {}
       }
 
-      // Safe clean peer broker initialization
       state.peer = new Peer(peerIceConfig);
 
       state.peer.on('open', function(id) {
@@ -1388,7 +1599,6 @@
 
         document.getElementById('settings-modal').classList.remove('open');
         updateUI();
-
         shareRoomInvite(id);
 
         state.peer.on('connection', function(conn) {
@@ -1433,7 +1643,7 @@
         updateUI();
       });
 
-      state.peer.on('error', function(err) {
+      state.peer.on('error', function() {
         alert('Could not connect to room. Check code and retry.');
         updateUI();
       });
@@ -1445,9 +1655,12 @@
         playSfx('connect');
 
         conn.send({
-          type: 'nameSync',
+          type: 'handshake',
           playerNum: state.myPlayerNum,
-          name: state.playerNames[state.myPlayerNum]
+          name: state.playerNames[state.myPlayerNum],
+          level: state.currentLevel,
+          winCondition: state.winCondition,
+          targetScore: state.targetScore
         });
 
         if (state.myPlayerNum === 1) {
@@ -1459,10 +1672,22 @@
 
       conn.on('data', function(data) {
         if (data.type === 'move') {
+          if (data.grid) state.grid = data.grid;
+          if (data.scores) state.scores = data.scores;
           commitDrop(data.piece, data.r, data.c, data.slotIdx, true);
         } else if (data.type === 'syncTray') {
           state.trayPieces = data.tray;
           renderTrayDOM();
+        } else if (data.type === 'handshake') {
+          state.playerNames[data.playerNum] = data.name;
+          if (state.myPlayerNum === 2) {
+            state.currentLevel = data.level;
+            state.winCondition = data.winCondition;
+            state.targetScore = data.targetScore;
+            initBoard();
+            renderBoardDOM();
+          }
+          updateUI();
         } else if (data.type === 'nameSync') {
           state.playerNames[data.playerNum] = data.name;
           updateUI();
@@ -1492,8 +1717,10 @@
       }
     }
 
-    // Direct Boot Engine (Paints UI immediately)
+    // Direct Boot Engine
     function bootGame() {
+      applyTheme(state.theme);
+
       var savedName1 = localStorage.getItem('blockclash_name_1') || 'Player 1';
       var savedName2 = localStorage.getItem('blockclash_name_2') || 'Player 2';
       state.playerNames[1] = savedName1;
@@ -1512,6 +1739,12 @@
       document.getElementById('settings-btn').onclick = function() { settingsModal.classList.add('open'); };
       document.getElementById('close-modal-x').onclick = function() { settingsModal.classList.remove('open'); };
       document.getElementById('close-modal-bottom').onclick = function() { settingsModal.classList.remove('open'); };
+
+      document.getElementById('theme-btn').onclick = function() {
+        applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+      };
+      document.getElementById('theme-dark-opt').onclick = function() { applyTheme('dark'); };
+      document.getElementById('theme-light-opt').onclick = function() { applyTheme('light'); };
 
       document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
       document.getElementById('p2-card').onclick = function() {
@@ -1538,16 +1771,66 @@
       };
 
       document.getElementById('restart-btn').onclick = resetGame;
+      document.getElementById('gameover-restart-btn').onclick = resetGame;
 
       document.getElementById('opt-pass').onclick = function() { setMode('pass'); };
       document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
       document.getElementById('opt-pvp').onclick = function() { setMode('pvp'); };
 
+      // Win Condition setup
+      var trapOpt = document.getElementById('winrule-trap-opt');
+      var ptsOpt = document.getElementById('winrule-points-opt');
+      var ptsBox = document.getElementById('points-target-box');
+
+      trapOpt.onclick = function() {
+        state.winCondition = 'trap';
+        trapOpt.classList.add('active-opt');
+        ptsOpt.classList.remove('active-opt');
+        ptsBox.style.display = 'none';
+        updateUI();
+      };
+
+      ptsOpt.onclick = function() {
+        state.winCondition = 'race';
+        ptsOpt.classList.add('active-opt');
+        trapOpt.classList.remove('active-opt');
+        ptsBox.style.display = 'flex';
+        updateUI();
+      };
+
+      document.querySelectorAll('.target-chip-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          state.targetScore = parseInt(btn.dataset.pts, 10);
+          document.getElementById('target-pts-display').textContent = state.targetScore + ' pts';
+          document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+          btn.classList.add('active-opt');
+          updateUI();
+        };
+      });
+
+      document.getElementById('apply-custom-target').onclick = function() {
+        var val = parseInt(document.getElementById('custom-target-input').value, 10);
+        if (val && val >= 500) {
+          state.targetScore = val;
+          document.getElementById('target-pts-display').textContent = val + ' pts';
+          document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+          updateUI();
+        }
+      };
+
+      // Board Level Selection
+      document.querySelectorAll('.lvl-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          state.currentLevel = parseInt(btn.dataset.lvl, 10);
+          document.querySelectorAll('.lvl-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+          btn.classList.add('active-opt');
+          resetGame();
+        };
+      });
+
       document.getElementById('pvp-create-btn').onclick = createPvPRoom;
       document.getElementById('share-again-btn').onclick = function() {
-        if (state.activeRoomCode) {
-          shareRoomInvite(state.activeRoomCode);
-        }
+        if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
       };
 
       document.getElementById('open-history-btn').onclick = function() {
@@ -1590,10 +1873,9 @@
         setMode('pvp');
         settingsModal.classList.remove('open');
         document.getElementById('invite-room-code-display').textContent = roomParam;
-        
+
         var guestInput = document.getElementById('guest-name-input');
         guestInput.value = localStorage.getItem('blockclash_name_2') || 'Player 2';
-        
         inviteModal.classList.add('open');
 
         document.getElementById('accept-join-btn').onclick = function() {
