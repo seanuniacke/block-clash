@@ -132,26 +132,24 @@
       color: #ffffff !important;
     }
 
-    /* Main Container: dynamically scales cleanly across phones, tablets, and large 4K/desktop screens */
+    /* Main Container */
     main {
       flex: 1;
       width: 100%;
-      max-width: 900px;
+      max-width: 600px;
       margin: 0 auto;
-      padding: 4px 12px 6px;
+      padding: 4px 12px 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
       min-height: 0;
       overflow: hidden;
-      gap: 6px;
     }
 
     /* Scoreboard */
     .scoreboard {
       width: 100%;
-      max-width: 600px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -202,7 +200,7 @@
       font-weight: 900;
     }
 
-    /* Banner for network / PvP alerts */
+    /* Status Banner */
     #banner {
       display: none;
       font-size: 11px;
@@ -212,10 +210,10 @@
       border-radius: 8px;
       flex-shrink: 0;
       width: 100%;
-      max-width: 600px;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      margin-top: 2px;
     }
 
     .banner-waiting {
@@ -232,23 +230,22 @@
       color: #34d399 !important;
     }
 
-    /* ================= MAXIMIZED BOARD FRAME ================= */
+    /* ================= BALANCED RESPONSIVE BOARD ================= */
     .board-frame {
       width: 100%;
-      flex: 1 1 0;
+      flex: 1 1 auto;
       min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 4px 0;
     }
 
-    /* Board expands to 100% of the available height between top and bottom trays */
+    /* Sized cleanly against viewport height minus UI elements (header, scores, tray, join bar) */
     #board {
-      height: 100% !important;
-      max-height: 80vh !important;
-      width: auto !important;
-      max-width: 95vw !important;
-      aspect-ratio: 1 / 1 !important;
+      width: min(92vw, calc(100dvh - 275px), 520px);
+      height: min(92vw, calc(100dvh - 275px), 520px);
+      aspect-ratio: 1 / 1;
       border-radius: 16px;
       padding: 6px;
       display: grid;
@@ -257,6 +254,7 @@
       gap: 4px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .cell {
@@ -267,7 +265,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(14px, 2.5vmin, 26px);
+      font-size: clamp(14px, 2.8vmin, 24px);
       line-height: 1;
       overflow: hidden;
       transition: background-color 0.1s ease;
@@ -299,7 +297,6 @@
     /* Piece Tray (Directly Below Board) */
     .tray-wrap {
       width: 100%;
-      max-width: 600px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
@@ -318,7 +315,7 @@
 
     #tray {
       width: 100%;
-      height: 76px;
+      height: 74px;
       border-radius: 14px;
       display: flex;
       justify-content: space-around;
@@ -353,14 +350,14 @@
       opacity: 0.2;
     }
 
-    /* Bottom Quick Join Bar (Under Piece Tray) */
+    /* Bottom Quick Join Bar (Spaced cleanly underneath tray) */
     .quick-join-bar {
       width: 100%;
-      max-width: 600px;
       display: flex;
       gap: 8px;
       flex-shrink: 0;
-      padding-top: 1px;
+      margin-top: 8px;
+      margin-bottom: 2px;
     }
 
     .input-field {
@@ -582,7 +579,7 @@
       <div id="tray" class="panel-box"></div>
     </div>
 
-    <!-- Quick Join Bar (Under Piece Tray) -->
+    <!-- Quick Join Bar (Spaced Under Piece Tray) -->
     <div class="quick-join-bar">
       <input type="text" id="main-room-input" class="input-field quick-input" placeholder="ENTER ROOM CODE" maxlength="12" />
       <button id="main-join-btn" class="btn-quick-join">Join Code</button>
@@ -918,7 +915,7 @@
       startY: 0,
       hasMoved: false,
       slotEl: null,
-      cellSize: 46,
+      cellSize: 42,
       ghostEl: document.getElementById('drag-ghost')
     };
 
@@ -943,7 +940,7 @@
       }
       var lvl = LEVELS[state.currentLevel] || LEVELS[1];
       lvl.obstacles.forEach(function(coord) {
-        state.grid[coord[0]][coord[1]] = 99; // 99 = Bedrock Obstacle
+        state.grid[coord[0]][coord[1]] = 99; // 99 = Unbreakable Bedrock Obstacle
       });
     }
 
@@ -1198,7 +1195,7 @@
             var br = targetR + r;
             var bc = targetC + c;
             if (br < 0 || br >= 8 || bc < 0 || bc >= 8) return false;
-            if (state.grid[br][bc] !== 0) return false;
+            if (state.grid[br][bc] !== 0) return false; // Blocked if occupied or bedrock (99)
           }
         }
       }
