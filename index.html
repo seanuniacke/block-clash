@@ -3,161 +3,1032 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Block Clash Duel v4.0</title>
-  
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#090d16">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-
+  <title>Block Clash Duel</title>
   <style>
     * {
-      font-family: 'Fredoka', cursive, sans-serif;
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       user-select: none;
       -webkit-user-select: none;
-      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: #090d16;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
-      touch-action: none;
-      overscroll-behavior: none;
-      transition: background-color 0.2s ease, color 0.2s ease;
-      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Top Bar */
+    header {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(to right, #22d3ee, #f43f5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
+    .header-btns {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .btn-tv {
+      background: #4f46e5;
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+
+    /* Main Container (Optimized for Mobile Viewport) */
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 460px;
+      margin: 0 auto;
+      padding: 4px 10px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 0;
       overflow: hidden;
     }
 
-    /* Dark Theme (Default) */
-    body.theme-dark {
-      background-color: #090d16;
-      color: #f1f5f9;
-    }
-    body.theme-dark .panel-bg { background-color: rgba(15, 23, 42, 0.9); border-color: #1e293b; }
-    body.theme-dark .board-bg { background-color: #030712; border-color: #1e293b; }
-    body.theme-dark .empty-cell { background-color: #0f172a; border: 1px solid #1e293b; }
-    body.theme-dark .empty-cell:hover { background-color: #1e293b; }
-
-    /* Light Theme */
-    body.theme-light {
-      background-color: #f1f5f9;
-      color: #0f172a;
-    }
-    body.theme-light .panel-bg { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); }
-    body.theme-light .board-bg { background-color: #e2e8f0; border-color: #cbd5e1; }
-    body.theme-light .empty-cell { background-color: #ffffff; border: 1px solid #cbd5e1; }
-    body.theme-light .empty-cell:hover { background-color: #f8fafc; }
-
-    /* Dynamic Drop Preview */
-    .cell-preview-valid {
-      background-color: rgba(56, 189, 248, 0.6) !important;
-      outline: 2px solid #38bdf8 !important;
-      outline-offset: -2px;
-      transform: scale(0.96);
-    }
-    .cell-preview-invalid {
-      background-color: rgba(244, 63, 94, 0.45) !important;
-      outline: 2px solid #f43f5e !important;
-      outline-offset: -2px;
+    /* Scoreboard */
+    .scoreboard {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
-    /* Fixed equal 8x8 grid cells */
-    .board-grid-equal {
-      display: grid !important;
-      grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-      grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
+    .score-card {
+      background: #0f172a;
+      border: 2px solid #1e293b;
+      border-radius: 10px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.2s, opacity 0.2s;
     }
 
-    /* Responsive board container */
-    .responsive-board-box {
-      width: min(92vw, 48dvh, 520px) !important;
-      height: min(92vw, 48dvh, 520px) !important;
-      aspect-ratio: 1 / 1 !important;
-      flex-shrink: 0 !important;
+    .score-card.active-p1 {
+      border-color: #06b6d4;
+      opacity: 1;
     }
 
-    .board-cell-square {
-      aspect-ratio: 1 / 1 !important;
-      width: 100% !important;
-      height: 100% !important;
+    .score-card.active-p2 {
+      border-color: #ec4899;
+      opacity: 1;
     }
 
-    .mulligan-btn {
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-    .mulligan-btn:disabled {
-      opacity: 0.35 !important;
-      cursor: not-allowed !important;
-      filter: grayscale(1);
+    .score-card.waiting {
+      opacity: 0.5;
     }
 
-    .selected-tray-slot {
-      border-color: #38bdf8 !important;
-      box-shadow: 0 0 14px rgba(56, 189, 248, 0.55);
+    .player-tag {
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .turn-status {
+      font-size: 8px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .score-val {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    /* Banner */
+    #banner {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-align: center;
+      padding: 2px 0;
+      flex-shrink: 0;
+    }
+
+    /* 8x8 Board Container */
+    .board-frame {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-height: 0;
+      padding: 2px 0;
+    }
+
+    #board {
+      width: min(84vw, 42dvh, 380px);
+      height: min(84vw, 42dvh, 380px);
+      aspect-ratio: 1 / 1;
+      background: #030712;
+      border: 2px solid #1e293b;
+      border-radius: 14px;
+      padding: 5px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 3px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      touch-action: none;
+    }
+
+    .cell {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 4px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .cell.p1 {
+      background: rgba(6, 182, 212, 0.35);
+      border-color: #06b6d4;
+    }
+
+    .cell.p2 {
+      background: rgba(236, 72, 153, 0.35);
+      border-color: #ec4899;
+    }
+
+    .cell.preview {
+      background: rgba(34, 211, 238, 0.55) !important;
+      outline: 2px solid #22d3ee;
+    }
+
+    /* Piece Tray */
+    .tray-wrap {
+      width: 100%;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      touch-action: none;
+    }
+
+    .tray-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #94a3b8;
+      padding: 0 2px;
+    }
+
+    #tray {
+      width: 100%;
+      height: 70px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 6px;
+      padding: 6px;
+      touch-action: none;
+    }
+
+    .slot {
+      flex: 1;
+      height: 100%;
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      touch-action: none;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .slot.selected {
+      border-color: #22d3ee;
       transform: scale(1.04);
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
     }
 
-    /* Floating Drag Ghost */
-    #floating-drag-ghost {
+    .slot.used {
+      opacity: 0.25;
+      cursor: default;
+    }
+
+    /* Floating Touch / Mouse Drag Avatar */
+    #drag-ghost {
       position: fixed;
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
       display: none;
-      opacity: 0.95;
-      filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.65));
+      opacity: 0.9;
+      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6));
       touch-action: none;
-      will-change: left, top;
+    }
+
+    /* Settings Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 340px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 6px;
+    }
+
+    .setting-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .setting-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .btn-group-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .mode-btn.active-opt {
+      background: #083344;
+      border-color: #06b6d4;
+      color: #22d3ee;
+    }
+
+    /* TV View */
+    #tv-view {
+      display: none;
+      flex: 1;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    #tv-view.open {
+      display: flex;
+    }
+
+    #tv-board-grid {
+      width: min(80vmin, 480px);
+      height: min(80vmin, 480px);
+      background: #030712;
+      border: 4px solid #4f46e5;
+      border-radius: 20px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 4px;
     }
   </style>
 </head>
-<body class="theme-dark w-full h-[100dvh] flex flex-col justify-between overflow-hidden">
+<body>
 
-  <!-- Floating Drag Element -->
-  <div id="floating-drag-ghost"></div>
+  <!-- Floating Drag Piece -->
+  <div id="drag-ghost"></div>
 
-  <!-- TOP APP BAR -->
-  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b panel-bg shrink-0 z-30">
-    <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shadow-md">
-        ⚔️
-      </div>
-      <div>
-        <h1 class="text-sm font-bold tracking-wide leading-none text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500">
-          BLOCK CLASH
-        </h1>
-        <div class="flex items-center gap-1 mt-0.5">
-          <span id="header-mode-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800 font-semibold">Pass &amp; Play</span>
-          <span id="header-lvl-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-medium">Lvl 1</span>
-        </div>
-      </div>
+  <!-- Top Bar -->
+  <header>
+    <div>
+      <div class="brand-title">BLOCK CLASH</div>
+      <div class="brand-sub"><span id="mode-label">Pass &amp; Play</span> • Lvl 1</div>
     </div>
-
-    <!-- Right Header Controls -->
-    <div class="flex items-center gap-2">
-      <button id="quick-pvp-btn" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow transition active:scale-95" title="Play Online vs Friend">
-        <span>👥</span>
-        <span>PvP</span>
-      </button>
-      <button id="tv-toggle-btn" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shadow transition active:scale-95">
-        <span>📺</span>
-        <span>TV</span>
-      </button>
-      <button id="settings-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm transition" title="Settings &amp; Modes">
-        ⚙️
-      </button>
+    <div class="header-btns">
+      <button id="tv-btn" class="btn-tv">📺 TV</button>
+      <button id="settings-btn">⚙️</button>
     </div>
   </header>
 
-  <!-- =========================================================================
-       STANDARD MAIN VIEW (Mobile & Desktop Browser)
-       ========================================================================= -->
-  <main id="standard-view" class="w-full max-w-4xl mx-auto flex-1 px-3 py-1 flex flex-col justify-between items-center overflow-hidden min-h-0">
-    
+  <!-- TV Spectator Arena -->
+  <div id="tv-view">
+    <div id="tv-board-grid"></div>
+    <div style="font-size: 15px; font-weight: 700; color: #22d3ee;" id="tv-status">TV Spectator Mode Active</div>
+  </div>
+
+  <!-- Handheld Main Game Arena -->
+  <main id="game-view">
     <!-- Scoreboard -->
-    <section class="w-full max-w
+    <div class="scoreboard">
+      <div id="p1-card" class="score-card active-p1">
+        <div>
+          <div class="player-tag" style="color: #22d3ee;">💎 Player 1</div>
+          <div class="turn-status" id="p1-status">YOUR TURN</div>
+        </div>
+        <div class="score-val" id="p1-score" style="color: #22d3ee;">0</div>
+      </div>
+
+      <div id="p2-card" class="score-card waiting">
+        <div>
+          <div class="player-tag" id="p2-name" style="color: #ec4899;">🔥 Player 2</div>
+          <div class="turn-status" id="p2-status">WAITING</div>
+        </div>
+        <div class="score-val" id="p2-score" style="color: #ec4899;">0</div>
+      </div>
+    </div>
+
+    <!-- Instruction Banner -->
+    <div id="banner">Drag piece with finger, or tap piece then grid</div>
+
+    <!-- 8x8 Board -->
+    <div class="board-frame">
+      <div id="board"></div>
+    </div>
+
+    <!-- Bottom Tray -->
+    <div class="tray-wrap">
+      <div class="tray-bar">
+        <span>Piece Selection:</span>
+        <button id="restart-btn" style="background:#881337; border-color:#be123c; color:#fecdd3; padding:2px 8px;">🔄 Restart</button>
+      </div>
+      <div id="tray"></div>
+    </div>
+  </main>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 13px; font-weight: 800;">⚙️ Game Settings</h3>
+        <button id="close-modal-x">✕</button>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Game Mode</span>
+        <div class="btn-group-3">
+          <button id="opt-pass" class="mode-btn active-opt">👥 Pass</button>
+          <button id="opt-bot" class="mode-btn">🤖 Bot</button>
+          <button id="opt-pvp" class="mode-btn">⚔️ PvP</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Sound Effects</span>
+        <button id="sound-btn" style="background:#083344; border-color:#06b6d4; color:#22d3ee;">🔊 Sound: ON</button>
+      </div>
+
+      <button id="close-modal-bottom" style="background:#4f46e5; border-color:#6366f1; color:white; padding:8px;">Done / Resume</button>
+    </div>
+  </div>
+
+  <script>
+    // Audio Engine
+    var soundEnabled = true;
+    var audioCtx = null;
+    function playSfx(type) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        var now = audioCtx.currentTime;
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        if (type === 'place') {
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'clear') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523, now);
+          osc.frequency.setValueAtTime(659, now + 0.08);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        }
+      } catch (e) {}
+    }
+
+    // Shapes
+    var SHAPES = [
+      { matrix: [[1]] },
+      { matrix: [[1, 1]] },
+      { matrix: [[1], [1]] },
+      { matrix: [[1, 1, 1]] },
+      { matrix: [[1], [1], [1]] },
+      { matrix: [[1, 1, 1, 1]] },
+      { matrix: [[1, 1], [1, 1]] },
+      { matrix: [[1, 0], [1, 1]] },
+      { matrix: [[0, 1], [1, 1]] },
+      { matrix: [[1, 1, 1], [0, 1, 0]] }
+    ];
+
+    // Master State
+    var state = {
+      grid: [
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0]
+      ],
+      currentPlayer: 1,
+      scores: { 1: 0, 2: 0 },
+      mode: 'pass',
+      selectedPieceIdx: null,
+      trayPieces: [null, null, null],
+      gameOver: false,
+      isTV: false
+    };
+
+    // Touch & Pointer Drag Tracker
+    var drag = {
+      active: false,
+      piece: null,
+      slotIdx: null,
+      startX: 0,
+      startY: 0,
+      hasMoved: false,
+      ghostEl: document.getElementById('drag-ghost')
+    };
+
+    function initBoard() {
+      for (var r = 0; r < 8; r++) {
+        for (var c = 0; c < 8; c++) {
+          state.grid[r][c] = 0;
+        }
+      }
+    }
+
+    function renderBoardDOM() {
+      var board = document.getElementById('board');
+      if (!board) return;
+      board.innerHTML = '';
+      for (var r = 0; r < 8; r++) {
+        for (var c = 0; c < 8; c++) {
+          var val = state.grid[r][c];
+          var cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+          if (val === 1) {
+            cell.className += ' p1';
+            cell.textContent = '💎';
+          } else if (val === 2) {
+            cell.className += ' p2';
+            cell.textContent = '🔥';
+          }
+          (function(row, col) {
+            cell.addEventListener('click', function() { onCellClick(row, col); });
+          })(r, c);
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    function replenishTray() {
+      for (var i = 0; i < 3; i++) {
+        var rand = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        state.trayPieces[i] = JSON.parse(JSON.stringify(rand));
+      }
+      state.selectedPieceIdx = null;
+      renderTrayDOM();
+    }
+
+    function renderTrayDOM() {
+      var tray = document.getElementById('tray');
+      if (!tray) return;
+      tray.innerHTML = '';
+
+      state.trayPieces.forEach(function(piece, idx) {
+        var slot = document.createElement('div');
+        slot.className = 'slot' + (state.selectedPieceIdx === idx ? ' selected' : '');
+
+        if (!piece) {
+          slot.className += ' used';
+          slot.innerHTML = '<span style="font-size:10px; color:#475569;">USED</span>';
+        } else {
+          var rows = piece.matrix.length;
+          var cols = piece.matrix[0].length;
+          var container = document.createElement('div');
+          container.style.display = 'grid';
+          container.style.gap = '2px';
+          container.style.gridTemplateRows = 'repeat(' + rows + ', 8px)';
+          container.style.gridTemplateColumns = 'repeat(' + cols + ', 8px)';
+          container.style.pointerEvents = 'none';
+
+          piece.matrix.forEach(function(row) {
+            row.forEach(function(val) {
+              var b = document.createElement('div');
+              b.style.borderRadius = '2px';
+              b.style.background = val ? (state.currentPlayer === 1 ? '#22d3ee' : '#ec4899') : 'transparent';
+              container.appendChild(b);
+            });
+          });
+          slot.appendChild(container);
+
+          // Pointer Down for Touch Drag & Click Placement
+          slot.addEventListener('pointerdown', function(e) {
+            if (state.gameOver) return;
+            if (state.mode === 'bot' && state.currentPlayer === 2) return;
+            e.preventDefault();
+
+            drag.active = true;
+            drag.hasMoved = false;
+            drag.startX = e.clientX;
+            drag.startY = e.clientY;
+            drag.piece = piece;
+            drag.slotIdx = idx;
+
+            state.selectedPieceIdx = idx;
+            renderTrayDOM();
+
+            buildGhost(piece);
+            window.addEventListener('pointermove', onPointerMove, { passive: false });
+            window.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('pointercancel', onPointerCancel);
+          });
+        }
+        tray.appendChild(slot);
+      });
+    }
+
+    // Build Floating Ghost for Touch/Mouse Drag
+    function buildGhost(piece) {
+      var ghost = drag.ghostEl;
+      ghost.innerHTML = '';
+      var rows = piece.matrix.length;
+      var cols = piece.matrix[0].length;
+      var container = document.createElement('div');
+      container.style.display = 'grid';
+      container.style.gap = '3px';
+      container.style.padding = '6px';
+      container.style.background = 'rgba(15, 23, 42, 0.9)';
+      container.style.borderRadius = '10px';
+      container.style.border = '1px solid #22d3ee';
+      container.style.gridTemplateRows = 'repeat(' + rows + ', 22px)';
+      container.style.gridTemplateColumns = 'repeat(' + cols + ', 22px)';
+
+      piece.matrix.forEach(function(row) {
+        row.forEach(function(val) {
+          var c = document.createElement('div');
+          c.style.borderRadius = '3px';
+          c.style.background = val ? (state.currentPlayer === 1 ? '#22d3ee' : '#ec4899') : 'transparent';
+          container.appendChild(c);
+        });
+      });
+      ghost.appendChild(container);
+    }
+
+    function onPointerMove(e) {
+      if (!drag.active) return;
+      e.preventDefault();
+      var dist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
+      if (dist > 6) {
+        drag.hasMoved = true;
+        drag.ghostEl.style.display = 'block';
+
+        // Offset upward on touch screen so the user's thumb does not hide the drop location
+        var isTouch = e.pointerType === 'touch';
+        var offsetY = isTouch ? -55 : 0;
+        drag.ghostEl.style.left = e.clientX + 'px';
+        drag.ghostEl.style.top = (e.clientY + offsetY) + 'px';
+
+        var cell = getCellAt(e.clientX, e.clientY + offsetY);
+        if (cell) {
+          previewHover(cell.r, cell.c);
+        } else {
+          clearHover();
+        }
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!drag.active) return;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
+
+      drag.ghostEl.style.display = 'none';
+      clearHover();
+
+      if (drag.hasMoved) {
+        var isTouch = e.pointerType === 'touch';
+        var offsetY = isTouch ? -55 : 0;
+        var cell = getCellAt(e.clientX, e.clientY + offsetY);
+        if (cell && drag.piece) {
+          var fit = findFit(drag.piece, cell.r, cell.c);
+          if (fit) {
+            commitDrop(drag.piece, fit.r, fit.c, drag.slotIdx);
+          }
+        }
+      }
+      drag.active = false;
+      drag.piece = null;
+    }
+
+    function onPointerCancel() {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
+      drag.ghostEl.style.display = 'none';
+      clearHover();
+      drag.active = false;
+      drag.piece = null;
+    }
+
+    function getCellAt(x, y) {
+      var el = document.elementFromPoint(x, y);
+      if (el && el.classList.contains('cell')) {
+        return {
+          r: parseInt(el.dataset.r, 10),
+          c: parseInt(el.dataset.c, 10)
+        };
+      }
+      return null;
+    }
+
+    function canPlace(piece, targetR, targetC) {
+      var m = piece.matrix;
+      for (var r = 0; r < m.length; r++) {
+        for (var c = 0; c < m[r].length; c++) {
+          if (m[r][c]) {
+            var br = targetR + r;
+            var bc = targetC + c;
+            if (br < 0 || br >= 8 || bc < 0 || bc >= 8) return false;
+            if (state.grid[br][bc] !== 0) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function findFit(piece, cr, cc) {
+      if (canPlace(piece, cr, cc)) return { r: cr, c: cc };
+      var centerR = cr - Math.floor(piece.matrix.length / 2);
+      var centerC = cc - Math.floor(piece.matrix[0].length / 2);
+      if (canPlace(piece, centerR, centerC)) return { r: centerR, c: centerC };
+
+      var offsets = [[0,-1],[-1,0],[0,1],[1,0],[-1,-1],[-1,1],[1,-1],[1,1]];
+      for (var i = 0; i < offsets.length; i++) {
+        var tr = cr + offsets[i][0];
+        var tc = cc + offsets[i][1];
+        if (canPlace(piece, tr, tc)) return { r: tr, c: tc };
+      }
+      return null;
+    }
+
+    function previewHover(r, c) {
+      clearHover();
+      if (state.selectedPieceIdx === null) return;
+      var piece = state.trayPieces[state.selectedPieceIdx];
+      if (!piece) return;
+
+      var fit = findFit(piece, r, c);
+      if (!fit) return;
+
+      var m = piece.matrix;
+      for (var pr = 0; pr < m.length; pr++) {
+        for (var pc = 0; pc < m[pr].length; pc++) {
+          if (m[pr][pc]) {
+            var idx = (fit.r + pr) * 8 + (fit.c + pc);
+            var el = document.getElementById('board').children[idx];
+            if (el) el.classList.add('preview');
+          }
+        }
+      }
+    }
+
+    function clearHover() {
+      var previews = document.querySelectorAll('.cell.preview');
+      for (var i = 0; i < previews.length; i++) {
+        previews[i].classList.remove('preview');
+      }
+    }
+
+    function onCellClick(r, c) {
+      if (state.gameOver) return;
+      if (state.selectedPieceIdx === null) return;
+      var piece = state.trayPieces[state.selectedPieceIdx];
+      if (!piece) return;
+
+      var fit = findFit(piece, r, c);
+      if (!fit) return;
+
+      commitDrop(piece, fit.r, fit.c, state.selectedPieceIdx);
+    }
+
+    function commitDrop(piece, r, c, slotIdx) {
+      var m = piece.matrix;
+      for (var pr = 0; pr < m.length; pr++) {
+        for (var pc = 0; pc < m[pr].length; pc++) {
+          if (m[pr][pc]) state.grid[r + pr][c + pc] = state.currentPlayer;
+        }
+      }
+      playSfx('place');
+
+      state.trayPieces[slotIdx] = null;
+      state.selectedPieceIdx = null;
+
+      checkLines();
+
+      var allUsed = state.trayPieces.every(function(p) { return p === null; });
+      if (allUsed) {
+        replenishTray();
+      } else {
+        renderTrayDOM();
+      }
+
+      state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+      updateUI();
+      renderBoardDOM();
+      if (state.isTV) renderTVBoard();
+
+      checkEnd();
+
+      if (!state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
+        setTimeout(botTurn, 400);
+      }
+    }
+
+    function checkLines() {
+      var rows = [];
+      var cols = [];
+      for (var r = 0; r < 8; r++) {
+        var rowFull = true;
+        for (var c = 0; c < 8; c++) {
+          if (state.grid[r][c] === 0) { rowFull = false; break; }
+        }
+        if (rowFull) rows.push(r);
+      }
+      for (var col = 0; col < 8; col++) {
+        var colFull = true;
+        for (var row = 0; row < 8; row++) {
+          if (state.grid[row][col] === 0) { colFull = false; break; }
+        }
+        if (colFull) cols.push(col);
+      }
+
+      var total = rows.length + cols.length;
+      if (total > 0) {
+        playSfx('clear');
+        state.scores[state.currentPlayer] += total * 100;
+        rows.forEach(function(r) { for (var c = 0; c < 8; c++) state.grid[r][c] = 0; });
+        cols.forEach(function(c) { for (var r = 0; r < 8; r++) state.grid[r][c] = 0; });
+      }
+    }
+
+    function checkEnd() {
+      var available = state.trayPieces.filter(function(p) { return p !== null; });
+      if (available.length === 0) return;
+
+      var canMove = false;
+      for (var i = 0; i < available.length; i++) {
+        var piece = available[i];
+        for (var r = 0; r < 8; r++) {
+          for (var c = 0; c < 8; c++) {
+            if (canPlace(piece, r, c)) { canMove = true; break; }
+          }
+          if (canMove) break;
+        }
+        if (canMove) break;
+      }
+
+      if (!canMove) {
+        state.gameOver = true;
+        var winner = state.currentPlayer === 1 ? 2 : 1;
+        alert('PLAYER ' + winner + ' WINS! Rival has no moves left.');
+      }
+    }
+
+    function botTurn() {
+      var available = [];
+      state.trayPieces.forEach(function(piece, idx) {
+        if (piece) available.push({ piece: piece, idx: idx });
+      });
+      if (available.length === 0) return;
+
+      var moves = [];
+      for (var i = 0; i < available.length; i++) {
+        var item = available[i];
+        for (var r = 0; r < 8; r++) {
+          for (var c = 0; c < 8; c++) {
+            if (canPlace(item.piece, r, c)) {
+              moves.push({ piece: item.piece, slot: item.idx, r: r, c: c });
+            }
+          }
+        }
+      }
+
+      if (moves.length > 0) {
+        var move = moves[Math.floor(Math.random() * moves.length)];
+        commitDrop(move.piece, move.r, move.c, move.slot);
+      } else {
+        checkEnd();
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('p1-score').textContent = state.scores[1];
+      document.getElementById('p2-score').textContent = state.scores[2];
+
+      var p1Card = document.getElementById('p1-card');
+      var p2Card = document.getElementById('p2-card');
+      var p1Status = document.getElementById('p1-status');
+      var p2Status = document.getElementById('p2-status');
+
+      if (state.currentPlayer === 1) {
+        p1Card.className = 'score-card active-p1';
+        p2Card.className = 'score-card waiting';
+        p1Status.textContent = 'YOUR TURN';
+        p2Status.textContent = 'WAITING';
+      } else {
+        p2Card.className = 'score-card active-p2';
+        p1Card.className = 'score-card waiting';
+        p2Status.textContent = state.mode === 'bot' ? 'THINKING' : 'YOUR TURN';
+        p1Status.textContent = 'WAITING';
+      }
+
+      document.getElementById('p2-name').textContent = state.mode === 'bot' ? '🤖 Bot' : '🔥 Player 2';
+      var modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', pvp: 'PvP Duel' };
+      document.getElementById('mode-label').textContent = modeNames[state.mode];
+    }
+
+    function resetGame() {
+      state.scores = { 1: 0, 2: 0 };
+      state.currentPlayer = 1;
+      state.gameOver = false;
+      initBoard();
+      replenishTray();
+      renderBoardDOM();
+      updateUI();
+      if (state.isTV) renderTVBoard();
+    }
+
+    function renderTVBoard() {
+      var tvGrid = document.getElementById('tv-board-grid');
+      if (!tvGrid) return;
+      tvGrid.innerHTML = '';
+      for (var r = 0; r < 8; r++) {
+        for (var c = 0; c < 8; c++) {
+          var val = state.grid[r][c];
+          var cell = document.createElement('div');
+          cell.style.background = '#0f172a';
+          cell.style.borderRadius = '6px';
+          cell.style.display = 'flex';
+          cell.style.alignItems = 'center';
+          cell.style.justifyContent = 'center';
+          cell.style.fontSize = '20px';
+          if (val === 1) cell.textContent = '💎';
+          else if (val === 2) cell.textContent = '🔥';
+          tvGrid.appendChild(cell);
+        }
+      }
+    }
+
+    function setMode(newMode) {
+      state.mode = newMode;
+      var buttons = document.querySelectorAll('.mode-btn');
+      for (var i = 0; i < buttons.length; i++) buttons[i].classList.remove('active-opt');
+      if (newMode === 'pass') document.getElementById('opt-pass').classList.add('active-opt');
+      if (newMode === 'bot') document.getElementById('opt-bot').classList.add('active-opt');
+      if (newMode === 'pvp') document.getElementById('opt-pvp').classList.add('active-opt');
+      resetGame();
+    }
+
+    // Direct Boot
+    function bootGame() {
+      initBoard();
+      replenishTray();
+      renderBoardDOM();
+      updateUI();
+
+      var modal = document.getElementById('settings-modal');
+      document.getElementById('settings-btn').onclick = function() { modal.classList.add('open'); };
+      document.getElementById('close-modal-x').onclick = function() { modal.classList.remove('open'); };
+      document.getElementById('close-modal-bottom').onclick = function() { modal.classList.remove('open'); };
+
+      document.getElementById('restart-btn').onclick = resetGame;
+
+      document.getElementById('opt-pass').onclick = function() { setMode('pass'); };
+      document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
+      document.getElementById('opt-pvp').onclick = function() { setMode('pvp'); };
+
+      var sBtn = document.getElementById('sound-btn');
+      sBtn.onclick = function() {
+        soundEnabled = !soundEnabled;
+        sBtn.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+      };
+
+      var tvBtn = document.getElementById('tv-btn');
+      tvBtn.onclick = function() {
+        state.isTV = !state.isTV;
+        if (state.isTV) {
+          document.getElementById('game-view').style.display = 'none';
+          document.getElementById('tv-view').classList.add('open');
+          tvBtn.textContent = '📱 Phone';
+          renderTVBoard();
+        } else {
+          document.getElementById('tv-view').classList.remove('open');
+          document.getElementById('game-view').style.display = 'flex';
+          tvBtn.textContent = '📺 TV';
+        }
+      };
+    }
+
+    bootGame();
+  </script>
+</body>
+</html>
