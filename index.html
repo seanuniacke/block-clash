@@ -23,21 +23,24 @@
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       touch-action: none;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
+    /* ================= THEMES ================= */
     /* Dark Theme (Default) */
     body.theme-dark {
       background-color: #090d16;
       color: #f1f5f9;
     }
     body.theme-dark header { background: #0f172a; border-bottom: 1px solid #1e293b; }
-    body.theme-dark .panel-box { background: #0f172a; border-color: #1e293b; }
-    body.theme-dark .inner-box { background: #090d16; border-color: #1e293b; }
+    body.theme-dark .panel-box { background: #0f172a; border: 1px solid #1e293b; }
+    body.theme-dark .inner-box { background: #090d16; border: 1px solid #1e293b; }
     body.theme-dark .cell { background: #0f172a; border: 1px solid #1e293b; }
-    body.theme-dark .cell.obstacle { background: #334155; border-color: #475569; color: #94a3b8; }
-    body.theme-dark button { background: #1e293b; color: #f1f5f9; border-color: #334155; }
-    body.theme-dark .input-field { background: #090d16; border-color: #334155; color: #f1f5f9; }
+    body.theme-dark .cell:hover { background: #1e293b; }
+    body.theme-dark .cell.obstacle { background: #334155; border: 1px solid #475569; color: #94a3b8; }
+    body.theme-dark button { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; }
+    body.theme-dark button:hover { background: #334155; }
+    body.theme-dark .input-field { background: #090d16; border: 1px solid #334155; color: #f1f5f9; }
 
     /* Light Theme */
     body.theme-light {
@@ -45,12 +48,18 @@
       color: #0f172a;
     }
     body.theme-light header { background: #ffffff; border-bottom: 1px solid #cbd5e1; }
-    body.theme-light .panel-box { background: #ffffff; border-color: #cbd5e1; }
-    body.theme-light .inner-box { background: #f8fafc; border-color: #cbd5e1; }
+    body.theme-light .panel-box { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
+    body.theme-light .inner-box { background: #f8fafc; border: 1px solid #cbd5e1; }
     body.theme-light .cell { background: #ffffff; border: 1px solid #cbd5e1; }
-    body.theme-light .cell.obstacle { background: #94a3b8; border-color: #64748b; color: #1e293b; }
-    body.theme-light button { background: #e2e8f0; color: #0f172a; border-color: #cbd5e1; }
-    body.theme-light .input-field { background: #ffffff; border-color: #cbd5e1; color: #0f172a; }
+    body.theme-light .cell:hover { background: #f1f5f9; }
+    body.theme-light .cell.obstacle { background: #94a3b8; border: 1px solid #64748b; color: #1e293b; }
+    body.theme-light button { background: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; }
+    body.theme-light button:hover { background: #cbd5e1; }
+    body.theme-light .input-field { background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; }
+    body.theme-light .brand-sub { color: #64748b; }
+    body.theme-light .turn-status { color: #64748b; }
+    body.theme-light .tray-bar { color: #64748b; }
+    body.theme-light .setting-label { color: #64748b; }
 
     body {
       display: flex;
@@ -58,11 +67,11 @@
       justify-content: space-between;
     }
 
-    /* Top Bar */
+    /* Top Navigation Bar */
     header {
       width: 100%;
-      height: 44px;
-      padding: 0 12px;
+      height: 46px;
+      padding: 0 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -71,7 +80,7 @@
     }
 
     .brand-title {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 800;
       letter-spacing: 0.5px;
       background: linear-gradient(to right, #22d3ee, #f43f5e);
@@ -83,34 +92,34 @@
       font-size: 10px;
       color: #94a3b8;
       display: flex;
-      gap: 4px;
+      gap: 5px;
       align-items: center;
+      margin-top: 1px;
     }
 
     .badge-sub {
       font-size: 9px;
-      padding: 1px 4px;
+      padding: 1px 5px;
       border-radius: 4px;
-      background: rgba(34, 211, 238, 0.1);
-      border: 1px solid rgba(34, 211, 238, 0.3);
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.35);
       color: #22d3ee;
+      font-weight: 700;
     }
 
     .header-btns {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
     }
 
     button {
       border-radius: 8px;
-      border-width: 1px;
-      border-style: solid;
-      padding: 5px 10px;
-      font-size: 11px;
+      padding: 6px 11px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.1s ease;
+      transition: transform 0.1s ease, background 0.15s ease;
     }
 
     button:active {
@@ -123,19 +132,20 @@
       color: #ffffff !important;
     }
 
-    /* Main Container */
+    /* Main Container (Uncapped for desktop & large displays) */
     main {
       flex: 1;
       width: 100%;
-      max-width: 440px;
+      max-width: 680px;
       margin: 0 auto;
-      padding: 4px 8px 6px;
+      padding: 4px 10px 8px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
       min-height: 0;
       overflow: hidden;
+      gap: 4px;
     }
 
     /* Scoreboard */
@@ -143,14 +153,13 @@
       width: 100%;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
       flex-shrink: 0;
     }
 
     .score-card {
-      border: 2px solid transparent;
-      border-radius: 10px;
-      padding: 4px 8px;
+      border-radius: 12px;
+      padding: 6px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -158,12 +167,12 @@
     }
 
     .score-card.active-p1 {
-      border-color: #06b6d4 !important;
+      border: 2px solid #06b6d4 !important;
       opacity: 1;
     }
 
     .score-card.active-p2 {
-      border-color: #ec4899 !important;
+      border: 2px solid #ec4899 !important;
       opacity: 1;
     }
 
@@ -172,9 +181,9 @@
     }
 
     .player-tag {
-      font-size: 11px;
-      font-weight: 700;
-      max-width: 120px;
+      font-size: 12px;
+      font-weight: 800;
+      max-width: 130px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -182,77 +191,46 @@
     }
 
     .turn-status {
-      font-size: 8px;
-      font-weight: 600;
+      font-size: 9px;
+      font-weight: 700;
       color: #94a3b8;
     }
 
     .score-val {
-      font-size: 16px;
-      font-weight: 800;
+      font-size: 20px;
+      font-weight: 900;
     }
 
-    /* Direct Join Bar */
-    .quick-join-bar {
-      width: 100%;
-      display: flex;
-      gap: 6px;
-      padding: 2px 0;
-      flex-shrink: 0;
-    }
-
-    .input-field {
-      border-radius: 6px;
-      border-width: 1px;
-      border-style: solid;
-      padding: 5px 8px;
+    /* Status Banner (Used strictly for network state and alerts) */
+    #banner {
+      display: none;
       font-size: 11px;
       font-weight: 700;
-      outline: none;
-    }
-
-    .quick-input {
-      flex: 1;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .btn-quick-join {
-      background: #0284c7 !important;
-      border-color: #0ea5e9 !important;
-      color: #ffffff !important;
-      padding: 5px 12px;
-    }
-
-    /* Status Banner */
-    #banner {
-      font-size: 11px;
-      font-weight: 600;
-      color: #94a3b8;
       text-align: center;
-      padding: 3px 6px;
-      border-radius: 6px;
+      padding: 4px 8px;
+      border-radius: 8px;
       flex-shrink: 0;
       width: 100%;
-      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .banner-waiting {
+      display: flex !important;
       background: rgba(234, 179, 8, 0.15) !important;
-      border-color: rgba(234, 179, 8, 0.4) !important;
+      border: 1px solid rgba(234, 179, 8, 0.4) !important;
       color: #facc15 !important;
     }
 
     .banner-connected {
+      display: flex !important;
       background: rgba(16, 185, 129, 0.15) !important;
-      border-color: rgba(16, 185, 129, 0.4) !important;
+      border: 1px solid rgba(16, 185, 129, 0.4) !important;
       color: #34d399 !important;
     }
 
-    /* 8x8 Board Container */
+    /* Maximized Responsive 8x8 Board Frame */
     .board-frame {
       width: 100%;
       display: flex;
@@ -263,29 +241,31 @@
     }
 
     #board {
-      width: min(84vw, 38dvh, 340px);
-      height: min(84vw, 38dvh, 340px);
+      width: min(94vw, calc(100dvh - 210px), 620px);
+      height: min(94vw, calc(100dvh - 210px), 620px);
       aspect-ratio: 1 / 1;
-      border-radius: 14px;
-      padding: 4px;
+      border-radius: 16px;
+      padding: 6px;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: 3px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      gap: 4px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
     }
 
     .cell {
       width: 100%;
       height: 100%;
       aspect-ratio: 1 / 1;
-      border-radius: 4px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
+      font-size: clamp(14px, 3.2vw, 24px);
       line-height: 1;
       overflow: hidden;
+      transition: background-color 0.1s ease;
     }
 
     .cell.p1 {
@@ -301,62 +281,65 @@
     .cell.preview-valid {
       background: rgba(34, 211, 238, 0.6) !important;
       outline: 2px solid #22d3ee;
+      outline-offset: -2px;
+      transform: scale(0.96);
     }
 
     .cell.preview-invalid {
       background: rgba(244, 63, 94, 0.5) !important;
       outline: 2px solid #f43f5e;
+      outline-offset: -2px;
     }
 
-    /* Piece Tray */
+    /* Piece Tray (Directly under board) */
     .tray-wrap {
       width: 100%;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding-bottom: 6px;
+      gap: 3px;
     }
 
     .tray-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: 700;
       color: #94a3b8;
-      padding: 0 2px;
+      padding: 0 4px;
     }
 
     #tray {
       width: 100%;
       height: 74px;
-      border-radius: 12px;
+      border-radius: 14px;
       display: flex;
       justify-content: space-around;
       align-items: center;
-      gap: 6px;
-      padding: 5px;
+      gap: 8px;
+      padding: 6px;
     }
 
     .slot {
       flex: 1;
       height: 100%;
-      border-radius: 8px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: grab;
-      transition: border-color 0.15s, transform 0.15s;
+      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
     }
 
     .slot.selected {
-      border-color: #22d3ee !important;
-      transform: scale(1.04);
-      box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+      border: 2px solid #22d3ee !important;
+      transform: scale(1.03);
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
     }
 
     .slot.used {
-      opacity: 0.25;
+      opacity: 0.22;
       cursor: default;
     }
 
@@ -364,7 +347,37 @@
       opacity: 0.2;
     }
 
-    /* Floating Touch Drag Ghost */
+    /* Bottom Quick Join Bar (Under Tray) */
+    .quick-join-bar {
+      width: 100%;
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .input-field {
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .quick-input {
+      flex: 1;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-quick-join {
+      background: #0284c7 !important;
+      border-color: #0ea5e9 !important;
+      color: #ffffff !important;
+      padding: 6px 14px;
+    }
+
+    /* Floating Drag Element */
     #drag-ghost {
       position: fixed;
       pointer-events: none;
@@ -372,7 +385,7 @@
       transform: translate(-50%, -50%);
       display: none;
       opacity: 0.95;
-      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6));
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.65));
     }
 
     /* Modals & Overlays */
@@ -394,14 +407,12 @@
 
     .modal-box {
       width: 100%;
-      max-width: 360px;
-      border-radius: 16px;
-      border-width: 1px;
-      border-style: solid;
-      padding: 16px;
+      max-width: 400px;
+      border-radius: 18px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 13px;
       max-height: 90vh;
       overflow-y: auto;
     }
@@ -410,8 +421,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      padding-bottom: 8px;
     }
 
     .setting-row {
@@ -421,10 +432,11 @@
     }
 
     .setting-label {
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 800;
       color: #94a3b8;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .btn-group-2 {
@@ -453,8 +465,6 @@
 
     .pvp-box {
       border-radius: 10px;
-      border-width: 1px;
-      border-style: solid;
       padding: 10px;
       display: flex;
       flex-direction: column;
@@ -474,8 +484,6 @@
 
     .history-card {
       border-radius: 8px;
-      border-width: 1px;
-      border-style: solid;
       padding: 8px 10px;
       display: flex;
       justify-content: space-between;
@@ -483,7 +491,7 @@
       font-size: 11px;
     }
 
-    /* TV View */
+    /* TV Spectator View */
     #tv-view {
       display: none;
       flex: 1;
@@ -500,8 +508,8 @@
     }
 
     #tv-board-grid {
-      width: min(80vmin, 480px);
-      height: min(80vmin, 480px);
+      width: min(84vmin, 580px);
+      height: min(84vmin, 580px);
       background: #030712;
       border: 4px solid #4f46e5;
       border-radius: 20px;
@@ -509,7 +517,7 @@
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: 4px;
+      gap: 5px;
     }
   </style>
 </head>
@@ -528,7 +536,7 @@
       </div>
     </div>
     <div class="header-btns">
-      <button id="theme-btn" title="Toggle Light / Dark Theme">☀️</button>
+      <button id="theme-btn" title="Toggle Light / Dark Mode">☀️</button>
       <button id="tv-btn" class="btn-tv">📺 TV</button>
       <button id="settings-btn">⚙️</button>
     </div>
@@ -537,10 +545,10 @@
   <!-- TV Spectator Arena -->
   <div id="tv-view">
     <div id="tv-board-grid"></div>
-    <div style="font-size: 15px; font-weight: 700; color: #22d3ee;" id="tv-status">TV Spectator Mode Active</div>
+    <div style="font-size: 16px; font-weight: 800; color: #22d3ee;" id="tv-status">TV Spectator Mode Active</div>
   </div>
 
-  <!-- Handheld Main Game Arena -->
+  <!-- Main Game Arena -->
   <main id="game-view">
     <!-- Scoreboard (Tap name to edit) -->
     <div class="scoreboard">
@@ -561,24 +569,18 @@
       </div>
     </div>
 
-    <!-- Quick Join Bar -->
-    <div class="quick-join-bar">
-      <input type="text" id="main-room-input" class="input-field quick-input" placeholder="ENTER ROOM CODE" maxlength="12" />
-      <button id="main-join-btn" class="btn-quick-join">Join Code</button>
-    </div>
-
-    <!-- Status Banner -->
+    <!-- Status Banner (Shows waiting/connected status in PvP) -->
     <div id="banner" class="panel-box">
-      <span id="banner-text">Drag piece or tap piece then grid</span>
-      <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 6px; font-size:10px;">📲 Share</button>
+      <span id="banner-text">Connecting...</span>
+      <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 7px; font-size:10px;">📲 Share Link</button>
     </div>
 
-    <!-- 8x8 Board Frame -->
+    <!-- 8x8 Maximized Board -->
     <div class="board-frame">
       <div id="board" class="inner-box"></div>
     </div>
 
-    <!-- Bottom Tray -->
+    <!-- Piece Tray (Directly Below Board) -->
     <div class="tray-wrap">
       <div class="tray-bar">
         <span>Piece Tray:</span>
@@ -586,12 +588,18 @@
       </div>
       <div id="tray" class="panel-box"></div>
     </div>
+
+    <!-- Quick Join Bar (Under Piece Tray) -->
+    <div class="quick-join-bar">
+      <input type="text" id="main-room-input" class="input-field quick-input" placeholder="ENTER ROOM CODE" maxlength="12" />
+      <button id="main-join-btn" class="btn-quick-join">Join Code</button>
+    </div>
   </main>
-  
-  <!-- Dedicated Direct Join Prompt (Guest) -->
+
+  <!-- Guest Match Invite Prompt -->
   <div id="join-invite-modal" class="modal">
     <div class="modal-box panel-box" style="text-align: center; align-items: center; border: 2px solid #06b6d4;">
-      <div style="font-size: 32px;">⚔️</div>
+      <div style="font-size: 34px;">⚔️</div>
       <h3 style="font-size: 16px; font-weight: 800; color: #22d3ee;">Match Invite Received!</h3>
       <p style="font-size: 12px; color: #94a3b8;">You've been invited to duel.</p>
 
@@ -600,7 +608,7 @@
         <input type="text" id="guest-name-input" class="input-field" placeholder="Player 2" maxlength="14" />
       </div>
 
-      <div class="inner-box" style="border-radius: 8px; padding: 6px 12px; width: 100%;">
+      <div class="inner-box" style="border-radius: 8px; padding: 8px 12px; width: 100%;">
         <span class="setting-label">Room Code</span>
         <div id="invite-room-code-display" style="font-size: 16px; font-weight: 800; color: #ffffff; word-break: break-all;">------</div>
       </div>
@@ -615,10 +623,11 @@
   <div id="settings-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
-        <h3 style="font-size: 13px; font-weight: 800;">⚙️ Game Settings</h3>
+        <h3 style="font-size: 14px; font-weight: 800;">⚙️ Game Settings</h3>
         <button id="close-modal-x">✕</button>
       </div>
 
+      <!-- Player Name -->
       <div class="setting-row">
         <span class="setting-label">Your Player Name</span>
         <input type="text" id="host-name-input" class="input-field" placeholder="Player 1" maxlength="14" />
@@ -628,12 +637,12 @@
       <div class="setting-row">
         <span class="setting-label">Theme Mode</span>
         <div class="btn-group-2">
-          <button id="theme-dark-opt" class="opt-btn active-opt">🌙 Dark</button>
-          <button id="theme-light-opt" class="opt-btn">☀️ Light</button>
+          <button id="theme-dark-opt" class="opt-btn active-opt">🌙 Dark Mode</button>
+          <button id="theme-light-opt" class="opt-btn">☀️ Light Mode</button>
         </div>
       </div>
 
-      <!-- Mode Selection -->
+      <!-- Game Mode Selection -->
       <div class="setting-row">
         <span class="setting-label">Game Mode</span>
         <div class="btn-group-3">
@@ -657,10 +666,10 @@
           </button>
         </div>
 
-        <!-- Target Points Configuration -->
+        <!-- Target Points Selection -->
         <div id="points-target-box" style="display:none; flex-direction:column; gap:4px; margin-top:4px;">
           <div style="display:flex; justify-content:space-between; font-size:10px; color:#94a3b8;">
-            <span>Target Goal:</span>
+            <span>Race Goal Target:</span>
             <b id="target-pts-display" style="color:#facc15;">2000 pts</b>
           </div>
           <div class="btn-group-4">
@@ -670,8 +679,8 @@
             <button class="target-chip-btn opt-btn" data-pts="10000">10k</button>
           </div>
           <div style="display:flex; gap:4px; margin-top:2px;">
-            <input type="number" id="custom-target-input" class="input-field" placeholder="Custom (e.g. 7500)" style="flex:1; padding:4px 6px; font-size:11px;" />
-            <button id="apply-custom-target" style="padding:4px 8px; background:#0284c7; color:#fff;">Set</button>
+            <input type="number" id="custom-target-input" class="input-field" placeholder="Custom pts (e.g. 7500)" style="flex:1; padding:5px 8px; font-size:11px;" />
+            <button id="apply-custom-target" style="padding:5px 10px; background:#0284c7; color:#fff;">Set</button>
           </div>
         </div>
       </div>
@@ -689,15 +698,23 @@
         </div>
       </div>
 
+      <!-- PvP Online Duel Box -->
       <div id="settings-room-status" class="active-room-display" style="display:none;">
         <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">Room: <b id="settings-active-code" style="color:#22d3ee;">NONE</b></span>
-        <button id="settings-re-share" style="padding:2px 6px; font-size:10px; background:#065f46; color:#fff;">Copy Link</button>
+        <button id="settings-re-share" style="padding:2px 7px; font-size:10px; background:#065f46; color:#fff;">Copy Link</button>
       </div>
 
       <div id="pvp-panel" class="pvp-box inner-box" style="display:none;">
         <span class="setting-label" style="color:#22d3ee;">Remote Duel (Across 2 Phones)</span>
         <button id="pvp-create-btn" style="background:#065f46; border-color:#059669; color:#fff; padding:8px; font-size:12px;">
           🔗 Create Room &amp; Share Link
+        </button>
+      </div>
+
+      <!-- How to Play Instructions Toggle -->
+      <div class="setting-row">
+        <button id="open-rules-btn" style="background:#1e293b; border-color:#334155; color:#38bdf8; padding:7px;">
+          📖 How to Play &amp; Controls
         </button>
       </div>
 
@@ -713,6 +730,36 @@
       </div>
 
       <button id="close-modal-bottom" style="background:#4f46e5; border-color:#6366f1; color:white; padding:8px;">Done / Resume</button>
+    </div>
+  </div>
+
+  <!-- How to Play Modal -->
+  <div id="rules-modal" class="modal">
+    <div class="modal-box panel-box">
+      <div class="modal-header">
+        <h3 style="font-size: 14px; font-weight: 800;">📖 How to Play</h3>
+        <button id="close-rules-x">✕</button>
+      </div>
+      <div style="font-size: 12px; line-height: 1.5; display: flex; flex-direction: column; gap: 8px;">
+        <div>
+          <b style="color:#22d3ee;">🖱️ Desktop Controls:</b>
+          <p style="color:#94a3b8; font-size:11px;">Click and drag a piece to the board, OR click any piece in the tray to select it and click any cell on the board to place it.</p>
+        </div>
+        <div>
+          <b style="color:#ec4899;">📱 Mobile &amp; Touch Controls:</b>
+          <p style="color:#94a3b8; font-size:11px;">Touch and drag pieces directly onto the board with your finger, or tap a piece in the tray followed by tapping a board cell.</p>
+        </div>
+        <div>
+          <b style="color:#facc15;">🎯 Win Conditions:</b>
+          <p style="color:#94a3b8; font-size:11px;"><b>Survival Trap:</b> Points do not decide the game. The winner is the player who outlasts their opponent when the other player cannot place any piece remaining in their tray.</p>
+          <p style="color:#94a3b8; font-size:11px; margin-top:2px;"><b>Points Race:</b> The first player to reach or exceed the target score (1,000 to 10,000+ points) wins immediately.</p>
+        </div>
+        <div>
+          <b style="color:#a855f7;">🗿 Obstacles (Bedrock):</b>
+          <p style="color:#94a3b8; font-size:11px;">Levels 2 to 6 feature indestructible stone obstacles that cannot be cleared by line clears, creating strategic chokepoints.</p>
+        </div>
+      </div>
+      <button id="close-rules-btn" style="background:#334155; color:#fff; padding:8px;">Back to Settings</button>
     </div>
   </div>
 
@@ -849,6 +896,7 @@
       trayPieces: [null, null, null],
       gameOver: false,
       isTV: false,
+      isTouchDevice: false,
       peer: null,
       conn: null,
       myPlayerNum: 1,
@@ -877,9 +925,13 @@
       startY: 0,
       hasMoved: false,
       slotEl: null,
-      cellSize: 36,
+      cellSize: 42,
       ghostEl: document.getElementById('drag-ghost')
     };
+
+    function detectDeviceType() {
+      state.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+    }
 
     function applyTheme(theme) {
       state.theme = theme;
@@ -898,7 +950,7 @@
       }
       var lvl = LEVELS[state.currentLevel] || LEVELS[1];
       lvl.obstacles.forEach(function(coord) {
-        state.grid[coord[0]][coord[1]] = 99; // 99 = Bedrock Obstacle
+        state.grid[coord[0]][coord[1]] = 99; // 99 = Unbreakable Bedrock Stone
       });
     }
 
@@ -923,9 +975,17 @@
             cell.className += ' obstacle';
             cell.textContent = '🗿';
           }
+
           (function(row, col) {
             cell.addEventListener('click', function() { onCellClick(row, col); });
+            cell.addEventListener('mouseenter', function() {
+              if (!drag.active && state.selectedPieceIdx !== null) previewHover(row, col);
+            });
+            cell.addEventListener('mouseleave', function() {
+              if (!drag.active) clearHover();
+            });
           })(r, c);
+
           board.appendChild(cell);
         }
       }
@@ -952,13 +1012,13 @@
 
         if (!piece) {
           slot.className += ' used';
-          slot.innerHTML = '<span style="font-size:10px; color:#475569;">USED</span>';
+          slot.innerHTML = '<span style="font-size:10px; color:#475569; font-weight:800;">USED</span>';
         } else {
           var rows = piece.matrix.length;
           var cols = piece.matrix[0].length;
           var container = document.createElement('div');
           container.style.display = 'grid';
-          container.style.gap = '2px';
+          container.style.gap = '2.5px';
           container.style.gridTemplateRows = 'repeat(' + rows + ', 8px)';
           container.style.gridTemplateColumns = 'repeat(' + cols + ', 8px)';
           container.style.pointerEvents = 'none';
@@ -1021,7 +1081,7 @@
       ghost.innerHTML = '';
       var rows = piece.matrix.length;
       var cols = piece.matrix[0].length;
-      var cs = Math.max(drag.cellSize, 26);
+      var cs = Math.max(drag.cellSize, 28);
 
       var container = document.createElement('div');
       container.style.display = 'grid';
@@ -1056,7 +1116,7 @@
           if (drag.slotEl) drag.slotEl.classList.add('dragging-source');
         }
 
-        var offsetY = isTouch ? -70 : 0;
+        var offsetY = isTouch ? -68 : 0;
         drag.ghostEl.style.left = x + 'px';
         drag.ghostEl.style.top = (y + offsetY) + 'px';
 
@@ -1076,7 +1136,7 @@
       clearHover();
 
       if (drag.hasMoved) {
-        var offsetY = isTouch ? -70 : 0;
+        var offsetY = isTouch ? -68 : 0;
         var cell = getCellAt(x, y + offsetY);
         if (cell && drag.piece) {
           var fit = findFit(drag.piece, cell.r, cell.c);
@@ -1145,7 +1205,7 @@
             var br = targetR + r;
             var bc = targetC + c;
             if (br < 0 || br >= 8 || bc < 0 || bc >= 8) return false;
-            if (state.grid[br][bc] !== 0) return false;
+            if (state.grid[br][bc] !== 0) return false; // Blocked if occupied or bedrock (99)
           }
         }
       }
@@ -1226,9 +1286,7 @@
       }
       playSfx('place');
 
-      // Accumulate score for placed blocks (10 pts per cell)
       state.scores[state.currentPlayer] += placedBlocks * 10;
-
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
 
@@ -1467,9 +1525,6 @@
         p1Status.textContent = 'WAITING';
       }
 
-      banner.className = 'panel-box';
-      shareAgainBtn.style.display = 'none';
-
       document.getElementById('p1-title').innerHTML = '💎 ' + state.playerNames[1] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
       document.getElementById('p2-name').innerHTML = '🔥 ' + (state.mode === 'bot' ? 'Bot 🤖' : state.playerNames[2] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>');
 
@@ -1493,12 +1548,11 @@
           } else {
             bannerText.textContent = '🟢 Duel Live! ' + state.playerNames[state.currentPlayer] + "'s turn...";
           }
+          shareAgainBtn.style.display = 'none';
         }
       } else {
+        banner.style.display = 'none';
         settingsRoomBox.style.display = 'none';
-        bannerText.textContent = state.winCondition === 'race'
-          ? '🎯 Race to ' + state.targetScore + ' pts! Place pieces or clear lines'
-          : '🪤 Survival: Outlast opponent by avoiding getting trapped';
       }
 
       var modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', pvp: 'PvP Duel' };
@@ -1532,7 +1586,7 @@
           cell.style.display = 'flex';
           cell.style.alignItems = 'center';
           cell.style.justifyContent = 'center';
-          cell.style.fontSize = '20px';
+          cell.style.fontSize = '22px';
           if (val === 1) cell.textContent = '💎';
           else if (val === 2) cell.textContent = '🔥';
           else if (val === 99) cell.textContent = '🗿';
@@ -1540,8 +1594,8 @@
         }
       }
     }
-	
-	function setMode(newMode) {
+
+    function setMode(newMode) {
       state.mode = newMode;
       document.querySelectorAll('.mode-btn').forEach(function(btn) { btn.classList.remove('active-opt'); });
       if (newMode === 'pass') document.getElementById('opt-pass').classList.add('active-opt');
@@ -1622,6 +1676,8 @@
       }
 
       var bannerText = document.getElementById('banner-text');
+      var banner = document.getElementById('banner');
+      banner.className = 'panel-box banner-waiting';
       bannerText.textContent = 'Connecting to room...';
 
       if (state.peer) {
@@ -1719,6 +1775,7 @@
 
     // Direct Boot Engine
     function bootGame() {
+      detectDeviceType();
       applyTheme(state.theme);
 
       var savedName1 = localStorage.getItem('blockclash_name_1') || 'Player 1';
@@ -1735,6 +1792,7 @@
       var settingsModal = document.getElementById('settings-modal');
       var inviteModal = document.getElementById('join-invite-modal');
       var historyModal = document.getElementById('history-modal');
+      var rulesModal = document.getElementById('rules-modal');
 
       document.getElementById('settings-btn').onclick = function() { settingsModal.classList.add('open'); };
       document.getElementById('close-modal-x').onclick = function() { settingsModal.classList.remove('open'); };
@@ -1833,6 +1891,20 @@
         if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
       };
 
+      // Rules / How to play modal
+      document.getElementById('open-rules-btn').onclick = function() {
+        settingsModal.classList.remove('open');
+        rulesModal.classList.add('open');
+      };
+      document.getElementById('close-rules-x').onclick = function() {
+        rulesModal.classList.remove('open');
+        settingsModal.classList.add('open');
+      };
+      document.getElementById('close-rules-btn').onclick = function() {
+        rulesModal.classList.remove('open');
+        settingsModal.classList.add('open');
+      };
+
       document.getElementById('open-history-btn').onclick = function() {
         settingsModal.classList.remove('open');
         renderHistoryList();
@@ -1892,3 +1964,4 @@
   </script>
 </body>
 </html>
+
