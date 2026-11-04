@@ -3,450 +3,484 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Block Clash Duel</title>
+  <title>Block Clash Duel v3.5</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#090d16">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     * {
+      font-family: 'Fredoka', cursive, sans-serif;
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     body {
-      width: 100vw;
-      height: 100vh;
+      touch-action: none;
+      overscroll-behavior: none;
+      transition: background-color 0.2s ease, color 0.2s ease;
       height: 100dvh;
       overflow: hidden;
+    }
+
+    /* Dark Theme (Default) */
+    body.theme-dark {
       background-color: #090d16;
       color: #f1f5f9;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+    }
+    body.theme-dark .panel-bg { background-color: rgba(15, 23, 42, 0.9); border-color: #1e293b; }
+    body.theme-dark .board-bg { background-color: #030712; border-color: #1e293b; }
+    body.theme-dark .empty-cell { background-color: #0f172a; border: 1px solid #1e293b; }
+    body.theme-dark .empty-cell:hover { background-color: #1e293b; }
+
+    /* Light Theme */
+    body.theme-light {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    body.theme-light .panel-bg { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); }
+    body.theme-light .board-bg { background-color: #e2e8f0; border-color: #cbd5e1; }
+    body.theme-light .empty-cell { background-color: #ffffff; border: 1px solid #cbd5e1; }
+    body.theme-light .empty-cell:hover { background-color: #f8fafc; }
+
+    /* Dynamic Drop Preview */
+    .cell-preview-valid {
+      background-color: rgba(56, 189, 248, 0.6) !important;
+      outline: 2px solid #38bdf8 !important;
+      outline-offset: -2px;
+      transform: scale(0.96);
+    }
+    .cell-preview-invalid {
+      background-color: rgba(244, 63, 94, 0.45) !important;
+      outline: 2px solid #f43f5e !important;
+      outline-offset: -2px;
     }
 
-    /* Header */
-    header {
-      width: 100%;
-      height: 50px;
-      padding: 0 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #0f172a;
-      border-bottom: 1px solid #1e293b;
-      flex-shrink: 0;
+    /* Fixed equal 8x8 grid cells */
+    .board-grid-equal {
+      display: grid !important;
+      grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+      grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
     }
 
-    .brand-title {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      background: linear-gradient(to right, #22d3ee, #f43f5e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    /* Responsive board container: scales on mobile & desktop without flex collapse */
+    .responsive-board-box {
+      width: min(92vw, 50dvh, 580px) !important;
+      height: min(92vw, 50dvh, 580px) !important;
+      aspect-ratio: 1 / 1 !important;
+      flex-shrink: 0 !important;
     }
 
-    .brand-sub {
-      font-size: 10px;
-      color: #94a3b8;
+    /* Consistent 1:1 Squares for Individual Cells */
+    .board-cell-square {
+      aspect-ratio: 1 / 1 !important;
+      width: 100% !important;
+      height: 100% !important;
     }
 
-    .header-btns {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* Mulligan Button Styling */
+    .mulligan-btn {
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .mulligan-btn:disabled {
+      opacity: 0.35 !important;
+      cursor: not-allowed !important;
+      filter: grayscale(1);
     }
 
-    button {
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    button:active {
-      transform: scale(0.97);
-    }
-
-    .btn-tv {
-      background: #4f46e5;
-      border-color: #6366f1;
-      color: #ffffff;
-    }
-
-    /* Main Container */
-    main {
-      flex: 1;
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    /* Scoreboard */
-    .scoreboard {
-      width: 100%;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .score-card {
-      background: #0f172a;
-      border: 2px solid #1e293b;
-      border-radius: 12px;
-      padding: 6px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: border-color 0.2s, opacity 0.2s;
-    }
-
-    .score-card.active-p1 {
-      border-color: #06b6d4;
-      opacity: 1;
-    }
-
-    .score-card.active-p2 {
-      border-color: #ec4899;
-      opacity: 1;
-    }
-
-    .score-card.waiting {
-      opacity: 0.5;
-    }
-
-    .player-tag {
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .turn-status {
-      font-size: 9px;
-      font-weight: 600;
-      color: #94a3b8;
-    }
-
-    .score-val {
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    /* Banner */
-    #banner {
-      font-size: 12px;
-      font-weight: 600;
-      color: #94a3b8;
-      text-align: center;
-      padding: 4px 0;
-      flex-shrink: 0;
-    }
-
-    /* 8x8 Board Container */
-    .board-frame {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      min-height: 0;
-    }
-
-    #board {
-      width: min(88vw, calc(100dvh - 230px), 440px);
-      height: min(88vw, calc(100dvh - 230px), 440px);
-      background: #030712;
-      border: 2px solid #1e293b;
-      border-radius: 16px;
-      padding: 6px;
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-      gap: 4px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    }
-
-    .cell {
-      width: 100%;
-      height: 100%;
-      border-radius: 6px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background-color 0.1s;
-    }
-
-    .cell.p1 {
-      background: rgba(6, 182, 212, 0.35);
-      border-color: #06b6d4;
-    }
-
-    .cell.p2 {
-      background: rgba(236, 72, 153, 0.35);
-      border-color: #ec4899;
-    }
-
-    .cell.preview {
-      background: rgba(34, 211, 238, 0.5) !important;
-      outline: 2px solid #22d3ee;
-    }
-
-    /* Piece Tray */
-    .tray-wrap {
-      width: 100%;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding-bottom: 8px;
-    }
-
-    .tray-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: #94a3b8;
-      padding: 0 4px;
-    }
-
-    #tray {
-      width: 100%;
-      height: 74px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 14px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      gap: 8px;
-      padding: 6px;
-    }
-
-    .slot {
-      flex: 1;
-      height: 100%;
-      background: #090d16;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: border-color 0.15s, transform 0.15s;
-    }
-
-    .slot.selected {
-      border-color: #22d3ee;
+    /* Tray Highlight */
+    .selected-tray-slot {
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.55);
       transform: scale(1.04);
-      box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
     }
 
-    .slot.used {
-      opacity: 0.3;
-      cursor: default;
-    }
-
-    /* Settings Modal */
-    .modal {
-      display: none;
+    /* Floating Drag Ghost Element */
+    #floating-drag-ghost {
       position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
-      z-index: 50;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal.open {
-      display: flex;
-    }
-
-    .modal-box {
-      width: 100%;
-      max-width: 360px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #1e293b;
-      padding-bottom: 8px;
-    }
-
-    .setting-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .setting-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #94a3b8;
-      text-transform: uppercase;
-    }
-
-    .btn-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .active-opt {
-      background: #083344;
-      border-color: #06b6d4;
-      color: #22d3ee;
-    }
-
-    /* TV Mode View */
-    #tv-view {
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
       display: none;
-      flex: 1;
-      width: 100%;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      padding: 16px;
+      opacity: 0.95;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
+      touch-action: none;
+      will-change: left, top;
     }
 
-    #tv-view.open {
-      display: flex;
+    /* Line Clear Pop Animation */
+    @keyframes linePop {
+      0% { transform: scale(1); filter: brightness(2); }
+      50% { transform: scale(1.25); filter: brightness(2.8); }
+      100% { transform: scale(0); opacity: 0; }
     }
-
-    #tv-board-grid {
-      width: min(80vmin, 500px);
-      height: min(80vmin, 500px);
-      background: #030712;
-      border: 4px solid #4f46e5;
-      border-radius: 20px;
-      padding: 8px;
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-      gap: 4px;
+    .clearing-cell {
+      animation: linePop 0.32s ease-in-out forwards;
     }
   </style>
 </head>
-<body>
+<body class="theme-dark w-full h-[100dvh] flex flex-col justify-between overflow-hidden">
 
-  <!-- Top Header -->
-  <header>
-    <div>
-      <div class="brand-title">BLOCK CLASH</div>
-      <div class="brand-sub"><span id="mode-label">Pass &amp; Play</span> • Lvl 1</div>
+  <!-- Floating Drag Element (Mouse & Touch) -->
+  <div id="floating-drag-ghost"></div>
+
+  <!-- TOP APP BAR -->
+  <header class="w-full px-3 py-1.5 flex items-center justify-between border-b panel-bg shrink-0 z-30">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shadow-md">
+        ⚔️
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-wide leading-none text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500">
+          BLOCK CLASH
+        </h1>
+        <div class="flex items-center gap-1 mt-0.5">
+          <span id="header-mode-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800 font-semibold">Pass &amp; Play</span>
+          <span id="header-lvl-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-medium">Lvl 1</span>
+        </div>
+      </div>
     </div>
-    <div class="header-btns">
-      <button id="tv-btn" class="btn-tv">📺 TV Mode</button>
-      <button id="settings-btn">⚙️</button>
+
+    <!-- Right Header Controls -->
+    <div class="flex items-center gap-2">
+      <button id="tv-toggle-btn" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shadow transition active:scale-95">
+        <span>📺</span>
+        <span>TV</span>
+      </button>
+      <button id="settings-btn" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm transition" title="Settings &amp; Modes">
+        ⚙️
+      </button>
     </div>
   </header>
 
-  <!-- TV Big-Screen Arena (Hidden by Default) -->
-  <div id="tv-view">
-    <div id="tv-board-grid"></div>
-    <div style="font-size: 16px; font-weight: 700; color: #22d3ee;" id="tv-status">TV Spectator Mode Active</div>
-  </div>
-
-  <!-- Handheld & Desktop Main Game -->
-  <main id="game-view">
-    <!-- Scoreboard -->
-    <div class="scoreboard">
-      <div id="p1-card" class="score-card active-p1">
-        <div>
-          <div class="player-tag" style="color: #22d3ee;">💎 Player 1</div>
-          <div class="turn-status" id="p1-status">YOUR TURN</div>
+  <!-- =========================================================================
+       STANDARD MAIN VIEW (Mobile & Desktop Browser)
+       ========================================================================= -->
+  <main id="standard-view" class="w-full max-w-4xl mx-auto flex-1 px-3 py-1.5 flex flex-col justify-between items-center overflow-hidden min-h-0">
+    
+    <!-- Scoreboard (Compact Low-Profile Bar) -->
+    <section class="w-full max-w-xl grid grid-cols-2 gap-2 mt-0.5 shrink-0">
+      <div id="p1-card" class="panel-bg flex items-center justify-between px-2.5 py-1.5 rounded-xl border border-cyan-400 shadow-sm transition gap-1.5">
+        <div class="flex items-center gap-1.5 min-w-0 flex-1">
+          <span id="p1-icon" class="text-sm shrink-0">💎</span>
+          <div class="truncate leading-tight min-w-0">
+            <div id="p1-name-label" class="text-xs font-bold text-cyan-400 truncate">P1</div>
+            <div id="p1-status" class="text-[9px] text-cyan-300 font-semibold leading-none truncate">YOUR TURN</div>
+          </div>
         </div>
-        <div class="score-val" id="p1-score" style="color: #22d3ee;">0</div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="p1-mulligan-btn" class="mulligan-btn text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-700 text-cyan-300 font-bold" title="Takeback move (Costs 50% points)">
+            ↩️ 1x
+          </button>
+          <span id="p1-score" class="text-sm sm:text-base font-bold text-cyan-300 min-w-[20px] text-right">0</span>
+        </div>
       </div>
 
-      <div id="p2-card" class="score-card waiting">
-        <div>
-          <div class="player-tag" id="p2-name" style="color: #ec4899;">🔥 Player 2</div>
-          <div class="turn-status" id="p2-status">WAITING</div>
+      <div id="p2-card" class="panel-bg flex items-center justify-between px-2.5 py-1.5 rounded-xl border border-slate-700 transition opacity-50 gap-1.5">
+        <div class="flex items-center gap-1.5 min-w-0 flex-1">
+          <span id="p2-icon" class="text-sm shrink-0">🔥</span>
+          <div class="truncate leading-tight min-w-0">
+            <div id="p2-name-label" class="text-xs font-bold text-pink-400 truncate">P2</div>
+            <div id="p2-status" class="text-[9px] text-slate-400 leading-none truncate">Waiting...</div>
+          </div>
         </div>
-        <div class="score-val" id="p2-score" style="color: #ec4899;">0</div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="p2-mulligan-btn" class="mulligan-btn text-[10px] px-1.5 py-0.5 rounded bg-pink-950/80 hover:bg-pink-900 border border-pink-700 text-pink-300 font-bold" title="Takeback move (Costs 50% points)">
+            ↩️ 1x
+          </button>
+          <span id="p2-score" class="text-sm sm:text-base font-bold text-pink-300 min-w-[20px] text-right">0</span>
+        </div>
       </div>
+    </section>
+
+    <!-- Turn Banner & Target Score Goal Indicator -->
+    <div class="w-full flex items-center justify-center gap-2 shrink-0 py-0.5">
+      <div id="turn-banner" class="text-center text-xs font-semibold opacity-80 text-cyan-300 truncate px-2">
+        Player 1: Drag a piece or tap piece then board
+      </div>
+      <span id="goal-badge" class="hidden text-[10px] px-2 py-0.2 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold shrink-0">
+        🎯 Race to 2000
+      </span>
     </div>
 
-    <!-- Instruction / Banner -->
-    <div id="banner">Tap a piece in the tray, then tap the grid to place it</div>
-
-    <!-- 8x8 Board -->
-    <div class="board-frame">
-      <div id="board"></div>
-    </div>
-
-    <!-- Bottom Piece Tray -->
-    <div class="tray-wrap">
-      <div class="tray-bar">
-        <span>Piece Selection:</span>
-        <button id="restart-btn" style="background:#881337; border-color:#be123c; color:#fecdd3; padding:3px 8px;">🔄 Restart</button>
+    <!-- 8x8 Board Container -->
+    <section class="w-full flex-1 flex items-center justify-center min-h-0 py-1">
+      <div id="board" class="board-bg board-grid-equal responsive-board-box p-1.5 sm:p-2.5 rounded-2xl border-2 shadow-2xl gap-1 sm:gap-1.5 cursor-pointer touch-none">
+        <!-- 64 cells generated by JS -->
       </div>
-      <div id="tray"></div>
+    </section>
+
+    <!-- Piece Tray & Main Actions -->
+    <section class="w-full max-w-xl shrink-0 flex flex-col items-center gap-1 mb-1">
+      <div class="w-full flex items-center justify-between px-2 text-[10px] opacity-70">
+        <span id="tray-msg">Drag piece to board:</span>
+        <div class="flex items-center gap-2">
+          <button id="main-restart-btn" class="px-2 py-0.5 rounded bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-[10px] transition active:scale-95 flex items-center gap-1">
+            <span>🔄</span> Restart
+          </button>
+          <span id="active-mode-label" class="font-bold text-cyan-400">Pass &amp; Play</span>
+        </div>
+      </div>
+
+      <div id="tray" class="panel-bg w-full flex items-center justify-around gap-2 p-2 rounded-2xl border min-h-[76px] shadow-lg touch-none">
+        <!-- 3 Piece Slots -->
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       TV / ARENA VIEW
+       ========================================================================= -->
+  <main id="tv-arena-view" class="w-full max-w-6xl mx-auto flex-1 px-6 py-4 hidden flex-col justify-center items-center">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center">
+      
+      <!-- TV Scoreboard -->
+      <div class="lg:col-span-4 flex flex-col gap-4">
+        <div id="tv-card-p1" class="p-5 rounded-2xl bg-slate-900 border-2 border-cyan-400 shadow-xl transition-all">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span id="tv-p1-icon" class="text-3xl">💎</span>
+              <div>
+                <h3 class="text-base font-bold text-cyan-400">Player 1</h3>
+                <span id="tv-tag-p1" class="text-xs text-cyan-300 font-semibold">Active Turn</span>
+              </div>
+            </div>
+            <span id="tv-score-p1" class="text-4xl font-black text-white">0</span>
+          </div>
+        </div>
+
+        <div id="tv-card-p2" class="p-5 rounded-2xl bg-slate-900/60 border-2 border-slate-800 shadow-xl transition-all opacity-60">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span id="tv-p2-icon" class="text-3xl">🔥</span>
+              <div>
+                <h3 class="text-base font-bold text-pink-400">Player 2</h3>
+                <span id="tv-tag-p2" class="text-xs text-slate-500 font-semibold">Waiting...</span>
+              </div>
+            </div>
+            <span id="tv-score-p2" class="text-4xl font-black text-slate-400">0</span>
+          </div>
+        </div>
+
+        <div id="tv-turn-banner" class="p-4 rounded-xl bg-cyan-950/40 border border-cyan-700/50 text-center text-sm font-semibold text-cyan-300">
+          Scan QR with phones to play on TV!
+        </div>
+
+        <button id="exit-tv-btn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+          Exit TV View
+        </button>
+      </div>
+
+      <!-- TV Board -->
+      <div class="lg:col-span-5 flex items-center justify-center">
+        <div id="tv-board-container" class="relative p-4 rounded-3xl bg-slate-900 border-4 border-cyan-500/70 w-[75vw] max-w-[560px] aspect-square shadow-2xl transition-all">
+          <div id="tv-board" class="board-grid-equal gap-2 w-full h-full p-2 bg-slate-950 rounded-2xl overflow-hidden"></div>
+        </div>
+      </div>
+
+      <!-- QR Box -->
+      <div class="lg:col-span-3 flex flex-col items-center justify-center bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-xl text-center">
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
+          <span>📱</span> Scan with Phone Camera
+        </span>
+        
+        <div id="tv-qr-box" class="bg-white p-3 rounded-2xl shadow-inner mb-3 flex items-center justify-center min-h-[160px] min-w-[160px]"></div>
+
+        <div class="text-xs text-slate-300 space-y-1">
+          <p class="font-bold text-white">Join Room Code:</p>
+          <p id="tv-room-code" class="text-xl font-mono font-black text-cyan-400 tracking-wider">----</p>
+          <p class="text-[11px] text-slate-400 pt-1 leading-snug">
+            Scan to turn your phone into a handheld controller pad!
+          </p>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800 w-full flex items-center justify-between text-[11px] text-slate-400">
+          <span>Connected Phones:</span>
+          <span id="tv-players-count" class="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-full">0/2</span>
+        </div>
+      </div>
+
     </div>
   </main>
 
-  <!-- Settings Modal -->
-  <div id="settings-modal" class="modal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 style="font-size: 14px; font-weight: 800;">⚙️ Game Settings</h3>
-        <button id="close-modal-x">✕</button>
+  <!-- =========================================================================
+       SETTINGS MODAL
+       ========================================================================= -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-bg w-full max-w-sm rounded-2xl p-5 border shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+        <h3 class="text-base font-bold flex items-center gap-1.5">
+          <span>⚙️</span> Settings &amp; Modes
+        </h3>
+        <button id="close-settings" class="text-xl font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
       </div>
 
-      <div class="setting-row">
-        <span class="setting-label">Opponent</span>
-        <div class="btn-group">
-          <button id="opt-pass" class="active-opt">👥 Pass &amp; Play</button>
-          <button id="opt-bot">🤖 vs Bot</button>
+      <!-- Game Mode Selection -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-bold uppercase tracking-wider opacity-60">Game Mode</label>
+        <div class="grid grid-cols-3 gap-1.5 text-xs">
+          <button class="mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold text-center" data-mode="pass">
+            👥 Pass &amp; Play
+          </button>
+          <button class="mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-center" data-mode="bot">
+            🤖 vs AI Bot
+          </button>
+          <button class="mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-center" data-mode="online">
+            🌐 2 Phones
+          </button>
+        </div>
+
+        <div id="online-connect-panel" class="hidden p-2.5 rounded-xl border border-indigo-700/60 bg-indigo-950/30 flex flex-col gap-2 mt-1">
+          <div class="text-[11px] text-slate-300 font-medium">Duel across two phones or computers:</div>
+          <div class="flex gap-1.5">
+            <button id="host-room-btn" class="flex-1 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition">
+              Create Room
+            </button>
+            <button id="join-room-btn" class="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition">
+              Join Code
+            </button>
+          </div>
+          <div id="room-code-display" class="hidden text-xs text-center font-mono py-1 px-2 rounded bg-slate-900 border border-indigo-500/50 text-cyan-300 select-all"></div>
         </div>
       </div>
 
-      <div class="setting-row">
-        <span class="setting-label">Sound Effects</span>
-        <button id="sound-btn" style="background:#083344; border-color:#06b6d4; color:#22d3ee;">🔊 Sound: ON</button>
+      <!-- Win Condition -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-bold uppercase tracking-wider opacity-60">Win Condition</label>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button id="winrule-trap-btn" class="winrule-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold text-left">
+            🪤 Survival Trap
+            <div class="text-[9px] font-normal opacity-70">Opponent can't move</div>
+          </button>
+          <button id="winrule-points-btn" class="winrule-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-left">
+            🎯 Points Race
+            <div class="text-[9px] font-normal opacity-70">First to reach target</div>
+          </button>
+        </div>
+
+        <div id="points-target-box" class="hidden mt-1 p-2 rounded-xl bg-slate-800/50 border border-slate-700 flex items-center justify-between text-xs">
+          <span class="opacity-70 text-[11px]">Race Target:</span>
+          <div class="flex gap-1">
+            <button class="target-pts-btn px-2 py-0.5 rounded border border-slate-700 bg-slate-800 text-slate-300 font-bold" data-target="1000">1000</button>
+            <button class="target-pts-btn px-2 py-0.5 rounded border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold" data-target="2000">2000</button>
+            <button class="target-pts-btn px-2 py-0.5 rounded border border-slate-700 bg-slate-800 text-slate-300 font-bold" data-target="3000">3000</button>
+          </div>
+        </div>
       </div>
 
-      <button id="close-modal-bottom" style="background:#4f46e5; border-color:#6366f1; color:white; padding:8px;">Done / Resume</button>
+      <!-- Level -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-bold uppercase tracking-wider opacity-60">Board Scenario / Level</label>
+        <div class="grid grid-cols-4 gap-1.5 text-xs">
+          <button class="lvl-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 font-bold" data-lvl="1">Lvl 1</button>
+          <button class="lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold" data-lvl="2">Lvl 2</button>
+          <button class="lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold" data-lvl="3">Lvl 3</button>
+          <button class="lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold" data-lvl="4">Lvl 4</button>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
+        <div>
+          <div class="text-sm font-semibold">Theme Mode</div>
+          <div class="text-xs opacity-60">Switch Light or Dark display</div>
+        </div>
+        <button id="modal-theme-toggle" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition">
+          ☀️ Light
+        </button>
+      </div>
+
+      <!-- Sound FX -->
+      <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
+        <div>
+          <div class="text-sm font-semibold">Sound FX</div>
+          <div class="text-xs opacity-60">Piece drop &amp; line clear audio</div>
+        </div>
+        <button id="sound-btn" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">
+          🔊 ON
+        </button>
+      </div>
+
+      <!-- Match History -->
+      <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-700 bg-slate-800/40">
+        <div>
+          <div class="text-sm font-semibold">Match Results</div>
+          <div class="text-xs opacity-60">View win / loss logs</div>
+        </div>
+        <button id="open-history-btn" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          <span>📜</span> History
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+        <span class="opacity-50 font-mono text-[11px]">v3.6 Duel</span>
+        <button id="bottom-close-settings" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition active:scale-95">
+          Done / Close
+        </button>
+      </div>
     </div>
   </div>
 
+  <!-- =========================================================================
+       MATCH HISTORY MODAL
+       ========================================================================= -->
+  <div id="history-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="panel-bg w-full max-w-sm rounded-2xl p-5 border shadow-2xl flex flex-col gap-3 max-h-[80vh]">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+        <h3 class="text-base font-bold flex items-center gap-1.5">
+          <span>📜</span> Match History
+        </h3>
+        <button id="close-history" class="text-xl font-bold px-2 opacity-60 hover:opacity-100">&times;</button>
+      </div>
+      <div id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-2 min-h-[160px] pr-1"></div>
+      <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs">
+        <button id="clear-history-btn" class="text-rose-400 hover:underline">Clear History</button>
+        <button id="history-done-btn" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg font-semibold">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       GAME OVER MODAL
+       ========================================================================= -->
+  <div id="gameover-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="panel-bg border-2 border-cyan-500 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-3">
+      <div class="text-5xl">🏆</div>
+      <h2 id="winner-title" class="text-2xl font-black text-cyan-400">PLAYER 1 WINS!</h2>
+      <p id="winner-reason" class="text-xs opacity-70">Rival was trapped with no legal moves left.</p>
+      <div class="w-full flex justify-around p-3 my-2 rounded-xl border border-slate-700 bg-slate-800/40">
+        <div>
+          <div class="text-[10px] opacity-60 font-bold">P1 SCORE</div>
+          <div id="final-p1-score" class="text-xl font-bold text-cyan-400">0</div>
+        </div>
+        <div class="border-r border-slate-700"></div>
+        <div>
+          <div class="text-[10px] opacity-60 font-bold">P2 SCORE</div>
+          <div id="final-p2-score" class="text-xl font-bold text-pink-400">0</div>
+        </div>
+      </div>
+      <button id="play-again-btn" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-pink-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
+        Play Next Match
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       GAME SCRIPT
+       ========================================================================= -->
   <script>
-    // --- Audio ---
     class SoundFX {
-      constructor() {
-        this.ctx = null;
-        this.enabled = true;
-      }
+      constructor() { this.ctx = null; this.enabled = true; }
       init() {
         if (!this.ctx) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -466,7 +500,7 @@
           gain.connect(this.ctx.destination);
 
           if (type === 'place') {
-            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.setValueAtTime(320, now);
             osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
@@ -474,69 +508,148 @@
             osc.stop(now + 0.08);
           } else if (type === 'clear') {
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(523, now);
-            osc.frequency.setValueAtTime(659, now + 0.08);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.08);
+            osc.frequency.setValueAtTime(783.99, now + 0.16);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
             osc.start(now);
-            osc.stop(now + 0.25);
+            osc.stop(now + 0.3);
+          } else if (type === 'win') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+            osc.start(now);
+            osc.stop(now + 0.45);
           }
         } catch (e) {}
       }
     }
     const sfx = new SoundFX();
 
-    // --- Shapes ---
     const SHAPES = [
-      { matrix: [[1]] },
-      { matrix: [[1, 1]] },
-      { matrix: [[1], [1]] },
-      { matrix: [[1, 1, 1]] },
-      { matrix: [[1], [1], [1]] },
-      { matrix: [[1, 1, 1, 1]] },
-      { matrix: [[1, 1], [1, 1]] },
-      { matrix: [[1, 0], [1, 1]] },
-      { matrix: [[0, 1], [1, 1]] },
-      { matrix: [[1, 1, 1], [0, 1, 0]] }
+      { name: 'dot', matrix: [[1]] },
+      { name: 'h2', matrix: [[1, 1]] },
+      { name: 'v2', matrix: [[1], [1]] },
+      { name: 'h3', matrix: [[1, 1, 1]] },
+      { name: 'v3', matrix: [[1], [1], [1]] },
+      { name: 'h4', matrix: [[1, 1, 1, 1]] },
+      { name: 'sq2', matrix: [[1, 1], [1, 1]] },
+      { name: 'sq3', matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]] },
+      { name: 'l-tr', matrix: [[1, 0], [1, 1]] },
+      { name: 'l-tl', matrix: [[0, 1], [1, 1]] },
+      { name: 't-up', matrix: [[1, 1, 1], [0, 1, 0]] }
     ];
 
-    // --- State ---
+    const LEVELS = {
+      1: { title: "Classic Arena", obstacles: [] },
+      2: { title: "Stone Core", obstacles: [[3,3],[3,4],[4,3],[4,4]] },
+      3: { title: "Corner Traps", obstacles: [[0,0],[0,7],[7,0],[7,7]] },
+      4: { title: "Lightning Blitz", obstacles: [[2,2],[2,5],[5,2],[5,5]] }
+    };
+
     const state = {
       grid: Array(8).fill(null).map(() => Array(8).fill(0)),
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass', // 'pass' or 'bot'
+      mode: 'pass',
+      themeMode: 'dark',
+      currentLevel: 1,
       selectedPieceIdx: null,
       trayPieces: [null, null, null],
       gameOver: false,
-      isTV: false
+      peer: null,
+      conn: null,
+      tvCode: null,
+      winCondition: 'trap',
+      targetScore: 2000,
+      mulliganUsed: { 1: false, 2: false },
+      lastTurnSnapshot: null
     };
 
-    // --- Game Logic ---
+    /* Unified Mouse & Touch Drag State */
+    const drag = {
+      active: false,
+      piece: null,
+      slotIdx: null,
+      startX: 0,
+      startY: 0,
+      hasMoved: false,
+      ghostEl: document.getElementById('floating-drag-ghost'),
+      activePointerId: null,
+      activeSlotEl: null
+    };
+
     function initBoard() {
       state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
+      const config = LEVELS[state.currentLevel] || LEVELS[1];
+      config.obstacles.forEach(([r, c]) => { state.grid[r][c] = 99; });
     }
 
     function renderBoardDOM() {
       const board = document.getElementById('board');
       board.innerHTML = '';
+
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           const val = state.grid[r][c];
           const cell = document.createElement('div');
-          cell.className = 'cell';
-          if (val === 1) {
-            cell.className += ' p1';
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+          cell.className = 'board-cell board-cell-square rounded-md flex items-center justify-center text-sm sm:text-base md:text-xl font-bold select-none transition-all leading-none overflow-hidden ';
+
+          if (val === 0) {
+            cell.className += 'empty-cell';
+          } else if (val === 1) {
+            cell.className += 'bg-cyan-500/30 border border-cyan-400 text-cyan-300';
             cell.textContent = '💎';
           } else if (val === 2) {
-            cell.className += ' p2';
+            cell.className += 'bg-pink-500/30 border border-pink-400 text-pink-300';
             cell.textContent = '🔥';
+          } else if (val === 99) {
+            cell.className += 'bg-slate-700/60 border border-slate-600 text-slate-400';
+            cell.textContent = '🗿';
           }
 
-          cell.addEventListener('mouseenter', () => previewHover(r, c));
-          cell.addEventListener('mouseleave', clearHover);
-          cell.addEventListener('click', () => onCellClick(r, c));
+          cell.addEventListener('mouseenter', () => {
+            if (!drag.active) handleCellHover(r, c);
+          });
+          cell.addEventListener('mouseleave', () => {
+            if (!drag.active) clearCellHover();
+          });
+          cell.addEventListener('click', () => handleCellClick(r, c));
+
           board.appendChild(cell);
+        }
+      }
+    }
+
+    function renderTVBoardDOM() {
+      const tvBoard = document.getElementById('tv-board');
+      if (!tvBoard) return;
+      tvBoard.innerHTML = '';
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const val = state.grid[r][c];
+          const cell = document.createElement('div');
+          cell.className = 'board-cell-square rounded-lg flex items-center justify-center text-xl font-bold select-none overflow-hidden ';
+
+          if (val === 0) {
+            cell.className += 'bg-slate-900 border border-slate-800';
+          } else if (val === 1) {
+            cell.className += 'bg-cyan-500/30 border border-cyan-400 text-cyan-300';
+            cell.textContent = '💎';
+          } else if (val === 2) {
+            cell.className += 'bg-pink-500/30 border border-pink-400 text-pink-300';
+            cell.textContent = '🔥';
+          } else if (val === 99) {
+            cell.className += 'bg-slate-700/60 border border-slate-600 text-slate-400';
+            cell.textContent = '🗿';
+          }
+          tvBoard.appendChild(cell);
         }
       }
     }
@@ -550,50 +663,286 @@
       renderTrayDOM();
     }
 
+    function recordSnapshot(slotIdx) {
+      state.lastTurnSnapshot = {
+        grid: state.grid.map(row => [...row]),
+        scores: { ...state.scores },
+        currentPlayer: state.currentPlayer,
+        slotIdx: slotIdx,
+        restoredPiece: JSON.parse(JSON.stringify(state.trayPieces[slotIdx]))
+      };
+    }
+
+    function useMulligan(playerNum) {
+      if (state.gameOver) return;
+      if (state.mulliganUsed[playerNum]) return;
+      if (!state.lastTurnSnapshot || state.lastTurnSnapshot.currentPlayer !== playerNum) return;
+
+      const snap = state.lastTurnSnapshot;
+      state.grid = snap.grid.map(row => [...row]);
+      state.scores[playerNum] = Math.floor(snap.scores[playerNum] / 2);
+      state.trayPieces[snap.slotIdx] = snap.restoredPiece;
+      state.selectedPieceIdx = snap.slotIdx;
+      state.currentPlayer = playerNum;
+      state.mulliganUsed[playerNum] = true;
+      state.lastTurnSnapshot = null;
+
+      sfx.play('clear');
+      renderBoardDOM();
+      renderTrayDOM();
+      renderTVBoardDOM();
+      updateUI();
+    }
+
     function renderTrayDOM() {
       const tray = document.getElementById('tray');
       tray.innerHTML = '';
 
       state.trayPieces.forEach((piece, idx) => {
         const slot = document.createElement('div');
-        slot.className = 'slot' + (state.selectedPieceIdx === idx ? ' selected' : '');
+        slot.dataset.slotIdx = idx;
+        slot.className = `flex-1 h-14 rounded-xl border flex items-center justify-center cursor-grab active:cursor-grabbing transition p-1 touch-none ${
+          state.themeMode === 'dark' ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-100 border-slate-300'
+        } ${state.selectedPieceIdx === idx ? 'selected-tray-slot' : ''}`;
 
         if (!piece) {
-          slot.className += ' used';
-          slot.innerHTML = '<span style="font-size:10px; color:#475569;">USED</span>';
+          slot.innerHTML = `<span class="text-[10px] opacity-40 font-bold">USED</span>`;
+          slot.classList.add('cursor-default', 'opacity-30');
         } else {
           const rows = piece.matrix.length;
           const cols = piece.matrix[0].length;
           const container = document.createElement('div');
-          container.style.display = 'grid';
-          container.style.gap = '2px';
-          container.style.gridTemplateRows = `repeat(${rows}, 8px)`;
-          container.style.gridTemplateColumns = `repeat(${cols}, 8px)`;
+          container.className = 'grid gap-0.5 pointer-events-none';
+          container.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+          container.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
 
-          piece.matrix.forEach(row => {
-            row.forEach(val => {
-              const b = document.createElement('div');
-              b.style.borderRadius = '2px';
-              b.style.background = val ? (state.currentPlayer === 1 ? '#22d3ee' : '#ec4899') : 'transparent';
-              container.appendChild(b);
+          piece.matrix.forEach(r => {
+            r.forEach(val => {
+              const c = document.createElement('div');
+              c.className = `w-3 h-3 rounded-[3px] ${val ? (state.currentPlayer === 1 ? 'bg-cyan-400' : 'bg-pink-400') : 'bg-transparent'}`;
+              container.appendChild(c);
             });
           });
+
           slot.appendChild(container);
 
-          slot.addEventListener('click', () => {
-            sfx.init();
+          /* Pointer Down Handler */
+          slot.addEventListener('pointerdown', (e) => {
             if (state.gameOver) return;
             if (state.mode === 'bot' && state.currentPlayer === 2) return;
-            state.selectedPieceIdx = state.selectedPieceIdx === idx ? null : idx;
-            renderTrayDOM();
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+            e.preventDefault();
+            sfx.init();
+
+            drag.active = true;
+            drag.hasMoved = false;
+            drag.startX = e.clientX;
+            drag.startY = e.clientY;
+            drag.piece = piece;
+            drag.slotIdx = idx;
+            drag.activePointerId = e.pointerId;
+            drag.activeSlotEl = slot;
+
+            state.selectedPieceIdx = idx;
+
+            // Highlight slot without recreating DOM
+            document.querySelectorAll('#tray > div').forEach((s, i) => {
+              s.classList.toggle('selected-tray-slot', i === idx);
+            });
+
+            buildGhost(piece);
+
+            // Crucial: pointer capture ensures mobile touch events continue streaming off the tray
+            try {
+              slot.setPointerCapture(e.pointerId);
+            } catch(err) {}
+
+            slot.addEventListener('pointermove', onPointerMove);
+            slot.addEventListener('pointerup', onPointerUp);
+            slot.addEventListener('pointercancel', onPointerCancel);
           });
         }
         tray.appendChild(slot);
       });
     }
 
-    function canPlace(piece, targetR, targetC) {
+    function buildGhost(piece) {
+      const ghost = drag.ghostEl;
+      ghost.innerHTML = '';
+      const rows = piece.matrix.length;
+      const cols = piece.matrix[0].length;
+      const container = document.createElement('div');
+      container.className = 'grid gap-1 bg-slate-900/90 p-2 rounded-xl border border-cyan-400 pointer-events-none';
+      container.style.gridTemplateRows = `repeat(${rows}, 24px)`;
+      container.style.gridTemplateColumns = `repeat(${cols}, 24px)`;
+
+      piece.matrix.forEach(r => {
+        r.forEach(val => {
+          const cell = document.createElement('div');
+          cell.className = `w-6 h-6 rounded-md ${val ? (state.currentPlayer === 1 ? 'bg-cyan-400' : 'bg-pink-400') : 'bg-transparent'}`;
+          container.appendChild(cell);
+        });
+      });
+      ghost.appendChild(container);
+    }
+
+    function onPointerMove(e) {
+      if (!drag.active) return;
+      e.preventDefault();
+
+      const dist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
+      if (dist > 5) {
+        drag.hasMoved = true;
+        drag.ghostEl.style.display = 'block';
+
+        const isTouch = (e.pointerType === 'touch');
+        const offsetY = isTouch ? -65 : 0;
+        drag.ghostEl.style.left = `${e.clientX}px`;
+        drag.ghostEl.style.top = `${e.clientY + offsetY}px`;
+
+        const cell = getCellUnderPoint(e.clientX, e.clientY);
+        if (cell && drag.piece) {
+          handleCellHover(cell.r, cell.c, drag.piece);
+        } else {
+          clearCellHover();
+        }
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!drag.active) return;
+      e.preventDefault();
+
+      const slot = drag.activeSlotEl;
+      if (slot) {
+        try {
+          if (drag.activePointerId !== null) slot.releasePointerCapture(drag.activePointerId);
+        } catch(err) {}
+        slot.removeEventListener('pointermove', onPointerMove);
+        slot.removeEventListener('pointerup', onPointerUp);
+        slot.removeEventListener('pointercancel', onPointerCancel);
+      }
+
+      drag.ghostEl.style.display = 'none';
+      clearCellHover();
+
+      if (drag.hasMoved && drag.piece) {
+        const cell = getCellUnderPoint(e.clientX, e.clientY);
+        if (cell) {
+          const placement = calculatePlacement(drag.piece, cell.r, cell.c);
+          if (placement) {
+            commitDrop(drag.piece, placement.r, placement.c, drag.slotIdx);
+          }
+        }
+      }
+
+      drag.active = false;
+      drag.piece = null;
+      drag.activePointerId = null;
+      drag.activeSlotEl = null;
+    }
+
+    function onPointerCancel(e) {
+      const slot = drag.activeSlotEl;
+      if (slot) {
+        try {
+          if (drag.activePointerId !== null) slot.releasePointerCapture(drag.activePointerId);
+        } catch(err) {}
+        slot.removeEventListener('pointermove', onPointerMove);
+        slot.removeEventListener('pointerup', onPointerUp);
+        slot.removeEventListener('pointercancel', onPointerCancel);
+      }
+      drag.ghostEl.style.display = 'none';
+      clearCellHover();
+      drag.active = false;
+      drag.piece = null;
+      drag.activePointerId = null;
+      drag.activeSlotEl = null;
+    }
+
+    function getCellUnderPoint(x, y) {
+      const isTouch = window.matchMedia('(pointer: coarse)').matches;
+      const targetY = isTouch ? y - 65 : y;
+      const els = document.elementsFromPoint(x, targetY);
+      for (const el of els) {
+        if (el && el.classList && el.classList.contains('board-cell')) {
+          return { r: parseInt(el.dataset.r, 10), c: parseInt(el.dataset.c, 10) };
+        }
+      }
+      return null;
+    }
+
+    /* Reliable, Predictable Placement: Tries centered cursor, then top-left anchor */
+    function calculatePlacement(piece, targetR, targetC) {
+      const rows = piece.matrix.length;
+      const cols = piece.matrix[0].length;
+
+      // 1. Center of shape on targeted cell
+      const centerR = targetR - Math.floor(rows / 2);
+      const centerC = targetC - Math.floor(cols / 2);
+      if (canPlace(piece, centerR, centerC)) return { r: centerR, c: centerC };
+
+      // 2. Direct origin top-left on targeted cell
+      if (canPlace(piece, targetR, targetC)) return { r: targetR, c: targetC };
+
+      // 3. One cell nudge adjustments if right on edge
+      const nudges = [
+        [0, -1], [-1, 0], [0, 1], [1, 0],
+        [-1, -1], [-1, 1], [1, -1], [1, 1]
+      ];
+      for (const [dr, dc] of nudges) {
+        if (canPlace(piece, centerR + dr, centerC + dc)) {
+          return { r: centerR + dr, c: centerC + dc };
+        }
+      }
+      return null;
+    }
+
+    function handleCellHover(r, c, overridePiece = null) {
+      clearCellHover();
+      const piece = overridePiece || (state.selectedPieceIdx !== null ? state.trayPieces[state.selectedPieceIdx] : null);
+      if (!piece) return;
+
+      const placement = calculatePlacement(piece, r, c);
+      const isValid = placement !== null;
+      const baseR = placement ? placement.r : (r - Math.floor(piece.matrix.length / 2));
+      const baseC = placement ? placement.c : (c - Math.floor(piece.matrix[0].length / 2));
+
       const m = piece.matrix;
+      for (let pr = 0; pr < m.length; pr++) {
+        for (let pc = 0; pc < m[pr].length; pc++) {
+          if (m[pr][pc]) {
+            const tr = baseR + pr;
+            const tc = baseC + pc;
+            const el = document.querySelector(`.board-cell[data-r="${tr}"][data-c="${tc}"]`);
+            if (el) el.classList.add(isValid ? 'cell-preview-valid' : 'cell-preview-invalid');
+          }
+        }
+      }
+    }
+
+    function clearCellHover() {
+      document.querySelectorAll('.board-cell').forEach(c => {
+        c.classList.remove('cell-preview-valid', 'cell-preview-invalid');
+      });
+    }
+
+    /* Tap-to-Place (Click on piece slot, then click on board) */
+    function handleCellClick(r, c) {
+      if (state.gameOver) return;
+      if (state.selectedPieceIdx === null) return;
+      const piece = state.trayPieces[state.selectedPieceIdx];
+      if (!piece) return;
+
+      const placement = calculatePlacement(piece, r, c);
+      if (placement) {
+        commitDrop(piece, placement.r, placement.c, state.selectedPieceIdx);
+      }
+    }
+
+    function canPlace(shape, targetR, targetC) {
+      const m = shape.matrix;
       for (let r = 0; r < m.length; r++) {
         for (let c = 0; c < m[r].length; c++) {
           if (m[r][c]) {
@@ -607,57 +956,9 @@
       return true;
     }
 
-    function findFit(piece, cr, cc) {
-      if (canPlace(piece, cr, cc)) return { r: cr, c: cc };
-      const centerR = cr - Math.floor(piece.matrix.length / 2);
-      const centerC = cc - Math.floor(piece.matrix[0].length / 2);
-      if (canPlace(piece, centerR, centerC)) return { r: centerR, c: centerC };
-
-      const offsets = [[0,-1],[-1,0],[0,1],[1,0],[-1,-1],[-1,1],[1,-1],[1,1]];
-      for (const [dr, dc] of offsets) {
-        if (canPlace(piece, cr + dr, cc + dc)) return { r: cr + dr, c: cc + dc };
-      }
-      return null;
-    }
-
-    function previewHover(r, c) {
-      clearHover();
-      if (state.selectedPieceIdx === null) return;
-      const piece = state.trayPieces[state.selectedPieceIdx];
-      if (!piece) return;
-
-      const fit = findFit(piece, r, c);
-      if (!fit) return;
-
-      const m = piece.matrix;
-      for (let pr = 0; pr < m.length; pr++) {
-        for (let pc = 0; pc < m[pr].length; pc++) {
-          if (m[pr][pc]) {
-            const idx = (fit.r + pr) * 8 + (fit.c + pc);
-            const el = document.getElementById('board').children[idx];
-            if (el) el.classList.add('preview');
-          }
-        }
-      }
-    }
-
-    function clearHover() {
-      document.querySelectorAll('.cell.preview').forEach(c => c.classList.remove('preview'));
-    }
-
-    function onCellClick(r, c) {
-      if (state.gameOver) return;
-      if (state.selectedPieceIdx === null) return;
-      const piece = state.trayPieces[state.selectedPieceIdx];
-      if (!piece) return;
-
-      const fit = findFit(piece, r, c);
-      if (!fit) return;
-
-      commitDrop(piece, fit.r, fit.c, state.selectedPieceIdx);
-    }
-
     function commitDrop(piece, r, c, slotIdx) {
+      recordSnapshot(slotIdx);
+
       const m = piece.matrix;
       for (let pr = 0; pr < m.length; pr++) {
         for (let pc = 0; pc < m[pr].length; pc++) {
@@ -671,21 +972,36 @@
 
       checkLines();
 
+      if (state.winCondition === 'race' && state.scores[state.currentPlayer] >= state.targetScore) {
+        triggerWin(state.currentPlayer, `Reached the target goal of ${state.targetScore} points!`);
+        return;
+      }
+
       if (state.trayPieces.every(p => p === null)) {
         replenishTray();
       } else {
         renderTrayDOM();
       }
 
+      if (state.mode === 'online' && state.conn && state.conn.open) {
+        state.conn.send({
+          type: 'MOVE',
+          grid: state.grid,
+          scores: state.scores,
+          tray: state.trayPieces,
+          nextPlayer: state.currentPlayer === 1 ? 2 : 1
+        });
+      }
+
       state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
       updateUI();
       renderBoardDOM();
-      if (state.isTV) renderTVBoard();
+      renderTVBoardDOM();
 
-      checkEnd();
+      checkGameOver();
 
       if (!state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
-        setTimeout(botTurn, 400);
+        setTimeout(executeBot, 450);
       }
     }
 
@@ -707,12 +1023,27 @@
       if (total > 0) {
         sfx.play('clear');
         state.scores[state.currentPlayer] += total * 100;
-        rows.forEach(r => { for (let c = 0; c < 8; c++) state.grid[r][c] = 0; });
-        cols.forEach(c => { for (let r = 0; r < 8; r++) state.grid[r][c] = 0; });
+        rows.forEach(r => {
+          for (let c = 0; c < 8; c++) if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
+        });
+        cols.forEach(c => {
+          for (let r = 0; r < 8; r++) if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
+        });
       }
     }
 
-    function checkEnd() {
+    function checkGameOver() {
+      if (state.winCondition === 'race') {
+        if (state.scores[1] >= state.targetScore) {
+          triggerWin(1, `Hit the ${state.targetScore} score target first!`);
+          return;
+        }
+        if (state.scores[2] >= state.targetScore) {
+          triggerWin(2, `Hit the ${state.targetScore} score target first!`);
+          return;
+        }
+      }
+
       const available = state.trayPieces.filter(p => p !== null);
       if (available.length === 0) return;
 
@@ -728,13 +1059,30 @@
       }
 
       if (!canMove) {
-        state.gameOver = true;
         const winner = state.currentPlayer === 1 ? 2 : 1;
-        alert(`PLAYER ${winner} WINS! Other player has no moves left.`);
+        triggerWin(winner, `Rival was trapped with no legal moves left.`);
       }
     }
 
-    function botTurn() {
+    function triggerWin(winner, reason) {
+      state.gameOver = true;
+      sfx.play('win');
+      saveHistory(winner);
+
+      const modal = document.getElementById('gameover-modal');
+      document.getElementById('winner-title').textContent = `PLAYER ${winner} WINS!`;
+      document.getElementById('winner-title').className = `text-2xl font-black ${winner === 1 ? 'text-cyan-400' : 'text-pink-400'}`;
+      document.getElementById('winner-reason').textContent = reason;
+      document.getElementById('final-p1-score').textContent = state.scores[1];
+      document.getElementById('final-p2-score').textContent = state.scores[2];
+      modal.classList.remove('hidden');
+
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 110, spread: 75, origin: { y: 0.6 } });
+      }
+    }
+
+    function executeBot() {
       const available = [];
       state.trayPieces.forEach((piece, idx) => { if (piece) available.push({ piece, idx }); });
       if (available.length === 0) return;
@@ -752,7 +1100,7 @@
         const move = moves[Math.floor(Math.random() * moves.length)];
         commitDrop(move.piece, move.r, move.c, move.slot);
       } else {
-        checkEnd();
+        checkGameOver();
       }
     }
 
@@ -760,113 +1108,315 @@
       document.getElementById('p1-score').textContent = state.scores[1];
       document.getElementById('p2-score').textContent = state.scores[2];
 
+      const tvS1 = document.getElementById('tv-score-p1');
+      const tvS2 = document.getElementById('tv-score-p2');
+      if (tvS1) tvS1.textContent = state.scores[1];
+      if (tvS2) tvS2.textContent = state.scores[2];
+
       const p1Card = document.getElementById('p1-card');
       const p2Card = document.getElementById('p2-card');
       const p1Status = document.getElementById('p1-status');
       const p2Status = document.getElementById('p2-status');
+      const banner = document.getElementById('turn-banner');
 
-      if (state.currentPlayer === 1) {
-        p1Card.className = 'score-card active-p1';
-        p2Card.className = 'score-card waiting';
-        p1Status.textContent = 'YOUR TURN';
-        p2Status.textContent = 'WAITING';
-      } else {
-        p2Card.className = 'score-card active-p2';
-        p1Card.className = 'score-card waiting';
-        p2Status.textContent = state.mode === 'bot' ? 'THINKING' : 'YOUR TURN';
-        p1Status.textContent = 'WAITING';
+      const m1 = document.getElementById('p1-mulligan-btn');
+      const m2 = document.getElementById('p2-mulligan-btn');
+      if (m1) {
+        m1.disabled = state.mulliganUsed[1] || (state.lastTurnSnapshot && state.lastTurnSnapshot.currentPlayer !== 1) || (!state.lastTurnSnapshot && state.currentPlayer !== 1);
+        m1.textContent = state.mulliganUsed[1] ? 'USED' : '↩️ 1x';
+      }
+      if (m2) {
+        m2.disabled = state.mulliganUsed[2] || (state.lastTurnSnapshot && state.lastTurnSnapshot.currentPlayer !== 2) || (!state.lastTurnSnapshot && state.currentPlayer !== 2);
+        m2.textContent = state.mulliganUsed[2] ? 'USED' : '↩️ 1x';
       }
 
-      document.getElementById('p2-name').textContent = state.mode === 'bot' ? '🤖 Bot' : '🔥 Player 2';
-      document.getElementById('mode-label').textContent = state.mode === 'bot' ? 'vs AI Bot' : 'Pass & Play';
+      const goalBadge = document.getElementById('goal-badge');
+      if (state.winCondition === 'race') {
+        goalBadge.classList.remove('hidden');
+        goalBadge.textContent = `🎯 Race to ${state.targetScore}`;
+      } else {
+        goalBadge.classList.add('hidden');
+      }
+
+      if (state.currentPlayer === 1) {
+        p1Card.classList.remove('opacity-50');
+        p1Card.classList.add('border-cyan-400');
+        p2Card.classList.add('opacity-50');
+        p2Card.classList.remove('border-pink-400');
+        p1Status.textContent = 'YOUR TURN';
+        p2Status.textContent = 'Waiting...';
+        banner.textContent = 'Player 1: Drag a piece or tap piece then board';
+      } else {
+        p2Card.classList.remove('opacity-50');
+        p2Card.classList.add('border-pink-400');
+        p1Card.classList.add('opacity-50');
+        p1Card.classList.remove('border-cyan-400');
+        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
+        p1Status.textContent = 'Waiting...';
+        banner.textContent = state.mode === 'bot' ? 'Bot is picking a move...' : 'Player 2: Drag a piece or tap piece then board';
+      }
+
+      const modeLabels = { pass: 'Pass & Play', bot: 'vs AI Bot', online: '2 Phones Online' };
+      document.getElementById('header-mode-badge').textContent = modeLabels[state.mode] || 'Duel';
+      document.getElementById('active-mode-label').textContent = modeLabels[state.mode] || 'Duel';
+      document.getElementById('p2-name-label').textContent = state.mode === 'bot' ? 'Bot 🤖' : 'P2';
+    }
+
+    function toggleTheme() {
+      state.themeMode = state.themeMode === 'dark' ? 'light' : 'dark';
+      document.body.className = `theme-${state.themeMode} w-full h-[100dvh] flex flex-col justify-between overflow-hidden`;
+      const modalBtn = document.getElementById('modal-theme-toggle');
+      modalBtn.textContent = state.themeMode === 'dark' ? '☀️ Light' : '🌙 Dark';
+      renderBoardDOM();
+      renderTrayDOM();
     }
 
     function resetGame() {
       state.scores = { 1: 0, 2: 0 };
       state.currentPlayer = 1;
       state.gameOver = false;
+      state.mulliganUsed = { 1: false, 2: false };
+      state.lastTurnSnapshot = null;
+      document.getElementById('gameover-modal').classList.add('hidden');
       initBoard();
       replenishTray();
       renderBoardDOM();
+      renderTVBoardDOM();
       updateUI();
-      if (state.isTV) renderTVBoard();
     }
 
-    function renderTVBoard() {
-      const tvGrid = document.getElementById('tv-board-grid');
-      tvGrid.innerHTML = '';
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          const val = state.grid[r][c];
-          const cell = document.createElement('div');
-          cell.style.background = '#0f172a';
-          cell.style.borderRadius = '6px';
-          cell.style.display = 'flex';
-          cell.style.alignItems = 'center';
-          cell.style.justifyContent = 'center';
-          cell.style.fontSize = '20px';
-          if (val === 1) cell.textContent = '💎';
-          else if (val === 2) cell.textContent = '🔥';
-          tvGrid.appendChild(cell);
-        }
+    function saveHistory(winnerNum) {
+      try {
+        const history = JSON.parse(localStorage.getItem('clash_history_v35') || '[]');
+        history.unshift({
+          date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          winner: winnerNum === 1 ? 'Player 1' : (state.mode === 'bot' ? 'Bot 🤖' : 'Player 2'),
+          p1: state.scores[1],
+          p2: state.scores[2],
+          level: `Lvl ${state.currentLevel}`
+        });
+        if (history.length > 25) history.pop();
+        localStorage.setItem('clash_history_v35', JSON.stringify(history));
+      } catch (e) {}
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('history-list');
+      const history = JSON.parse(localStorage.getItem('clash_history_v35') || '[]');
+      if (!history.length) {
+        container.innerHTML = `<div class="text-center text-xs opacity-50 py-8">No match records yet.</div>`;
+        return;
       }
+      container.innerHTML = history.map(item => `
+        <div class="panel-bg p-2.5 rounded-xl border flex items-center justify-between text-xs">
+          <div>
+            <div class="font-bold text-cyan-400">${item.winner} Won</div>
+            <div class="text-[10px] opacity-60">${item.date} • ${item.level}</div>
+          </div>
+          <div class="text-right font-bold text-sm">${item.p1} - ${item.p2}</div>
+        </div>
+      `).join('');
     }
 
-    // --- Init & Wiring ---
-    window.addEventListener('DOMContentLoaded', () => {
+    function initTVMode() {
+      document.getElementById('standard-view').classList.add('hidden');
+      document.getElementById('tv-arena-view').classList.remove('hidden');
+      document.getElementById('tv-arena-view').classList.add('flex');
+
+      const roomCode = 'TV-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+      state.tvCode = roomCode;
+      document.getElementById('tv-room-code').textContent = roomCode;
+
+      const qrBox = document.getElementById('tv-qr-box');
+      qrBox.innerHTML = '';
+      const controllerUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+      try {
+        new QRCode(qrBox, {
+          text: controllerUrl,
+          width: 160,
+          height: 160,
+          colorDark: "#020617",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch(e) {}
+
+      renderTVBoardDOM();
+    }
+
+    function exitTVMode() {
+      document.getElementById('tv-arena-view').classList.add('hidden');
+      document.getElementById('tv-arena-view').classList.remove('flex');
+      document.getElementById('standard-view').classList.remove('hidden');
+      renderBoardDOM();
+    }
+
+    /* Init */
+    document.addEventListener('DOMContentLoaded', () => {
       initBoard();
       replenishTray();
       renderBoardDOM();
       updateUI();
 
-      // Modal Controls
-      const modal = document.getElementById('settings-modal');
-      document.getElementById('settings-btn').onclick = () => modal.classList.add('open');
-      document.getElementById('close-modal-x').onclick = () => modal.classList.remove('open');
-      document.getElementById('close-modal-bottom').onclick = () => modal.classList.remove('open');
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tv') === '1') {
+        initTVMode();
+      }
 
-      document.getElementById('restart-btn').onclick = resetGame;
+      document.getElementById('tv-toggle-btn').addEventListener('click', initTVMode);
+      document.getElementById('exit-tv-btn').addEventListener('click', exitTVMode);
 
-      // Mode toggles
-      const optPass = document.getElementById('opt-pass');
-      const optBot = document.getElementById('opt-bot');
+      const settingsModal = document.getElementById('settings-modal');
+      document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
+      document.getElementById('close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
+      document.getElementById('bottom-close-settings').addEventListener('click', () => settingsModal.classList.add('hidden'));
 
-      optPass.onclick = () => {
-        state.mode = 'pass';
-        optPass.className = 'active-opt';
-        optBot.className = '';
-        resetGame();
-      };
+      document.getElementById('p1-mulligan-btn').addEventListener('click', () => useMulligan(1));
+      document.getElementById('p2-mulligan-btn').addEventListener('click', () => useMulligan(2));
 
-      optBot.onclick = () => {
-        state.mode = 'bot';
-        optBot.className = 'active-opt';
-        optPass.className = '';
-        resetGame();
-      };
+      document.getElementById('main-restart-btn').addEventListener('click', resetGame);
 
-      // Sound toggle
-      const sBtn = document.getElementById('sound-btn');
-      sBtn.onclick = () => {
+      document.querySelectorAll('.mode-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.mode = btn.dataset.mode;
+          document.querySelectorAll('.mode-opt-btn').forEach(b => {
+            b.className = b.dataset.mode === state.mode
+              ? 'mode-opt-btn p-2 rounded-lg border border-cyan-500 bg-cyan-950/40 text-cyan-300 font-bold text-center'
+              : 'mode-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-center';
+          });
+
+          const onlinePanel = document.getElementById('online-connect-panel');
+          if (state.mode === 'online') {
+            onlinePanel.classList.remove('hidden');
+          } else {
+            onlinePanel.classList.add('hidden');
+          }
+          resetGame();
+        });
+      });
+
+      document.getElementById('host-room-btn').addEventListener('click', () => {
+        const roomCode = 'CLASH-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        const display = document.getElementById('room-code-display');
+        display.textContent = `Room Code: ${roomCode}`;
+        display.classList.remove('hidden');
+        try {
+          if (typeof Peer !== 'undefined') {
+            state.peer = new Peer(roomCode);
+            state.peer.on('connection', conn => {
+              state.conn = conn;
+              conn.on('data', data => {
+                if (data.type === 'MOVE') {
+                  state.grid = data.grid;
+                  state.scores = data.scores;
+                  state.trayPieces = data.tray;
+                  state.currentPlayer = data.nextPlayer;
+                  renderBoardDOM();
+                  renderTrayDOM();
+                  updateUI();
+                }
+              });
+            });
+          }
+        } catch(e) {}
+      });
+
+      document.getElementById('join-room-btn').addEventListener('click', () => {
+        const inputCode = prompt('Enter 4-character Room Code:');
+        if (!inputCode) return;
+        const code = inputCode.trim().toUpperCase();
+        try {
+          if (typeof Peer !== 'undefined') {
+            state.peer = new Peer();
+            state.conn = state.peer.connect(code.startsWith('CLASH-') ? code : `CLASH-${code}`);
+            state.conn.on('open', () => {
+              settingsModal.classList.add('hidden');
+            });
+            state.conn.on('data', data => {
+              if (data.type === 'MOVE') {
+                state.grid = data.grid;
+                state.scores = data.scores;
+                state.trayPieces = data.tray;
+                state.currentPlayer = data.nextPlayer;
+                renderBoardDOM();
+                renderTrayDOM();
+                updateUI();
+              }
+            });
+          }
+        } catch(e) {}
+      });
+
+      const trapBtn = document.getElementById('winrule-trap-btn');
+      const raceBtn = document.getElementById('winrule-points-btn');
+      const ptsTargetBox = document.getElementById('points-target-box');
+
+      trapBtn.addEventListener('click', () => {
+        state.winCondition = 'trap';
+        trapBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold text-left';
+        raceBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-left';
+        ptsTargetBox.classList.add('hidden');
+        updateUI();
+      });
+
+      raceBtn.addEventListener('click', () => {
+        state.winCondition = 'race';
+        raceBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold text-left';
+        trapBtn.className = 'winrule-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 text-left';
+        ptsTargetBox.classList.remove('hidden');
+        updateUI();
+      });
+
+      document.querySelectorAll('.target-pts-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.targetScore = parseInt(btn.dataset.target, 10);
+          document.querySelectorAll('.target-pts-btn').forEach(b => {
+            b.className = parseInt(b.dataset.target, 10) === state.targetScore
+              ? 'target-pts-btn px-2 py-0.5 rounded border border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold'
+              : 'target-pts-btn px-2 py-0.5 rounded border border-slate-700 bg-slate-800 text-slate-300 font-bold';
+          });
+          updateUI();
+        });
+      });
+
+      document.querySelectorAll('.lvl-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentLevel = parseInt(btn.dataset.lvl, 10);
+          document.querySelectorAll('.lvl-opt-btn').forEach(b => {
+            b.className = parseInt(b.dataset.lvl, 10) === state.currentLevel
+              ? 'lvl-opt-btn p-2 rounded-lg border border-cyan-400 bg-cyan-950/40 font-bold'
+              : 'lvl-opt-btn p-2 rounded-lg border border-slate-700 bg-slate-800 opacity-70 hover:opacity-100 font-bold';
+          });
+          document.getElementById('header-lvl-badge').textContent = `Lvl ${state.currentLevel}`;
+          resetGame();
+        });
+      });
+
+      document.getElementById('modal-theme-toggle').addEventListener('click', toggleTheme);
+
+      const soundBtn = document.getElementById('sound-btn');
+      soundBtn.addEventListener('click', () => {
         sfx.enabled = !sfx.enabled;
-        sBtn.textContent = sfx.enabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
-      };
+        soundBtn.textContent = sfx.enabled ? '🔊 ON' : '🔇 OFF';
+        soundBtn.className = sfx.enabled
+          ? 'px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition'
+          : 'px-3 py-1 bg-slate-700 text-slate-400 rounded-lg text-xs font-bold transition';
+      });
 
-      // TV view toggle
-      const tvBtn = document.getElementById('tv-btn');
-      tvBtn.onclick = () => {
-        state.isTV = !state.isTV;
-        if (state.isTV) {
-          document.getElementById('game-view').style.display = 'none';
-          document.getElementById('tv-view').classList.add('open');
-          tvBtn.textContent = '📱 Phone View';
-          renderTVBoard();
-        } else {
-          document.getElementById('tv-view').classList.remove('open');
-          document.getElementById('game-view').style.display = 'flex';
-          tvBtn.textContent = '📺 TV Mode';
-        }
-      };
+      const histModal = document.getElementById('history-modal');
+      document.getElementById('open-history-btn').addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+        renderHistory();
+        histModal.classList.remove('hidden');
+      });
+      document.getElementById('close-history').addEventListener('click', () => histModal.classList.add('hidden'));
+      document.getElementById('history-done-btn').addEventListener('click', () => histModal.classList.add('hidden'));
+      document.getElementById('clear-history-btn').addEventListener('click', () => {
+        localStorage.removeItem('clash_history_v35');
+        renderHistory();
+      });
+
+      document.getElementById('play-again-btn').addEventListener('click', resetGame);
     });
   </script>
 </body>
