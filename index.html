@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Lorna: Tactical Duel</title>
+  <title>Clash of Lorna</title>
   
-  <!-- Vector Warrior Crest SVG Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2 L28 7 V16 C28 23 16 30 16 30 C16 30 4 23 4 16 V7 Z' fill='%230f172a' stroke='%2306b6d4' stroke-width='2'/><path d='M16 6 L18 12 L24 14 L18 16 L16 22 L14 16 L8 14 L14 12 Z' fill='%23f43f5e'/><circle cx='16' cy='14' r='2' fill='%23ffffff'/></svg>">
+  <!-- Fierce Female Warrior Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%230f172a' stroke='%2306b6d4' stroke-width='2'/><path d='M16 48 C16 34 22 26 32 26 C42 26 48 34 48 48 Z' fill='%23334155'/><circle cx='32' cy='24' r='11' fill='%23fed7aa'/><path d='M20 18 C22 8 42 8 44 18 C46 26 45 32 45 38 C41 33 39 30 32 30 C25 30 23 33 19 38 C19 32 18 26 20 18 Z' fill='%23d97706'/><path d='M22 21 L32 15 L42 21 L37 23 L32 19 L27 23 Z' fill='%23f59e0b'/><path d='M12 50 L24 38 M52 50 L40 38' stroke='%2338bdf8' stroke-width='3' stroke-linecap='round'/></svg>">
 
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
@@ -30,24 +30,23 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* ================= THEMES ================= */
+    /* Neutral Theme Palettes */
     body.theme-dark {
-      background-color: #0d1117;
+      background-color: #0b0f17;
       color: #e6edf3;
     }
-    body.theme-dark header { background: #161b22; border-bottom: 1px solid #30363d; }
-    body.theme-dark .panel-box { background: #161b22; border: 1px solid #30363d; }
-    body.theme-dark .inner-box { background: #0b0e14; border: 1px solid #30363d; }
-    body.theme-dark .cell { background: #161b22; border: 1px solid #282e38; }
-    body.theme-dark .cell:hover { background: #21262d; }
-    body.theme-dark .cell.obstacle { background: #484f58; border: 1px solid #6e7681; color: #c9d1d9; }
-    body.theme-dark button { background: #21262d; color: #e6edf3; border: 1px solid #363b42; }
-    body.theme-dark button:hover { background: #30363d; }
-    body.theme-dark .input-field { background: #0d1117; border: 1px solid #30363d; color: #f0f6fc; }
-    body.theme-dark .avatar-sprite-wrap { background: #161b22; border: 2px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    body.theme-dark header { background: #131924; border-bottom: 1px solid #242d3d; }
+    body.theme-dark .panel-box { background: #131924; border: 1px solid #242d3d; }
+    body.theme-dark .inner-box { background: #070a0f; border: 1px solid #242d3d; }
+    body.theme-dark .cell { background: #131924; border: 1px solid #1f2736; }
+    body.theme-dark .cell:hover { background: #1b2333; }
+    body.theme-dark .cell.obstacle { background: #3b4454; border: 1px solid #576275; color: #cbd5e1; }
+    body.theme-dark button { background: #1d2535; color: #f1f5f9; border: 1px solid #2f3b52; }
+    body.theme-dark button:hover { background: #28344a; }
+    body.theme-dark .input-field { background: #070a0f; border: 1px solid #242d3d; color: #f0f6fc; }
 
     body.theme-light {
-      background-color: #eef2f6;
+      background-color: #edf2f7;
       color: #1e293b;
     }
     body.theme-light header { background: #ffffff; border-bottom: 1px solid #cbd5e1; }
@@ -59,17 +58,14 @@
     body.theme-light button { background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; }
     body.theme-light button:hover { background: #e2e8f0; }
     body.theme-light .input-field { background: #ffffff; border: 1.5px solid #cbd5e1; color: #0f172a; }
-    body.theme-light .brand-sub, 
-    body.theme-light .turn-status, 
-    body.theme-light .tray-bar, 
-    body.theme-light .setting-label { color: #64748b; }
-    body.theme-light .avatar-sprite-wrap { background: #ffffff; border: 2px solid #cbd5e1; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12); }
+    body.theme-light .brand-sub, body.theme-light .turn-status, body.theme-light .tray-bar, body.theme-light .setting-label { color: #64748b; }
 
     body {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
+      perspective: 1200px;
     }
 
     /* Top Bar */
@@ -81,28 +77,30 @@
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
-      z-index: 30;
+      z-index: 40;
       position: relative;
     }
 
     .brand-wrap {
       display: flex;
       align-items: center;
-      gap: 9px;
+      gap: 10px;
     }
 
-    .crest-icon-svg {
-      width: 26px;
-      height: 26px;
-      filter: drop-shadow(0 2px 5px rgba(6, 182, 212, 0.4));
+    /* Realistic Fierce Warrior Logo */
+    .warrior-logo-svg {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 6px rgba(6, 182, 212, 0.45));
     }
 
     .brand-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 900;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
       line-height: 1;
-      background: linear-gradient(135deg, #06b6d4 0%, #f43f5e 100%);
+      background: linear-gradient(135deg, #22d3ee 0%, #fb7185 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -159,7 +157,7 @@
       color: #ffffff !important;
     }
 
-    /* Compact Top-Right Room Code Bar Under Settings */
+    /* Small Room Join Box Tucked Under Settings in Top-Right */
     .top-right-join-bar {
       display: flex;
       align-items: center;
@@ -167,9 +165,10 @@
       position: absolute;
       top: 48px;
       right: 14px;
-      z-index: 25;
-      padding: 4px 6px;
+      z-index: 35;
+      padding: 3px 6px;
       border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
 
     .top-join-input {
@@ -216,6 +215,7 @@
       gap: 10px;
       flex-shrink: 0;
       margin-top: 2px;
+      z-index: 20;
     }
 
     .score-card {
@@ -255,7 +255,7 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
 
     .turn-status {
@@ -268,7 +268,7 @@
       font-weight: 900;
     }
 
-    /* Status Banner */
+    /* Banner for PvP Notifications */
     #banner {
       display: none;
       font-size: 11px;
@@ -282,6 +282,7 @@
       justify-content: center;
       gap: 8px;
       margin-top: 2px;
+      z-index: 20;
     }
 
     .banner-waiting {
@@ -300,7 +301,7 @@
     }
     body.theme-dark .banner-connected { color: #34d399 !important; }
 
-    /* ================= FULL-SCREEN DROP-DOWN AVATAR ARENA ================= */
+    /* ================= REALISTIC 3D FLOATING DROP AVATARS ================= */
     .arena-container {
       width: 100%;
       flex: 1 1 auto;
@@ -312,83 +313,151 @@
       padding: 4px 0;
     }
 
-    /* Side avatar drop columns anchored to the screen bounds */
-    .avatar-drop-column {
+    /* Left & Right Drop Shafts (Above Page Layer) */
+    .avatar-drop-shaft {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 70px;
+      width: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
       pointer-events: none;
-      z-index: 10;
+      z-index: 100; /* Floats visually above page elements */
     }
 
-    .avatar-drop-column.left-side {
-      left: max(6px, calc(50% - 340px));
+    .avatar-drop-shaft.left-flank {
+      left: max(4px, calc(50% - 350px));
     }
 
-    .avatar-drop-column.right-side {
-      right: max(6px, calc(50% - 340px));
+    .avatar-drop-shaft.right-flank {
+      right: max(4px, calc(50% - 350px));
     }
 
-    @media (max-width: 580px) {
-      .avatar-drop-column { display: none; }
+    @media (max-width: 620px) {
+      .avatar-drop-shaft { display: none; }
     }
 
-    .avatar-sprite-wrap {
+    /* 3D Realistic Character Cards with Metal Bezel */
+    .realistic-warrior-card {
       position: absolute;
-      top: -120px;
-      width: 60px;
+      top: -180px; /* Off-screen start */
+      width: 72px;
       border-radius: 14px;
-      padding: 8px 4px;
+      padding: 8px 4px 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 4px;
       text-align: center;
       pointer-events: auto;
+      transform-style: preserve-3d;
+      will-change: top, transform, filter;
     }
 
-    .avatar-sprite-wrap.dropping {
-      animation: retroDropBounce 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    #avatar1.realistic-warrior-card {
+      background: linear-gradient(145deg, rgba(14, 116, 144, 0.95), rgba(8, 51, 68, 0.95));
+      border: 2px solid #22d3ee;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(6, 182, 212, 0.45);
     }
 
-    @keyframes retroDropBounce {
+    #avatar2.realistic-warrior-card {
+      background: linear-gradient(145deg, rgba(190, 18, 60, 0.95), rgba(76, 5, 25, 0.95));
+      border: 2px solid #fb7185;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(244, 63, 94, 0.45);
+    }
+
+    /* Dropping Animation with Gravity Acceleration & Ground Slam */
+    .dropping-active {
+      animation: gravitySlam 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes gravitySlam {
       0% {
-        top: -120px;
+        top: -200px;
+        transform: translateY(0) scale(0.85) rotateX(25deg);
         opacity: 0;
+        filter: blur(4px);
       }
-      65% {
-        top: calc(50% + 20px);
+      50% {
         opacity: 1;
+        filter: blur(1px);
       }
-      82% {
-        top: calc(50% - 15px);
+      72% {
+        top: calc(50% + 35px);
+        transform: translateY(0) scale(1.08, 0.88) rotateX(0deg); /* Impact squash */
+        filter: blur(0);
+      }
+      85% {
+        top: calc(50% - 18px);
+        transform: translateY(0) scale(0.96, 1.04); /* Rebound stretch */
       }
       100% {
-        top: calc(50% - 25px);
+        top: calc(50% - 15px);
+        transform: translateY(0) scale(1, 1);
         opacity: 1;
+        filter: blur(0);
       }
     }
 
-    .avatar-icon-large {
-      font-size: 32px;
-      line-height: 1;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    /* SVG Character Illustration Container */
+    .warrior-art-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 
-    .avatar-name-label {
+    .warrior-art-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .warrior-name-tag {
       font-size: 10px;
       font-weight: 800;
-      max-width: 54px;
+      color: #ffffff;
+      max-width: 62px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
     }
 
-    /* Balanced 8x8 Board Frame */
+    /* Dynamic Ground Shockwave Ring */
+    .impact-shockwave {
+      position: absolute;
+      width: 60px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #22d3ee;
+      opacity: 0;
+      pointer-events: none;
+      top: calc(50% + 40px);
+    }
+
+    .impact-shockwave.slamming {
+      animation: shockwaveExpand 0.6s ease-out 0.72s forwards;
+    }
+
+    @keyframes shockwaveExpand {
+      0% {
+        transform: scale(0.3);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(2.2);
+        opacity: 0;
+      }
+    }
+
+    /* ================= 8x8 BOARD FRAME ================= */
     #board {
       width: min(90vw, calc(100dvh - 255px), 520px);
       height: min(90vw, calc(100dvh - 255px), 520px);
@@ -451,7 +520,7 @@
       flex-direction: column;
       gap: 3px;
       margin-bottom: 2px;
-      z-index: 5;
+      z-index: 10;
     }
 
     .tray-bar {
@@ -500,7 +569,7 @@
       opacity: 0.2;
     }
 
-    /* Floating Drag Element */
+    /* Floating Touch / Mouse Drag Ghost */
     #drag-ghost {
       position: fixed;
       pointer-events: none;
@@ -518,7 +587,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(4px);
-      z-index: 50;
+      z-index: 200;
       align-items: center;
       justify-content: center;
       padding: 16px;
@@ -635,7 +704,7 @@
     #tv-board-grid {
       width: min(84vmin, 600px);
       height: min(84vmin, 600px);
-      background: #030712;
+      background: #070a0f;
       border: 4px solid #4f46e5;
       border-radius: 20px;
       padding: 8px;
@@ -650,17 +719,37 @@
 
   <div id="drag-ghost"></div>
 
-  <!-- Top Bar with Custom Crest & Title -->
+  <!-- Top Bar with Fierce Female Warrior Branding -->
   <header>
     <div class="brand-wrap">
-      <!-- High-Resolution Shield Crest SVG -->
-      <svg class="crest-icon-svg" viewBox="0 0 32 32">
-        <path d="M16 2 L28 7 V16 C28 23 16 30 16 30 C16 30 4 23 4 16 V7 Z" fill="#0f172a" stroke="#06b6d4" stroke-width="2"/>
-        <path d="M16 6 L18 12 L24 14 L18 16 L16 22 L14 16 L8 14 L14 12 Z" fill="#f43f5e"/>
-        <circle cx="16" cy="14" r="2" fill="#ffffff"/>
+      <!-- Detailed Vector Fierce Warrior SVG Logo -->
+      <svg class="warrior-logo-svg" viewBox="0 0 64 64">
+        <defs>
+          <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f59e0b" />
+            <stop offset="100%" stop-color="#b45309" />
+          </linearGradient>
+          <linearGradient id="armorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#0284c7" />
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="30" fill="#0f172a" stroke="#06b6d4" stroke-width="2.5"/>
+        <path d="M16 52 C16 36 22 28 32 28 C42 28 48 36 48 52 Z" fill="#334155"/>
+        <path d="M26 38 L32 46 L38 38 Z" fill="url(#armorGrad)"/>
+        <circle cx="32" cy="24" r="11" fill="#fed7aa"/>
+        <!-- Fierce Eyes & Warpaint -->
+        <path d="M26 23 L30 25 M38 23 L34 25" stroke="#0f172a" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M25 26 L29 27 M39 26 L35 27" stroke="#f43f5e" stroke-width="1.5"/>
+        <!-- Flowing Red-Gold Hair & Crown Diadem -->
+        <path d="M19 18 C22 6 42 6 45 18 C47 26 46 34 46 40 C42 34 40 31 32 31 C24 31 22 34 18 40 C18 34 17 26 19 18 Z" fill="url(#hairGrad)"/>
+        <path d="M22 20 L32 14 L42 20 L37 22 L32 18 L27 22 Z" fill="#fbbf24" stroke="#d97706" stroke-width="0.8"/>
+        <!-- Crossed Blades Behind Head -->
+        <path d="M10 52 L26 36 M54 52 L38 36" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/>
       </svg>
+
       <div>
-        <div class="brand-title">LORNA : CLASH</div>
+        <div class="brand-title">CLASH OF LORNA</div>
         <div class="brand-sub">
           <span id="mode-label">Pass &amp; Play</span> •
           <span id="level-label" class="badge-sub">Lvl 1</span> •
@@ -717,25 +806,48 @@
       <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 7px; font-size:10px;">📲 Share Link</button>
     </div>
 
-    <!-- Arena Container with Full-Screen Drop-Down Avatar Flanks -->
+    <!-- Arena with 3D Drop-Down Character Cards Floating Over Screen -->
     <div class="arena-container">
-      <!-- Player 1 Dropping Sprite Flank -->
-      <div class="avatar-drop-column left-side">
-        <div id="avatar1" class="avatar-sprite-wrap dropping">
-          <span class="avatar-icon-large" id="p1-flank-avatar">🧝‍♀️</span>
-          <span class="avatar-name-label" id="p1-flank-name">P1</span>
+      <!-- Player 1 Dropping Column -->
+      <div class="avatar-drop-shaft left-flank">
+        <div id="avatar1" class="realistic-warrior-card dropping-active">
+          <div class="warrior-art-box">
+            <!-- Lorna Valkyrie Avatar -->
+            <svg class="warrior-art-svg" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="28" fill="#083344"/>
+              <path d="M18 54 C18 38 24 30 32 30 C40 30 46 38 46 54 Z" fill="#0284c7"/>
+              <circle cx="32" cy="24" r="10" fill="#fed7aa"/>
+              <path d="M20 20 C22 10 42 10 44 20 C46 28 44 34 44 42 C40 35 38 32 32 32 C26 32 24 35 20 42 Z" fill="#f59e0b"/>
+              <path d="M24 22 L32 16 L40 22 L36 24 L32 20 L28 24 Z" fill="#38bdf8"/>
+              <circle cx="28" cy="24" r="1.5" fill="#0f172a"/><circle cx="36" cy="24" r="1.5" fill="#0f172a"/>
+            </svg>
+          </div>
+          <span class="warrior-name-tag" id="p1-flank-name">Lorna</span>
         </div>
+        <div id="shockwave1" class="impact-shockwave slamming" style="border-color:#22d3ee;"></div>
       </div>
 
       <!-- Maximized 8x8 Board Frame -->
       <div id="board" class="inner-box"></div>
 
-      <!-- Player 2 Dropping Sprite Flank -->
-      <div class="avatar-drop-column right-side">
-        <div id="avatar2" class="avatar-sprite-wrap dropping">
-          <span class="avatar-icon-large" id="p2-flank-avatar">⚔️</span>
-          <span class="avatar-name-label" id="p2-flank-name">P2</span>
+      <!-- Player 2 Dropping Column -->
+      <div class="avatar-drop-shaft right-flank">
+        <div id="avatar2" class="realistic-warrior-card dropping-active">
+          <div class="warrior-art-box">
+            <!-- Rival Armored Vanguard Avatar -->
+            <svg class="warrior-art-svg" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="28" fill="#4c0519"/>
+              <path d="M18 54 C18 38 24 30 32 30 C40 30 46 38 46 54 Z" fill="#be123c"/>
+              <circle cx="32" cy="24" r="10" fill="#fecdd3"/>
+              <!-- Armored Helmet Visor -->
+              <path d="M22 16 C22 10 42 10 42 16 L44 28 L32 34 L20 28 Z" fill="#9f1239"/>
+              <path d="M24 23 L40 23 L32 26 Z" fill="#fb7185"/>
+              <path d="M32 10 L32 20" stroke="#f43f5e" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="warrior-name-tag" id="p2-flank-name">Rival</span>
         </div>
+        <div id="shockwave2" class="impact-shockwave slamming" style="border-color:#fb7185;"></div>
       </div>
     </div>
 
@@ -753,8 +865,8 @@
   <div id="join-invite-modal" class="modal">
     <div class="modal-box panel-box" style="text-align: center; align-items: center; border: 2px solid #06b6d4;">
       <div style="font-size: 34px;">⚔️</div>
-      <h3 style="font-size: 16px; font-weight: 800; color: #22d3ee;">Arena Challenge Received!</h3>
-      <p style="font-size: 12px; color: #94a3b8;">You've been invited to duel in Lorna: Clash.</p>
+      <h3 style="font-size: 16px; font-weight: 800; color: #22d3ee;">Challenge Received!</h3>
+      <p style="font-size: 12px; color: #94a3b8;">You've been invited to duel in Clash of Lorna.</p>
 
       <div style="width:100%; display:flex; flex-direction:column; gap:4px; text-align:left;">
         <span class="setting-label">Your Name</span>
@@ -897,7 +1009,7 @@
 
       <!-- Instructions Toggle -->
       <div class="setting-row">
-        <button id="open-rules-btn" style="background:#1e293b; border-color:#334155; color:#38bdf8; padding:7px;">
+        <button id="open-rules-btn" style="background:#1d2535; border-color:#2f3b52; color:#38bdf8; padding:7px;">
           📖 How to Play &amp; Controls
         </button>
       </div>
@@ -1138,13 +1250,23 @@
     function triggerDropAnimation() {
       var av1 = document.getElementById('avatar1');
       var av2 = document.getElementById('avatar2');
+      var sw1 = document.getElementById('shockwave1');
+      var sw2 = document.getElementById('shockwave2');
+
       if (av1 && av2) {
-        av1.classList.remove('dropping');
-        av2.classList.remove('dropping');
+        av1.classList.remove('dropping-active');
+        av2.classList.remove('dropping-active');
+        if (sw1) sw1.classList.remove('slamming');
+        if (sw2) sw2.classList.remove('slamming');
+
         void av1.offsetWidth;
         void av2.offsetWidth;
-        av1.classList.add('dropping');
-        av2.classList.add('dropping');
+
+        av1.classList.add('dropping-active');
+        av2.classList.add('dropping-active');
+        if (sw1) sw1.classList.add('slamming');
+        if (sw2) sw2.classList.add('slamming');
+
         playSfx('slam');
       }
     }
@@ -1741,10 +1863,9 @@
         p1Status.textContent = 'WAITING';
       }
 
+      // Display Player Names & Avatars
       document.getElementById('p1-display-avatar').textContent = state.playerAvatars[1];
       document.getElementById('p2-display-avatar').textContent = state.mode === 'bot' ? '🤖' : state.playerAvatars[2];
-      document.getElementById('p1-flank-avatar').textContent = state.playerAvatars[1];
-      document.getElementById('p2-flank-avatar').textContent = state.mode === 'bot' ? '🤖' : state.playerAvatars[2];
       document.getElementById('p1-flank-name').textContent = state.playerNames[1];
       document.getElementById('p2-flank-name').textContent = state.mode === 'bot' ? 'Bot' : state.playerNames[2];
 
@@ -1847,8 +1968,8 @@
       var joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
       if (navigator.share) {
         navigator.share({
-          title: 'Lorna: Tactical Duel',
-          text: 'Challenge me in Lorna: Tactical Duel! Room Code: ' + code,
+          title: 'Clash of Lorna',
+          text: 'Challenge me in Clash of Lorna! Room Code: ' + code,
           url: joinUrl
         }).catch(function() {});
       } else if (navigator.clipboard) {
@@ -2228,7 +2349,7 @@
         }
       };
 
-      // Direct Link Joins (?room=ID)
+      // Handle Direct Link Joins (?room=ID)
       var params = new URLSearchParams(window.location.search);
       var roomParam = params.get('room');
       if (roomParam) {
