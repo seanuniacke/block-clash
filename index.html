@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -259,7 +259,7 @@
     }
     body.theme-dark .banner-connected { color: #34d399 !important; }
 
-    /* Arena & Dynamic Board Auto-Sizing */
+    /* Arena & Board */
     .arena-container {
       width: 100%;
       flex: 1 1 auto;
@@ -381,7 +381,6 @@
       opacity: 0.2;
     }
 
-    /* Floating Touch / Mouse Drag Ghost */
     #drag-ghost {
       position: fixed;
       pointer-events: none;
@@ -392,7 +391,7 @@
       filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.65));
     }
 
-    /* Modals */
+    /* ================= MODAL FIXES (FULL SCROLLING & ACCESSIBILITY) ================= */
     .modal {
       display: none;
       position: fixed;
@@ -402,23 +401,27 @@
       z-index: 200;
       align-items: center;
       justify-content: center;
-      padding: 14px;
+      padding: 12px;
+      overflow: hidden;
     }
 
     .modal.open {
       display: flex;
     }
 
+    /* Strict max-height and flex-direction to guarantee bottom scrolling */
     .modal-box {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
+      max-height: 86dvh;
       border-radius: 16px;
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      max-height: 90vh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     .modal-header {
@@ -426,8 +429,24 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-      padding-bottom: 6px;
+      padding-bottom: 8px;
+      position: sticky;
+      top: -16px;
+      z-index: 10;
+      margin-top: -4px;
     }
+    body.theme-dark .modal-header { background: #131924; }
+    body.theme-light .modal-header { background: #ffffff; }
+
+    .modal-footer {
+      position: sticky;
+      bottom: -16px;
+      padding-top: 8px;
+      margin-bottom: -4px;
+      z-index: 10;
+    }
+    body.theme-dark .modal-footer { background: #131924; border-top: 1px solid rgba(148, 163, 184, 0.25); }
+    body.theme-light .modal-footer { background: #ffffff; border-top: 1px solid rgba(148, 163, 184, 0.25); }
 
     .setting-row {
       display: flex;
@@ -581,7 +600,7 @@
 
   <!-- Main Game Arena -->
   <main id="game-view">
-    <!-- Scoreboard (Completely visible, no overlay) -->
+    <!-- Scoreboard -->
     <div class="scoreboard">
       <div id="p1-card" class="panel-box score-card active-p1">
         <div>
@@ -644,7 +663,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal (Includes Clean Online Room Connect) -->
+  <!-- Settings Modal (Scrollable with Fixed Header and Footer) -->
   <div id="settings-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
@@ -652,11 +671,11 @@
         <button id="close-modal-x">✕</button>
       </div>
 
-      <!-- Quick Room Join Directly Inside Settings -->
+      <!-- Quick Room Join -->
       <div class="setting-row" style="background: rgba(6,182,212,0.08); padding: 8px; border-radius: 8px; border: 1px solid rgba(6,182,212,0.25);">
         <span class="setting-label" style="color: #06b6d4;">Direct Room Code Join</span>
         <div style="display: flex; gap: 6px;">
-          <input type="text" id="modal-room-input" class="input-field" placeholder="ENTER 4-DIGIT CODE" maxlength="12" style="flex:1; text-transform:uppercase; font-size:12px;" />
+          <input type="text" id="modal-room-input" class="input-field" placeholder="ROOM CODE" maxlength="12" style="flex:1; text-transform:uppercase; font-size:12px;" />
           <button id="modal-join-btn" style="background:#0284c7; border-color:#0ea5e9; color:#fff; padding: 0 14px;">Join</button>
         </div>
       </div>
@@ -792,7 +811,9 @@
         <button id="sound-btn" style="background:#083344; border-color:#06b6d4; color:#22d3ee;">🔊 Sound: ON</button>
       </div>
 
-      <button id="close-modal-bottom" style="background:#4f46e5; border-color:#6366f1; color:white; padding:8px;">Done / Resume</button>
+      <div class="modal-footer">
+        <button id="close-modal-bottom" style="width: 100%; background:#4f46e5; border-color:#6366f1; color:white; padding:10px; font-weight: 800;">Done / Resume</button>
+      </div>
     </div>
   </div>
 
@@ -822,7 +843,7 @@
           <p style="color:#94a3b8; font-size:11px;">Levels 2 to 6 feature indestructible stone obstacles that cannot be cleared by line clears, creating strategic chokepoints.</p>
         </div>
       </div>
-      <button id="close-rules-btn" style="background:#334155; color:#fff; padding:8px;">Back to Settings</button>
+      <button id="close-rules-btn" style="background:#334155; color:#fff; padding:8px; margin-top: 6px;">Back to Settings</button>
     </div>
   </div>
 
@@ -865,7 +886,7 @@
       </button>
     </div>
   </div>
-    <script>
+  <script>
     // Audio Synthesizer
     var soundEnabled = true;
     var audioCtx = null;
@@ -967,6 +988,7 @@
       trayPieces: [null, null, null],
       gameOver: false,
       isTV: false,
+      botThinking: false,
       peer: null,
       conn: null,
       myPlayerNum: 1,
@@ -1125,7 +1147,7 @@
     }
 
     function handleDragStart(clientX, clientY, piece, idx, slotEl) {
-      if (state.gameOver) return;
+      if (state.gameOver || state.botThinking) return;
       if (state.mode === 'bot' && state.currentPlayer === 2) return;
       if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
 
@@ -1339,7 +1361,8 @@
     }
 
     function onCellClick(r, c) {
-      if (state.gameOver) return;
+      if (state.gameOver || state.botThinking) return;
+      if (state.mode === 'bot' && state.currentPlayer === 2) return;
       if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
       if (state.selectedPieceIdx === null) return;
       var piece = state.trayPieces[state.selectedPieceIdx];
@@ -1351,6 +1374,7 @@
       commitDrop(piece, fit.r, fit.c, state.selectedPieceIdx);
     }
 
+    // Fixed: Guaranteed persistent piece placement, correct line-clear logic, and robust bot triggering
     function commitDrop(piece, r, c, slotIdx, isRemote) {
       var placedBlocks = 0;
       var m = piece.matrix;
@@ -1368,8 +1392,10 @@
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
 
+      // Check and clear ONLY completely filled lines
       checkLines();
 
+      // Check points race target immediately
       if (state.winCondition === 'race' && state.scores[state.currentPlayer] >= state.targetScore) {
         if (!isRemote && state.conn && state.conn.open) {
           state.conn.send({
@@ -1382,6 +1408,8 @@
             scores: state.scores
           });
         }
+        renderBoardDOM();
+        updateUI();
         triggerWin(state.currentPlayer, 'Reached the target goal of ' + state.targetScore + ' points!');
         return;
       }
@@ -1408,48 +1436,68 @@
         renderTrayDOM();
       }
 
-      state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
-      updateUI();
+      // Render board with placed piece retained
       renderBoardDOM();
       if (state.isTV) renderTVBoard();
 
-      checkEnd();
+      // Switch turn
+      state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+      updateUI();
 
-      if (!state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
-        setTimeout(botTurn, 400);
+      var isEnded = checkEnd();
+
+      // Fire Bot move if active and not game over
+      if (!isEnded && !state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
+        state.botThinking = true;
+        setTimeout(botTurn, 450);
       }
     }
 
+    // Fixed: Strict row & column validation ensuring pieces stay on board unless lines are full
     function checkLines() {
-      var rows = [];
-      var cols = [];
+      var rowsToClear = [];
+      var colsToClear = [];
+
       for (var r = 0; r < 8; r++) {
-        var rowFull = true;
+        var rowFilled = true;
         for (var c = 0; c < 8; c++) {
-          if (state.grid[r][c] === 0) { rowFull = false; break; }
+          if (state.grid[r][c] === 0) {
+            rowFilled = false;
+            break;
+          }
         }
-        if (rowFull) rows.push(r);
-      }
-      for (var col = 0; col < 8; col++) {
-        var colFull = true;
-        for (var row = 0; row < 8; row++) {
-          if (state.grid[row][col] === 0) { colFull = false; break; }
-        }
-        if (colFull) cols.push(col);
+        if (rowFilled) rowsToClear.push(r);
       }
 
-      var total = rows.length + cols.length;
-      if (total > 0) {
+      for (var c = 0; c < 8; c++) {
+        var colFilled = true;
+        for (var r = 0; r < 8; r++) {
+          if (state.grid[r][c] === 0) {
+            colFilled = false;
+            break;
+          }
+        }
+        if (colFilled) colsToClear.push(c);
+      }
+
+      var totalLines = rowsToClear.length + colsToClear.length;
+      if (totalLines > 0) {
         playSfx('clear');
-        state.scores[state.currentPlayer] += total * 100;
-        rows.forEach(function(r) {
-          for (var c = 0; c < 8; c++) {
-            if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
+        state.scores[state.currentPlayer] += totalLines * 100;
+
+        rowsToClear.forEach(function(r) {
+          for (var col = 0; col < 8; col++) {
+            if (state.grid[r][col] !== 99) { // Preserve indestructible bedrock obstacles
+              state.grid[r][col] = 0;
+            }
           }
         });
-        cols.forEach(function(c) {
-          for (var r = 0; r < 8; r++) {
-            if (state.grid[r][c] !== 99) state.grid[r][c] = 0;
+
+        colsToClear.forEach(function(c) {
+          for (var row = 0; row < 8; row++) {
+            if (state.grid[row][c] !== 99) {
+              state.grid[row][c] = 0;
+            }
           }
         });
       }
@@ -1498,6 +1546,7 @@
 
     function triggerWin(winnerNum, reason) {
       state.gameOver = true;
+      state.botThinking = false;
       playSfx('win');
       recordMatchHistory(winnerNum);
 
@@ -1521,16 +1570,16 @@
       if (state.winCondition === 'race') {
         if (state.scores[1] >= state.targetScore) {
           triggerWin(1, 'Hit the target goal of ' + state.targetScore + ' points!');
-          return;
+          return true;
         }
         if (state.scores[2] >= state.targetScore) {
           triggerWin(2, 'Hit the target goal of ' + state.targetScore + ' points!');
-          return;
+          return true;
         }
       }
 
       var available = state.trayPieces.filter(function(p) { return p !== null; });
-      if (available.length === 0) return;
+      if (available.length === 0) return false;
 
       var canMove = false;
       for (var i = 0; i < available.length; i++) {
@@ -1548,15 +1597,27 @@
         var winner = state.currentPlayer === 1 ? 2 : 1;
         var loserName = state.playerNames[state.currentPlayer];
         triggerWin(winner, loserName + ' was trapped with no legal moves left.');
+        return true;
       }
+      return false;
     }
 
+    // Fixed: Bot turn execution properly finds valid moves and commits
     function botTurn() {
+      if (state.gameOver || state.currentPlayer !== 2) {
+        state.botThinking = false;
+        return;
+      }
+
       var available = [];
       state.trayPieces.forEach(function(piece, idx) {
         if (piece) available.push({ piece: piece, idx: idx });
       });
-      if (available.length === 0) return;
+
+      if (available.length === 0) {
+        state.botThinking = false;
+        return;
+      }
 
       var moves = [];
       for (var i = 0; i < available.length; i++) {
@@ -1570,9 +1631,11 @@
         }
       }
 
+      state.botThinking = false;
+
       if (moves.length > 0) {
-        var move = moves[Math.floor(Math.random() * moves.length)];
-        commitDrop(move.piece, move.r, move.c, move.slot);
+        var chosenMove = moves[Math.floor(Math.random() * moves.length)];
+        commitDrop(chosenMove.piece, chosenMove.r, chosenMove.c, chosenMove.slot);
       } else {
         checkEnd();
       }
@@ -1618,7 +1681,7 @@
 
         if (!state.isConnected) {
           banner.className = 'panel-box banner-waiting';
-          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for player)';
+          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for rival)';
           shareAgainBtn.style.display = 'inline-block';
         } else {
           banner.className = 'panel-box banner-connected';
@@ -1644,6 +1707,7 @@
       state.scores = { 1: 0, 2: 0 };
       state.currentPlayer = 1;
       state.gameOver = false;
+      state.botThinking = false;
       document.getElementById('gameover-modal').classList.remove('open');
       initBoard();
       replenishTray();
@@ -2097,5 +2161,6 @@
 </body>
 </html>
 
+ 
 
-  
+ 
