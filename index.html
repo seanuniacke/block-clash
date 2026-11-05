@@ -29,7 +29,7 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* Themes */
+    /* Neutral Themes */
     body.theme-dark {
       background-color: #0b0f17;
       color: #e6edf3;
@@ -259,7 +259,7 @@
     }
     body.theme-dark .banner-connected { color: #34d399 !important; }
 
-    /* Arena & Dynamic Board */
+    /* Arena & Dynamic Board Auto-Sizing */
     .arena-container {
       width: 100%;
       flex: 1 1 auto;
@@ -391,7 +391,7 @@
       filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.65));
     }
 
-    /* Modals & Popups */
+    /* Modals & Full Scrolling Controls */
     .modal {
       display: none;
       position: fixed;
@@ -577,7 +577,7 @@
       <div style="min-width:0;">
         <div class="brand-title">CLASH OF LORNA</div>
         <div class="brand-sub">
-          <span id="mode-label">Pass &amp; Play</span> •
+          <span id="mode-label">vs AI Bot</span> •
           <span id="level-label" class="badge-sub">Lvl 1</span> •
           <span id="winrule-label" class="badge-sub">🪤 Survival</span>
         </div>
@@ -603,7 +603,7 @@
     <div class="scoreboard">
       <div id="p1-card" class="panel-box score-card active-p1">
         <div>
-          <div class="player-tag" style="color: #0891b2;" id="p1-title"><span id="p1-display-avatar">🧝‍♀️</span> Player 1 ✏️</div>
+          <div class="player-tag" style="color: #0891b2;" id="p1-title"><span id="p1-display-avatar">🧝‍♀️</span> <span id="p1-name-display">Lorna</span> ✏️</div>
           <div class="turn-status" id="p1-status">YOUR TURN</div>
         </div>
         <div class="score-val" id="p1-score" style="color: #0891b2;">0</div>
@@ -611,7 +611,7 @@
 
       <div id="p2-card" class="panel-box score-card waiting">
         <div>
-          <div class="player-tag" id="p2-name" style="color: #e11d48;"><span id="p2-display-avatar">⚔️</span> Player 2 ✏️</div>
+          <div class="player-tag" id="p2-name" style="color: #e11d48;"><span id="p2-display-avatar">🤖</span> <span id="p2-name-display">Bot</span></div>
           <div class="turn-status" id="p2-status">WAITING</div>
         </div>
         <div class="score-val" id="p2-score" style="color: #e11d48;">0</div>
@@ -639,21 +639,24 @@
     </div>
   </main>
 
-  <!-- FIRST-TIME ONBOARDING & WELCOME MODAL -->
+  <!-- POP-UP ON FIRST TIME APP LOAD -->
   <div id="welcome-modal" class="modal">
-    <div class="modal-box panel-box" style="border: 2px solid #06b6d4;">
-      <div style="text-align:center;">
-        <div style="font-size: 38px;">⚔️</div>
-        <h2 style="font-size: 18px; font-weight: 900; color: #22d3ee; margin-top: 4px;">Welcome to Clash of Lorna!</h2>
-        <p style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Set your warrior profile and select your battle mode.</p>
+    <div class="modal-box panel-box" style="border: 2px solid #06b6d4; text-align: center;">
+      <div style="font-size: 38px;">🧝‍♀️</div>
+      <h2 style="font-size: 18px; font-weight: 900; color: #22d3ee; margin-top: 2px;">Welcome to Clash of Lorna!</h2>
+      <p style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Choose your game mode to begin.</p>
+
+      <!-- Returning player greeting indicator -->
+      <div id="returning-user-notice" style="display:none; background:rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); border-radius:8px; padding:6px; font-size:11px; color:#22d3ee; margin-top:4px;">
+        Welcome back, <b id="welcome-returning-name">Lorna</b>!
       </div>
 
-      <div class="setting-row" style="margin-top: 6px;">
+      <div class="setting-row" style="margin-top: 6px; text-align: left;">
         <span class="setting-label">Your Warrior Name</span>
-        <input type="text" id="welcome-name-input" class="input-field" placeholder="Lorna" maxlength="14" value="Lorna" />
+        <input type="text" id="welcome-name-input" class="input-field" placeholder="Enter your name" maxlength="14" value="Lorna" />
       </div>
 
-      <div class="setting-row">
+      <div class="setting-row" style="text-align: left;">
         <span class="setting-label">Choose Your Avatar</span>
         <div class="avatar-grid" id="welcome-avatar-grid">
           <button class="avatar-opt-btn active-opt" data-avatar="🧝‍♀️">🧝‍♀️</button>
@@ -671,8 +674,8 @@
         </div>
       </div>
 
-      <div class="setting-row">
-        <span class="setting-label">Choose Game Mode to Play</span>
+      <div class="setting-row" style="text-align: left;">
+        <span class="setting-label">Select Game Mode To Play</span>
         <div class="btn-group-3">
           <button class="welcome-mode-btn opt-btn active-opt" data-mode="bot">🤖 vs Bot</button>
           <button class="welcome-mode-btn opt-btn" data-mode="pass">👥 Pass &amp; Play</button>
@@ -709,7 +712,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal (Scrollable with Fixed Header and Footer) -->
+  <!-- Settings Modal (Full Scrolling with Fixed Action Footer) -->
   <div id="settings-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
@@ -932,8 +935,7 @@
       </button>
     </div>
   </div>
-
-    <script>
+  <script>
     // Audio Synthesizer
     var soundEnabled = true;
     var audioCtx = null;
@@ -1043,7 +1045,7 @@
       isConnected: false,
       playerNames: {
         1: localStorage.getItem('lorna_name_1') || 'Lorna',
-        2: 'Bot 🤖'
+        2: 'Bot'
       },
       playerAvatars: {
         1: localStorage.getItem('lorna_avatar_1') || '🧝‍♀️',
@@ -1089,7 +1091,7 @@
       }
       var lvl = LEVELS[state.currentLevel] || LEVELS[1];
       lvl.obstacles.forEach(function(coord) {
-        state.grid[coord[0]][coord[1]] = 99; // 99 = Bedrock Obstacle
+        state.grid[coord[0]][coord[1]] = 99; // Indestructible Bedrock Obstacle
       });
     }
 
@@ -1138,6 +1140,8 @@
         state.trayPieces[i] = JSON.parse(JSON.stringify(rand));
       }
       state.selectedPieceIdx = null;
+      drag.piece = null;
+      drag.slotIdx = null;
       renderTrayDOM();
     }
 
@@ -1198,17 +1202,18 @@
       if (state.gameOver || state.botThinking) return;
       if (state.mode === 'bot' && state.currentPlayer === 2) return;
       if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
+      if (!state.trayPieces[idx]) return;
 
       updateCellSize();
       drag.active = true;
       drag.hasMoved = false;
       drag.startX = clientX;
       drag.startY = clientY;
-      drag.piece = piece;
+      drag.piece = JSON.parse(JSON.stringify(piece));
       drag.slotIdx = idx;
       drag.slotEl = slotEl;
 
-      buildScaledGhost(piece);
+      buildScaledGhost(drag.piece);
 
       window.addEventListener('touchmove', onTouchMove, { passive: false });
       window.addEventListener('touchend', onTouchEnd, { passive: false });
@@ -1283,22 +1288,28 @@
       if (drag.slotEl) drag.slotEl.classList.remove('dragging-source');
       clearHover();
 
+      var currentSlot = drag.slotIdx;
+      var currentPiece = drag.piece;
+
       if (drag.hasMoved) {
         var offsetY = isTouch ? -68 : 0;
         var cell = getCellAt(x, y + offsetY);
-        if (cell && drag.piece) {
-          var fit = findFit(drag.piece, cell.r, cell.c);
+        if (cell && currentPiece && state.trayPieces[currentSlot]) {
+          var fit = findFit(currentPiece, cell.r, cell.c);
           if (fit) {
-            commitDrop(drag.piece, fit.r, fit.c, drag.slotIdx);
+            commitDrop(currentPiece, fit.r, fit.c, currentSlot);
           }
         }
       } else {
-        state.selectedPieceIdx = (state.selectedPieceIdx === drag.slotIdx) ? null : drag.slotIdx;
-        renderTrayDOM();
+        if (state.trayPieces[currentSlot]) {
+          state.selectedPieceIdx = (state.selectedPieceIdx === currentSlot) ? null : currentSlot;
+          renderTrayDOM();
+        }
       }
 
       drag.active = false;
       drag.piece = null;
+      drag.slotIdx = null;
       drag.slotEl = null;
 
       window.removeEventListener('touchmove', onTouchMove);
@@ -1346,6 +1357,7 @@
     }
 
     function canPlace(piece, targetR, targetC) {
+      if (!piece || !piece.matrix) return false;
       var m = piece.matrix;
       for (var r = 0; r < m.length; r++) {
         for (var c = 0; c < m[r].length; c++) {
@@ -1413,13 +1425,15 @@
       if (state.mode === 'bot' && state.currentPlayer === 2) return;
       if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
       if (state.selectedPieceIdx === null) return;
-      var piece = state.trayPieces[state.selectedPieceIdx];
+      
+      var slotIdx = state.selectedPieceIdx;
+      var piece = state.trayPieces[slotIdx];
       if (!piece) return;
 
       var fit = findFit(piece, r, c);
       if (!fit) return;
 
-      commitDrop(piece, fit.r, fit.c, state.selectedPieceIdx);
+      commitDrop(piece, fit.r, fit.c, slotIdx);
     }
 
     function commitDrop(piece, r, c, slotIdx, isRemote) {
@@ -1438,6 +1452,8 @@
       state.scores[state.currentPlayer] += placedBlocks * 10;
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
+      drag.piece = null;
+      drag.slotIdx = null;
 
       checkLines();
 
@@ -1491,7 +1507,8 @@
 
       if (!isEnded && !state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
         state.botThinking = true;
-        setTimeout(botTurn, 450);
+        updateUI();
+        setTimeout(botTurn, 600);
       }
     }
 
@@ -1512,8 +1529,8 @@
 
       for (var c = 0; c < 8; c++) {
         var colFilled = true;
-        for (var r = 0; r < 8; r++) {
-          if (state.grid[r][c] === 0) {
+        for (var row = 0; row < 8; row++) {
+          if (state.grid[row][c] === 0) {
             colFilled = false;
             break;
           }
@@ -1549,7 +1566,7 @@
         var history = JSON.parse(localStorage.getItem('lorna_history') || '[]');
         var winnerName = state.playerNames[winnerNum] || ('Player ' + winnerNum);
         var p1Name = state.playerNames[1] || 'Player 1';
-        var p2Name = state.mode === 'bot' ? 'Bot 🤖' : (state.playerNames[2] || 'Player 2');
+        var p2Name = state.mode === 'bot' ? 'Bot' : (state.playerNames[2] || 'Player 2');
 
         history.unshift({
           winner: winnerName,
@@ -1643,9 +1660,11 @@
       return false;
     }
 
+    // Fully Autonomous Bot AI Execution Engine
     function botTurn() {
-      if (state.gameOver || state.currentPlayer !== 2) {
+      if (state.gameOver || state.currentPlayer !== 2 || state.mode !== 'bot') {
         state.botThinking = false;
+        updateUI();
         return;
       }
 
@@ -1656,16 +1675,17 @@
 
       if (available.length === 0) {
         state.botThinking = false;
+        updateUI();
         return;
       }
 
-      var moves = [];
+      var legalMoves = [];
       for (var i = 0; i < available.length; i++) {
-        var item = available[i];
+        var slotData = available[i];
         for (var r = 0; r < 8; r++) {
           for (var c = 0; c < 8; c++) {
-            if (canPlace(item.piece, r, c)) {
-              moves.push({ piece: item.piece, slot: item.idx, r: r, c: c });
+            if (canPlace(slotData.piece, r, c)) {
+              legalMoves.push({ piece: slotData.piece, slot: slotData.idx, r: r, c: c });
             }
           }
         }
@@ -1673,8 +1693,8 @@
 
       state.botThinking = false;
 
-      if (moves.length > 0) {
-        var chosenMove = moves[Math.floor(Math.random() * moves.length)];
+      if (legalMoves.length > 0) {
+        var chosenMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
         commitDrop(chosenMove.piece, chosenMove.r, chosenMove.c, chosenMove.slot);
       } else {
         checkEnd();
@@ -1701,22 +1721,22 @@
       } else {
         p2Card.className = 'panel-box score-card active-p2';
         p1Card.className = 'panel-box score-card waiting';
-        p2Status.textContent = state.mode === 'bot' ? 'THINKING' : 'YOUR TURN';
+        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
         p1Status.textContent = 'WAITING';
       }
 
       if (state.mode === 'bot') {
-        state.playerNames[2] = 'Bot 🤖';
+        state.playerNames[2] = 'Bot';
         state.playerAvatars[2] = '🤖';
-      } else if (state.playerNames[2] === 'Bot 🤖') {
+      } else if (state.playerNames[2] === 'Bot') {
         state.playerNames[2] = localStorage.getItem('lorna_name_2') || 'Player 2';
         state.playerAvatars[2] = localStorage.getItem('lorna_avatar_2') || '⚔️';
       }
 
       document.getElementById('p1-display-avatar').textContent = state.playerAvatars[1];
       document.getElementById('p2-display-avatar').textContent = state.playerAvatars[2];
-      document.getElementById('p1-title').innerHTML = state.playerAvatars[1] + ' ' + state.playerNames[1] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
-      document.getElementById('p2-name').innerHTML = state.playerAvatars[2] + ' ' + state.playerNames[2] + (state.mode === 'bot' ? '' : ' <span style="font-size:9px; opacity:0.6;">✏️</span>');
+      document.getElementById('p1-name-display').textContent = state.playerNames[1];
+      document.getElementById('p2-name-display').textContent = state.playerNames[2];
 
       var settingsRoomBox = document.getElementById('settings-room-status');
       var settingsActiveCode = document.getElementById('settings-active-code');
@@ -1745,8 +1765,12 @@
         settingsRoomBox.style.display = 'none';
       }
 
-      var modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', pvp: 'PvP Duel' };
-      document.getElementById('mode-label').textContent = modeNames[state.mode] || 'vs AI Bot';
+      var modeDisplayNames = {
+        'bot': 'vs AI Bot',
+        'pass': 'Pass & Play',
+        'pvp': 'PvP Duel'
+      };
+      document.getElementById('mode-label').textContent = modeDisplayNames[state.mode] || 'vs AI Bot';
       document.getElementById('level-label').textContent = 'Lvl ' + state.currentLevel;
       document.getElementById('winrule-label').textContent = state.winCondition === 'race' ? ('🎯 ' + state.targetScore) : '🪤 Survival';
     }
@@ -1756,6 +1780,9 @@
       state.currentPlayer = 1;
       state.gameOver = false;
       state.botThinking = false;
+      state.selectedPieceIdx = null;
+      drag.piece = null;
+      drag.slotIdx = null;
       document.getElementById('gameover-modal').classList.remove('open');
       initBoard();
       replenishTray();
@@ -1959,6 +1986,7 @@
     }
 
     function promptPlayerName(playerNum) {
+      if (state.mode === 'bot' && playerNum === 2) return;
       var current = state.playerNames[playerNum];
       var next = prompt('Enter name for ' + (playerNum === 1 ? 'Player 1' : 'Player 2'), current);
       if (next && next.trim()) {
@@ -1979,48 +2007,63 @@
       }
     }
 
-    function checkOnboarding() {
-      var isInitialized = localStorage.getItem('lorna_profile_initialized');
-      if (!isInitialized) {
-        var welcomeModal = document.getElementById('welcome-modal');
-        welcomeModal.classList.add('open');
+    // Modal Display Onboarding & Profile Verification
+    function triggerWelcomeModal(isReturning) {
+      var welcomeModal = document.getElementById('welcome-modal');
+      var returningNotice = document.getElementById('returning-user-notice');
+      var nameInput = document.getElementById('welcome-name-input');
+      
+      var savedName = localStorage.getItem('lorna_name_1') || 'Lorna';
+      var savedAvatar = localStorage.getItem('lorna_avatar_1') || '🧝‍♀️';
+      var currentMode = state.mode || 'bot';
 
-        var chosenAvatar = '🧝‍♀️';
-        var chosenMode = 'bot';
+      nameInput.value = savedName;
 
-        document.querySelectorAll('#welcome-avatar-grid .avatar-opt-btn').forEach(function(btn) {
-          btn.onclick = function() {
-            chosenAvatar = btn.dataset.avatar;
-            document.querySelectorAll('#welcome-avatar-grid .avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-            btn.classList.add('active-opt');
-          };
-        });
-
-        document.querySelectorAll('.welcome-mode-btn').forEach(function(btn) {
-          btn.onclick = function() {
-            chosenMode = btn.dataset.mode;
-            document.querySelectorAll('.welcome-mode-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-            btn.classList.add('active-opt');
-          };
-        });
-
-        document.getElementById('welcome-start-btn').onclick = function() {
-          var nameInput = document.getElementById('welcome-name-input').value.trim() || 'Lorna';
-          state.playerNames[1] = nameInput;
-          state.playerAvatars[1] = chosenAvatar;
-          localStorage.setItem('lorna_name_1', nameInput);
-          localStorage.setItem('lorna_avatar_1', chosenAvatar);
-          localStorage.setItem('lorna_profile_initialized', 'true');
-
-          welcomeModal.classList.remove('open');
-          setMode(chosenMode);
-        };
+      if (isReturning) {
+        returningNotice.style.display = 'block';
+        document.getElementById('welcome-returning-name').textContent = savedName;
+      } else {
+        returningNotice.style.display = 'none';
       }
+
+      // Highlight saved avatar
+      document.querySelectorAll('#welcome-avatar-grid .avatar-opt-btn').forEach(function(btn) {
+        btn.classList.toggle('active-opt', btn.dataset.avatar === savedAvatar);
+        btn.onclick = function() {
+          savedAvatar = btn.dataset.avatar;
+          document.querySelectorAll('#welcome-avatar-grid .avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+          btn.classList.add('active-opt');
+        };
+      });
+
+      // Highlight selected starting mode
+      document.querySelectorAll('.welcome-mode-btn').forEach(function(btn) {
+        btn.classList.toggle('active-opt', btn.dataset.mode === currentMode);
+        btn.onclick = function() {
+          currentMode = btn.dataset.mode;
+          document.querySelectorAll('.welcome-mode-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+          btn.classList.add('active-opt');
+        };
+      });
+
+      document.getElementById('welcome-start-btn').onclick = function() {
+        var chosenName = nameInput.value.trim() || 'Lorna';
+        state.playerNames[1] = chosenName;
+        state.playerAvatars[1] = savedAvatar;
+        localStorage.setItem('lorna_name_1', chosenName);
+        localStorage.setItem('lorna_avatar_1', savedAvatar);
+        localStorage.setItem('lorna_profile_initialized', 'true');
+
+        welcomeModal.classList.remove('open');
+        setMode(currentMode);
+      };
+
+      welcomeModal.classList.add('open');
     }
 
     function setupOfflineServiceWorker() {
       if ('serviceWorker' in navigator) {
-        var swCode = "const CACHE_NAME='lorna-duel-v1';const ASSETS=[self.location.href];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))))});";
+        var swCode = "const CACHE_NAME='lorna-duel-v2';const ASSETS=[self.location.href];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))))});";
         var blob = new Blob([swCode], { type: 'application/javascript' });
         var swUrl = URL.createObjectURL(blob);
         navigator.serviceWorker.register(swUrl).catch(function() {});
@@ -2030,6 +2073,7 @@
     function bootGame() {
       applyTheme(state.theme);
 
+      var hasInitialized = localStorage.getItem('lorna_profile_initialized');
       var savedName1 = localStorage.getItem('lorna_name_1') || 'Lorna';
       state.playerNames[1] = savedName1;
       document.getElementById('host-name-input').value = savedName1;
@@ -2038,7 +2082,7 @@
         b.classList.toggle('active-opt', b.dataset.theme === state.pieceTheme);
       });
 
-      document.querySelectorAll('.avatar-opt-btn').forEach(function(b) {
+      document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) {
         b.classList.toggle('active-opt', b.dataset.avatar === state.playerAvatars[1]);
       });
 
@@ -2097,9 +2141,7 @@
       });
 
       document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
-      document.getElementById('p2-card').onclick = function() {
-        if (state.mode !== 'bot') promptPlayerName(2);
-      };
+      document.getElementById('p2-card').onclick = function() { promptPlayerName(2); };
 
       document.getElementById('modal-join-btn').onclick = function() {
         var code = document.getElementById('modal-room-input').value.trim();
@@ -2125,7 +2167,9 @@
         }
       };
 
-      document.getElementById('restart-btn').onclick = resetGame;
+      document.getElementById('restart-btn').onclick = function() {
+        triggerWelcomeModal(true);
+      };
       document.getElementById('gameover-restart-btn').onclick = resetGame;
 
       document.getElementById('opt-pass').onclick = function() { setMode('pass'); };
@@ -2250,9 +2294,11 @@
           playSfx('place');
           joinPvPRoom(roomParam);
         };
+      } else {
+        // Show pop-up on launch to choose mode and verify profile
+        triggerWelcomeModal(hasInitialized ? true : false);
       }
 
-      checkOnboarding();
       setupOfflineServiceWorker();
     }
 
@@ -2261,3 +2307,4 @@
 </body>
 </html>
 
+  
