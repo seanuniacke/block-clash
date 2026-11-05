@@ -1,11 +1,10 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Clash of Lorna</title>
   
-  <!-- Fierce Female Warrior Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%230f172a' stroke='%2306b6d4' stroke-width='2'/><path d='M16 48 C16 34 22 26 32 26 C42 26 48 34 48 48 Z' fill='%23334155'/><circle cx='32' cy='24' r='11' fill='%23fed7aa'/><path d='M20 18 C22 8 42 8 44 18 C46 26 45 32 45 38 C41 33 39 30 32 30 C25 30 23 33 19 38 C19 32 18 26 20 18 Z' fill='%23d97706'/><path d='M22 21 L32 15 L42 21 L37 23 L32 19 L27 23 Z' fill='%23f59e0b'/><path d='M12 50 L24 38 M52 50 L40 38' stroke='%2338bdf8' stroke-width='3' stroke-linecap='round'/></svg>">
 
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -30,7 +29,7 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* Neutral Theme Palettes */
+    /* Themes */
     body.theme-dark {
       background-color: #0b0f17;
       color: #e6edf3;
@@ -65,57 +64,59 @@
       flex-direction: column;
       justify-content: space-between;
       position: relative;
-      perspective: 1200px;
     }
 
     /* Top Bar */
     header {
       width: 100%;
       height: 48px;
-      padding: 0 14px;
+      padding: 0 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
       z-index: 40;
-      position: relative;
+      gap: 6px;
     }
 
     .brand-wrap {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
     }
 
-    /* Realistic Fierce Warrior Logo */
     .warrior-logo-svg {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       flex-shrink: 0;
-      filter: drop-shadow(0 2px 6px rgba(6, 182, 212, 0.45));
+      filter: drop-shadow(0 2px 5px rgba(6, 182, 212, 0.45));
     }
 
     .brand-title {
-      font-size: 16px;
+      font-size: clamp(12px, 3.8vw, 16px);
       font-weight: 900;
-      letter-spacing: 0.8px;
-      line-height: 1;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+      white-space: nowrap;
       background: linear-gradient(135deg, #22d3ee 0%, #fb7185 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .brand-sub {
-      font-size: 10px;
+      font-size: 9px;
       display: flex;
-      gap: 5px;
+      gap: 3px;
       align-items: center;
-      margin-top: 3px;
+      margin-top: 2px;
+      white-space: nowrap;
     }
 
     .badge-sub {
-      font-size: 9px;
-      padding: 1px 5px;
+      font-size: 8.5px;
+      padding: 1px 4px;
       border-radius: 4px;
       background: rgba(6, 182, 212, 0.12);
       border: 1px solid rgba(6, 182, 212, 0.35);
@@ -124,23 +125,16 @@
     }
     body.theme-dark .badge-sub { color: #22d3ee; }
 
-    .header-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-      position: relative;
-    }
-
     .header-btns {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      flex-shrink: 0;
     }
 
     button {
       border-radius: 8px;
-      padding: 5px 10px;
+      padding: 5px 9px;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
@@ -157,46 +151,13 @@
       color: #ffffff !important;
     }
 
-    /* Small Room Join Box Tucked Under Settings in Top-Right */
-    .top-right-join-bar {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      position: absolute;
-      top: 48px;
-      right: 14px;
-      z-index: 35;
-      padding: 3px 6px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    }
-
-    .top-join-input {
-      width: 90px;
-      padding: 3px 6px;
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 800;
-      border-radius: 5px;
-    }
-
-    .btn-top-join {
-      padding: 3px 7px;
-      font-size: 9px;
-      background: #0284c7 !important;
-      border-color: #0ea5e9 !important;
-      color: #fff !important;
-      border-radius: 5px;
-    }
-
     /* Main Container */
     main {
       flex: 1;
       width: 100%;
-      max-width: 860px;
+      max-width: 600px;
       margin: 0 auto;
-      padding: 4px 12px 10px;
+      padding: 2px 10px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -209,10 +170,9 @@
     /* Scoreboard */
     .scoreboard {
       width: 100%;
-      max-width: 580px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
       margin-top: 2px;
       z-index: 20;
@@ -220,7 +180,7 @@
 
     .score-card {
       border-radius: 12px;
-      padding: 6px 12px;
+      padding: 5px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -230,14 +190,12 @@
     .score-card.active-p1 {
       border: 2px solid #0891b2 !important;
       opacity: 1;
-      transform: translateY(-1px);
     }
     body.theme-dark .score-card.active-p1 { border-color: #06b6d4 !important; }
 
     .score-card.active-p2 {
       border: 2px solid #e11d48 !important;
       opacity: 1;
-      transform: translateY(-1px);
     }
     body.theme-dark .score-card.active-p2 { border-color: #ec4899 !important; }
 
@@ -246,41 +204,41 @@
     }
 
     .player-tag {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
-      max-width: 140px;
+      max-width: 115px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
 
     .turn-status {
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 700;
     }
 
     .score-val {
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 900;
     }
 
-    /* Banner for PvP Notifications */
+    /* Status Banner */
     #banner {
       display: none;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       text-align: center;
-      padding: 3px 8px;
-      border-radius: 8px;
+      padding: 3px 6px;
+      border-radius: 6px;
       flex-shrink: 0;
       width: 100%;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       margin-top: 2px;
       z-index: 20;
     }
@@ -301,7 +259,7 @@
     }
     body.theme-dark .banner-connected { color: #34d399 !important; }
 
-    /* ================= REALISTIC 3D FLOATING DROP AVATARS ================= */
+    /* Arena & Dynamic Board Auto-Sizing */
     .arena-container {
       width: 100%;
       flex: 1 1 auto;
@@ -313,162 +271,17 @@
       padding: 4px 0;
     }
 
-    /* Left & Right Drop Shafts (Above Page Layer) */
-    .avatar-drop-shaft {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 100; /* Floats visually above page elements */
-    }
-
-    .avatar-drop-shaft.left-flank {
-      left: max(4px, calc(50% - 350px));
-    }
-
-    .avatar-drop-shaft.right-flank {
-      right: max(4px, calc(50% - 350px));
-    }
-
-    @media (max-width: 620px) {
-      .avatar-drop-shaft { display: none; }
-    }
-
-    /* 3D Realistic Character Cards with Metal Bezel */
-    .realistic-warrior-card {
-      position: absolute;
-      top: -180px; /* Off-screen start */
-      width: 72px;
-      border-radius: 14px;
-      padding: 8px 4px 6px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      text-align: center;
-      pointer-events: auto;
-      transform-style: preserve-3d;
-      will-change: top, transform, filter;
-    }
-
-    #avatar1.realistic-warrior-card {
-      background: linear-gradient(145deg, rgba(14, 116, 144, 0.95), rgba(8, 51, 68, 0.95));
-      border: 2px solid #22d3ee;
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(6, 182, 212, 0.45);
-    }
-
-    #avatar2.realistic-warrior-card {
-      background: linear-gradient(145deg, rgba(190, 18, 60, 0.95), rgba(76, 5, 25, 0.95));
-      border: 2px solid #fb7185;
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(244, 63, 94, 0.45);
-    }
-
-    /* Dropping Animation with Gravity Acceleration & Ground Slam */
-    .dropping-active {
-      animation: gravitySlam 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-
-    @keyframes gravitySlam {
-      0% {
-        top: -200px;
-        transform: translateY(0) scale(0.85) rotateX(25deg);
-        opacity: 0;
-        filter: blur(4px);
-      }
-      50% {
-        opacity: 1;
-        filter: blur(1px);
-      }
-      72% {
-        top: calc(50% + 35px);
-        transform: translateY(0) scale(1.08, 0.88) rotateX(0deg); /* Impact squash */
-        filter: blur(0);
-      }
-      85% {
-        top: calc(50% - 18px);
-        transform: translateY(0) scale(0.96, 1.04); /* Rebound stretch */
-      }
-      100% {
-        top: calc(50% - 15px);
-        transform: translateY(0) scale(1, 1);
-        opacity: 1;
-        filter: blur(0);
-      }
-    }
-
-    /* SVG Character Illustration Container */
-    .warrior-art-box {
-      width: 52px;
-      height: 52px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
-    }
-
-    .warrior-art-svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .warrior-name-tag {
-      font-size: 10px;
-      font-weight: 800;
-      color: #ffffff;
-      max-width: 62px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    }
-
-    /* Dynamic Ground Shockwave Ring */
-    .impact-shockwave {
-      position: absolute;
-      width: 60px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid #22d3ee;
-      opacity: 0;
-      pointer-events: none;
-      top: calc(50% + 40px);
-    }
-
-    .impact-shockwave.slamming {
-      animation: shockwaveExpand 0.6s ease-out 0.72s forwards;
-    }
-
-    @keyframes shockwaveExpand {
-      0% {
-        transform: scale(0.3);
-        opacity: 0.9;
-      }
-      100% {
-        transform: scale(2.2);
-        opacity: 0;
-      }
-    }
-
-    /* ================= 8x8 BOARD FRAME ================= */
     #board {
-      width: min(90vw, calc(100dvh - 255px), 520px);
-      height: min(90vw, calc(100dvh - 255px), 520px);
+      width: min(92vw, calc(100dvh - 230px), 520px);
+      height: min(92vw, calc(100dvh - 230px), 520px);
       aspect-ratio: 1 / 1;
-      border-radius: 16px;
-      padding: 6px;
+      border-radius: 14px;
+      padding: 5px;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: 4px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      gap: 3px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       cursor: pointer;
       flex-shrink: 0;
       z-index: 5;
@@ -478,7 +291,7 @@
       width: 100%;
       height: 100%;
       aspect-ratio: 1 / 1;
-      border-radius: 5px;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -514,7 +327,6 @@
     /* Piece Tray */
     .tray-wrap {
       width: 100%;
-      max-width: 580px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
@@ -527,26 +339,26 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       padding: 0 4px;
     }
 
     #tray {
       width: 100%;
-      height: 74px;
-      border-radius: 14px;
+      height: 72px;
+      border-radius: 12px;
       display: flex;
       justify-content: space-around;
       align-items: center;
-      gap: 8px;
-      padding: 6px;
+      gap: 6px;
+      padding: 5px;
     }
 
     .slot {
       flex: 1;
       height: 100%;
-      border-radius: 10px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -557,7 +369,7 @@
     .slot.selected {
       border: 2px solid #22d3ee !important;
       transform: scale(1.03);
-      box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
     }
 
     .slot.used {
@@ -590,7 +402,7 @@
       z-index: 200;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 14px;
     }
 
     .modal.open {
@@ -599,9 +411,9 @@
 
     .modal-box {
       width: 100%;
-      max-width: 420px;
-      border-radius: 18px;
-      padding: 18px;
+      max-width: 400px;
+      border-radius: 16px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -614,17 +426,17 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-      padding-bottom: 8px;
+      padding-bottom: 6px;
     }
 
     .setting-row {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .setting-label {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -641,13 +453,13 @@
     .btn-group-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .btn-group-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
     .btn-group-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-    .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+    .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
 
     .avatar-opt-btn {
-      font-size: 20px;
-      padding: 6px 0;
+      font-size: 18px;
+      padding: 5px 0;
       text-align: center;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
     }
 
@@ -719,10 +531,9 @@
 
   <div id="drag-ghost"></div>
 
-  <!-- Top Bar with Fierce Female Warrior Branding -->
+  <!-- Top Bar -->
   <header>
     <div class="brand-wrap">
-      <!-- Detailed Vector Fierce Warrior SVG Logo -->
       <svg class="warrior-logo-svg" viewBox="0 0 64 64">
         <defs>
           <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -738,17 +549,14 @@
         <path d="M16 52 C16 36 22 28 32 28 C42 28 48 36 48 52 Z" fill="#334155"/>
         <path d="M26 38 L32 46 L38 38 Z" fill="url(#armorGrad)"/>
         <circle cx="32" cy="24" r="11" fill="#fed7aa"/>
-        <!-- Fierce Eyes & Warpaint -->
         <path d="M26 23 L30 25 M38 23 L34 25" stroke="#0f172a" stroke-width="1.8" stroke-linecap="round"/>
         <path d="M25 26 L29 27 M39 26 L35 27" stroke="#f43f5e" stroke-width="1.5"/>
-        <!-- Flowing Red-Gold Hair & Crown Diadem -->
         <path d="M19 18 C22 6 42 6 45 18 C47 26 46 34 46 40 C42 34 40 31 32 31 C24 31 22 34 18 40 C18 34 17 26 19 18 Z" fill="url(#hairGrad)"/>
         <path d="M22 20 L32 14 L42 20 L37 22 L32 18 L27 22 Z" fill="#fbbf24" stroke="#d97706" stroke-width="0.8"/>
-        <!-- Crossed Blades Behind Head -->
         <path d="M10 52 L26 36 M54 52 L38 36" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/>
       </svg>
 
-      <div>
+      <div style="min-width:0;">
         <div class="brand-title">CLASH OF LORNA</div>
         <div class="brand-sub">
           <span id="mode-label">Pass &amp; Play</span> •
@@ -758,18 +566,10 @@
       </div>
     </div>
 
-    <div class="header-right">
-      <div class="header-btns">
-        <button id="theme-btn" title="Toggle Light / Dark Mode">☀️</button>
-        <button id="tv-btn" class="btn-tv">📺 TV</button>
-        <button id="settings-btn">⚙️</button>
-      </div>
-
-      <!-- Small Quick Join Bar Under Settings -->
-      <div class="top-right-join-bar panel-box">
-        <input type="text" id="top-room-input" class="input-field top-join-input" placeholder="ROOM CODE" maxlength="12" />
-        <button id="top-join-btn" class="btn-top-join">Join</button>
-      </div>
+    <div class="header-btns">
+      <button id="theme-btn" title="Toggle Light / Dark Mode">☀️</button>
+      <button id="tv-btn" class="btn-tv">📺 TV</button>
+      <button id="settings-btn">⚙️</button>
     </div>
   </header>
 
@@ -781,7 +581,7 @@
 
   <!-- Main Game Arena -->
   <main id="game-view">
-    <!-- Scoreboard -->
+    <!-- Scoreboard (Completely visible, no overlay) -->
     <div class="scoreboard">
       <div id="p1-card" class="panel-box score-card active-p1">
         <div>
@@ -806,49 +606,9 @@
       <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 7px; font-size:10px;">📲 Share Link</button>
     </div>
 
-    <!-- Arena with 3D Drop-Down Character Cards Floating Over Screen -->
+    <!-- Maximized 8x8 Board Frame -->
     <div class="arena-container">
-      <!-- Player 1 Dropping Column -->
-      <div class="avatar-drop-shaft left-flank">
-        <div id="avatar1" class="realistic-warrior-card dropping-active">
-          <div class="warrior-art-box">
-            <!-- Lorna Valkyrie Avatar -->
-            <svg class="warrior-art-svg" viewBox="0 0 64 64">
-              <circle cx="32" cy="32" r="28" fill="#083344"/>
-              <path d="M18 54 C18 38 24 30 32 30 C40 30 46 38 46 54 Z" fill="#0284c7"/>
-              <circle cx="32" cy="24" r="10" fill="#fed7aa"/>
-              <path d="M20 20 C22 10 42 10 44 20 C46 28 44 34 44 42 C40 35 38 32 32 32 C26 32 24 35 20 42 Z" fill="#f59e0b"/>
-              <path d="M24 22 L32 16 L40 22 L36 24 L32 20 L28 24 Z" fill="#38bdf8"/>
-              <circle cx="28" cy="24" r="1.5" fill="#0f172a"/><circle cx="36" cy="24" r="1.5" fill="#0f172a"/>
-            </svg>
-          </div>
-          <span class="warrior-name-tag" id="p1-flank-name">Lorna</span>
-        </div>
-        <div id="shockwave1" class="impact-shockwave slamming" style="border-color:#22d3ee;"></div>
-      </div>
-
-      <!-- Maximized 8x8 Board Frame -->
       <div id="board" class="inner-box"></div>
-
-      <!-- Player 2 Dropping Column -->
-      <div class="avatar-drop-shaft right-flank">
-        <div id="avatar2" class="realistic-warrior-card dropping-active">
-          <div class="warrior-art-box">
-            <!-- Rival Armored Vanguard Avatar -->
-            <svg class="warrior-art-svg" viewBox="0 0 64 64">
-              <circle cx="32" cy="32" r="28" fill="#4c0519"/>
-              <path d="M18 54 C18 38 24 30 32 30 C40 30 46 38 46 54 Z" fill="#be123c"/>
-              <circle cx="32" cy="24" r="10" fill="#fecdd3"/>
-              <!-- Armored Helmet Visor -->
-              <path d="M22 16 C22 10 42 10 42 16 L44 28 L32 34 L20 28 Z" fill="#9f1239"/>
-              <path d="M24 23 L40 23 L32 26 Z" fill="#fb7185"/>
-              <path d="M32 10 L32 20" stroke="#f43f5e" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="warrior-name-tag" id="p2-flank-name">Rival</span>
-        </div>
-        <div id="shockwave2" class="impact-shockwave slamming" style="border-color:#fb7185;"></div>
-      </div>
     </div>
 
     <!-- Piece Tray (Directly Below Board) -->
@@ -884,12 +644,21 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
+  <!-- Settings Modal (Includes Clean Online Room Connect) -->
   <div id="settings-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
         <h3 style="font-size: 14px; font-weight: 800;">⚙️ Game Settings</h3>
         <button id="close-modal-x">✕</button>
+      </div>
+
+      <!-- Quick Room Join Directly Inside Settings -->
+      <div class="setting-row" style="background: rgba(6,182,212,0.08); padding: 8px; border-radius: 8px; border: 1px solid rgba(6,182,212,0.25);">
+        <span class="setting-label" style="color: #06b6d4;">Direct Room Code Join</span>
+        <div style="display: flex; gap: 6px;">
+          <input type="text" id="modal-room-input" class="input-field" placeholder="ENTER 4-DIGIT CODE" maxlength="12" style="flex:1; text-transform:uppercase; font-size:12px;" />
+          <button id="modal-join-btn" style="background:#0284c7; border-color:#0ea5e9; color:#fff; padding: 0 14px;">Join</button>
+        </div>
       </div>
 
       <!-- Player Name -->
@@ -962,7 +731,6 @@
           </button>
         </div>
 
-        <!-- Target Points Selection -->
         <div id="points-target-box" style="display:none; flex-direction:column; gap:4px; margin-top:4px;">
           <div style="display:flex; justify-content:space-between; font-size:10px; color:#94a3b8;">
             <span>Race Goal Target:</span>
@@ -1007,7 +775,6 @@
         </button>
       </div>
 
-      <!-- Instructions Toggle -->
       <div class="setting-row">
         <button id="open-rules-btn" style="background:#1d2535; border-color:#2f3b52; color:#38bdf8; padding:7px;">
           📖 How to Play &amp; Controls
@@ -1098,8 +865,7 @@
       </button>
     </div>
   </div>
-  
-  <script>
+    <script>
     // Audio Synthesizer
     var soundEnabled = true;
     var audioCtx = null;
@@ -1128,14 +894,14 @@
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
           osc.start(now);
           osc.stop(now + 0.25);
-        } else if (type === 'connect' || type === 'slam') {
+        } else if (type === 'connect') {
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(140, now);
-          osc.frequency.exponentialRampToValueAtTime(55, now + 0.22);
-          gain.gain.setValueAtTime(0.45, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(880, now + 0.15);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
           osc.start(now);
-          osc.stop(now + 0.22);
+          osc.stop(now + 0.3);
         } else if (type === 'win') {
           osc.type = 'sine';
           osc.frequency.setValueAtTime(440, now);
@@ -1191,10 +957,10 @@
       ],
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass', // 'pass', 'bot', 'pvp'
+      mode: 'pass',
       theme: localStorage.getItem('lorna_theme') || 'dark',
       pieceTheme: localStorage.getItem('lorna_piece_theme') || 'gems',
-      winCondition: 'trap', // 'trap' (survival outlast) or 'race' (points target)
+      winCondition: 'trap',
       targetScore: 2000,
       currentLevel: 1,
       selectedPieceIdx: null,
@@ -1233,7 +999,7 @@
       startY: 0,
       hasMoved: false,
       slotEl: null,
-      cellSize: 46,
+      cellSize: 42,
       ghostEl: document.getElementById('drag-ghost')
     };
 
@@ -1246,31 +1012,6 @@
       document.getElementById('theme-light-opt').classList.toggle('active-opt', theme === 'light');
     }
 
-    // Drop Animation Trigger using requestAnimationFrame and offset reflow
-    function triggerDropAnimation() {
-      var av1 = document.getElementById('avatar1');
-      var av2 = document.getElementById('avatar2');
-      var sw1 = document.getElementById('shockwave1');
-      var sw2 = document.getElementById('shockwave2');
-
-      if (av1 && av2) {
-        av1.classList.remove('dropping-active');
-        av2.classList.remove('dropping-active');
-        if (sw1) sw1.classList.remove('slamming');
-        if (sw2) sw2.classList.remove('slamming');
-
-        void av1.offsetWidth;
-        void av2.offsetWidth;
-
-        av1.classList.add('dropping-active');
-        av2.classList.add('dropping-active');
-        if (sw1) sw1.classList.add('slamming');
-        if (sw2) sw2.classList.add('slamming');
-
-        playSfx('slam');
-      }
-    }
-
     function initBoard() {
       for (var r = 0; r < 8; r++) {
         for (var c = 0; c < 8; c++) {
@@ -1279,7 +1020,7 @@
       }
       var lvl = LEVELS[state.currentLevel] || LEVELS[1];
       lvl.obstacles.forEach(function(coord) {
-        state.grid[coord[0]][coord[1]] = 99; // 99 = Unbreakable Bedrock Obstacle
+        state.grid[coord[0]][coord[1]] = 99; // 99 = Bedrock Obstacle
       });
     }
 
@@ -1402,7 +1143,6 @@
       window.addEventListener('touchmove', onTouchMove, { passive: false });
       window.addEventListener('touchend', onTouchEnd, { passive: false });
       window.addEventListener('touchcancel', onTouchCancel, { passive: false });
-
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
     }
@@ -1412,15 +1152,15 @@
       ghost.innerHTML = '';
       var rows = piece.matrix.length;
       var cols = piece.matrix[0].length;
-      var cs = Math.max(drag.cellSize, 28);
+      var cs = Math.max(drag.cellSize, 26);
       var iconMap = PIECE_THEMES[state.pieceTheme] || PIECE_THEMES.gems;
       var activeIcon = iconMap[state.currentPlayer] || '';
 
       var container = document.createElement('div');
       container.style.display = 'grid';
       container.style.gap = '3px';
-      container.style.padding = '5px';
-      container.style.background = state.theme === 'dark' ? 'rgba(22, 27, 34, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+      container.style.padding = '4px';
+      container.style.background = state.theme === 'dark' ? 'rgba(19, 25, 36, 0.95)' : 'rgba(255, 255, 255, 0.95)';
       container.style.borderRadius = '8px';
       container.style.border = '2px solid #06b6d4';
       container.style.gridTemplateRows = 'repeat(' + rows + ', ' + cs + 'px)';
@@ -1630,7 +1370,6 @@
 
       checkLines();
 
-      // Check points race target immediately
       if (state.winCondition === 'race' && state.scores[state.currentPlayer] >= state.targetScore) {
         if (!isRemote && state.conn && state.conn.open) {
           state.conn.send({
@@ -1643,7 +1382,7 @@
             scores: state.scores
           });
         }
-        triggerWin(state.currentPlayer, 'Reached the race target of ' + state.targetScore + ' points!');
+        triggerWin(state.currentPlayer, 'Reached the target goal of ' + state.targetScore + ' points!');
         return;
       }
 
@@ -1863,12 +1602,8 @@
         p1Status.textContent = 'WAITING';
       }
 
-      // Display Player Names & Avatars
       document.getElementById('p1-display-avatar').textContent = state.playerAvatars[1];
       document.getElementById('p2-display-avatar').textContent = state.mode === 'bot' ? '🤖' : state.playerAvatars[2];
-      document.getElementById('p1-flank-name').textContent = state.playerNames[1];
-      document.getElementById('p2-flank-name').textContent = state.mode === 'bot' ? 'Bot' : state.playerNames[2];
-
       document.getElementById('p1-title').innerHTML = state.playerAvatars[1] + ' ' + state.playerNames[1] + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
       document.getElementById('p2-name').innerHTML = (state.mode === 'bot' ? '🤖 Bot' : state.playerAvatars[2] + ' ' + state.playerNames[2]) + ' <span style="font-size:9px; opacity:0.6;">✏️</span>';
 
@@ -1883,7 +1618,7 @@
 
         if (!state.isConnected) {
           banner.className = 'panel-box banner-waiting';
-          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for rival)';
+          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for player)';
           shareAgainBtn.style.display = 'inline-block';
         } else {
           banner.className = 'panel-box banner-connected';
@@ -1914,7 +1649,6 @@
       replenishTray();
       renderBoardDOM();
       updateUI();
-      triggerDropAnimation();
       if (state.isTV) renderTVBoard();
     }
 
@@ -2073,7 +1807,6 @@
         }
 
         updateUI();
-        triggerDropAnimation();
       });
 
       conn.on('data', function(data) {
@@ -2096,7 +1829,6 @@
             renderBoardDOM();
           }
           updateUI();
-          triggerDropAnimation();
         } else if (data.type === 'nameSync') {
           state.playerNames[data.playerNum] = data.name;
           state.playerAvatars[data.playerNum] = data.avatar;
@@ -2132,7 +1864,6 @@
       }
     }
 
-    // Direct Boot Engine
     function bootGame() {
       applyTheme(state.theme);
 
@@ -2142,12 +1873,10 @@
       state.playerNames[2] = savedName2;
       document.getElementById('host-name-input').value = savedName1;
 
-      // Select active piece theme button
       document.querySelectorAll('.piece-theme-btn').forEach(function(b) {
         b.classList.toggle('active-opt', b.dataset.theme === state.pieceTheme);
       });
 
-      // Select active avatar button
       document.querySelectorAll('.avatar-opt-btn').forEach(function(b) {
         b.classList.toggle('active-opt', b.dataset.avatar === state.playerAvatars[1]);
       });
@@ -2156,7 +1885,6 @@
       replenishTray();
       renderBoardDOM();
       updateUI();
-      triggerDropAnimation();
 
       window.addEventListener('resize', function() {
         updateCellSize();
@@ -2177,7 +1905,6 @@
       document.getElementById('theme-dark-opt').onclick = function() { applyTheme('dark'); };
       document.getElementById('theme-light-opt').onclick = function() { applyTheme('light'); };
 
-      // Avatar picker
       document.querySelectorAll('.avatar-opt-btn').forEach(function(btn) {
         btn.onclick = function() {
           var avatar = btn.dataset.avatar;
@@ -2197,7 +1924,6 @@
         };
       });
 
-      // Piece Theme selector
       document.querySelectorAll('.piece-theme-btn').forEach(function(btn) {
         btn.onclick = function() {
           state.pieceTheme = btn.dataset.theme;
@@ -2214,9 +1940,8 @@
         if (state.mode !== 'bot') promptPlayerName(2);
       };
 
-      // Compact Top-Right Join Button
-      document.getElementById('top-join-btn').onclick = function() {
-        var code = document.getElementById('top-room-input').value.trim();
+      document.getElementById('modal-join-btn').onclick = function() {
+        var code = document.getElementById('modal-room-input').value.trim();
         if (code) joinPvPRoom(code);
       };
 
@@ -2246,7 +1971,6 @@
       document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
       document.getElementById('opt-pvp').onclick = function() { setMode('pvp'); };
 
-      // Win Condition setup
       var trapOpt = document.getElementById('winrule-trap-opt');
       var ptsOpt = document.getElementById('winrule-points-opt');
       var ptsBox = document.getElementById('points-target-box');
@@ -2287,7 +2011,6 @@
         }
       };
 
-      // Board Level Selection
       document.querySelectorAll('.lvl-btn').forEach(function(btn) {
         btn.onclick = function() {
           state.currentLevel = parseInt(btn.dataset.lvl, 10);
@@ -2302,7 +2025,6 @@
         if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
       };
 
-      // Rules / How to play modal
       document.getElementById('open-rules-btn').onclick = function() {
         settingsModal.classList.remove('open');
         rulesModal.classList.add('open');
@@ -2349,7 +2071,6 @@
         }
       };
 
-      // Handle Direct Link Joins (?room=ID)
       var params = new URLSearchParams(window.location.search);
       var roomParam = params.get('room');
       if (roomParam) {
@@ -2375,3 +2096,6 @@
   </script>
 </body>
 </html>
+
+
+  
