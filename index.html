@@ -259,7 +259,7 @@
     }
     body.theme-dark .banner-connected { color: #34d399 !important; }
 
-    /* Arena & Board */
+    /* Arena & Dynamic Board Auto-Sizing */
     .arena-container {
       width: 100%;
       flex: 1 1 auto;
@@ -381,6 +381,7 @@
       opacity: 0.2;
     }
 
+    /* Floating Touch / Mouse Drag Ghost */
     #drag-ghost {
       position: fixed;
       pointer-events: none;
@@ -391,7 +392,7 @@
       filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.65));
     }
 
-    /* ================= MODAL FIXES (FULL SCROLLING & ACCESSIBILITY) ================= */
+    /* Modals */
     .modal {
       display: none;
       position: fixed;
@@ -401,7 +402,7 @@
       z-index: 200;
       align-items: center;
       justify-content: center;
-      padding: 12px;
+      padding: 14px;
       overflow: hidden;
     }
 
@@ -409,10 +410,9 @@
       display: flex;
     }
 
-    /* Strict max-height and flex-direction to guarantee bottom scrolling */
     .modal-box {
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
       max-height: 86dvh;
       border-radius: 16px;
       padding: 16px;
@@ -886,7 +886,7 @@
       </button>
     </div>
   </div>
-  <script>
+    <script>
     // Audio Synthesizer
     var soundEnabled = true;
     var audioCtx = null;
@@ -978,7 +978,7 @@
       ],
       currentPlayer: 1,
       scores: { 1: 0, 2: 0 },
-      mode: 'pass',
+      mode: 'pass', // 'pass', 'bot', 'pvp'
       theme: localStorage.getItem('lorna_theme') || 'dark',
       pieceTheme: localStorage.getItem('lorna_piece_theme') || 'gems',
       winCondition: 'trap',
@@ -1117,11 +1117,12 @@
           container.style.gridTemplateColumns = 'repeat(' + cols + ', 8px)';
           container.style.pointerEvents = 'none';
 
+          var color = state.currentPlayer === 1 ? '#06b6d4' : '#f43f5e';
           piece.matrix.forEach(function(row) {
             row.forEach(function(val) {
               var b = document.createElement('div');
               b.style.borderRadius = '2px';
-              b.style.background = val ? (state.currentPlayer === 1 ? '#06b6d4' : '#f43f5e') : 'transparent';
+              b.style.background = val ? color : 'transparent';
               container.appendChild(b);
             });
           });
@@ -1374,7 +1375,6 @@
       commitDrop(piece, fit.r, fit.c, state.selectedPieceIdx);
     }
 
-    // Fixed: Guaranteed persistent piece placement, correct line-clear logic, and robust bot triggering
     function commitDrop(piece, r, c, slotIdx, isRemote) {
       var placedBlocks = 0;
       var m = piece.matrix;
@@ -1392,10 +1392,8 @@
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
 
-      // Check and clear ONLY completely filled lines
       checkLines();
 
-      // Check points race target immediately
       if (state.winCondition === 'race' && state.scores[state.currentPlayer] >= state.targetScore) {
         if (!isRemote && state.conn && state.conn.open) {
           state.conn.send({
@@ -1436,24 +1434,20 @@
         renderTrayDOM();
       }
 
-      // Render board with placed piece retained
       renderBoardDOM();
       if (state.isTV) renderTVBoard();
 
-      // Switch turn
       state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
       updateUI();
 
       var isEnded = checkEnd();
 
-      // Fire Bot move if active and not game over
       if (!isEnded && !state.gameOver && state.mode === 'bot' && state.currentPlayer === 2) {
         state.botThinking = true;
         setTimeout(botTurn, 450);
       }
     }
 
-    // Fixed: Strict row & column validation ensuring pieces stay on board unless lines are full
     function checkLines() {
       var rowsToClear = [];
       var colsToClear = [];
@@ -1487,7 +1481,7 @@
 
         rowsToClear.forEach(function(r) {
           for (var col = 0; col < 8; col++) {
-            if (state.grid[r][col] !== 99) { // Preserve indestructible bedrock obstacles
+            if (state.grid[r][col] !== 99) {
               state.grid[r][col] = 0;
             }
           }
@@ -1602,7 +1596,6 @@
       return false;
     }
 
-    // Fixed: Bot turn execution properly finds valid moves and commits
     function botTurn() {
       if (state.gameOver || state.currentPlayer !== 2) {
         state.botThinking = false;
@@ -1681,7 +1674,7 @@
 
         if (!state.isConnected) {
           banner.className = 'panel-box banner-waiting';
-          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for rival)';
+          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for player)';
           shareAgainBtn.style.display = 'inline-block';
         } else {
           banner.className = 'panel-box banner-connected';
@@ -1698,7 +1691,7 @@
       }
 
       var modeNames = { pass: 'Pass & Play', bot: 'vs AI Bot', pvp: 'PvP Duel' };
-      document.getElementById('mode-label').textContent = modeNames[state.mode];
+      document.getElementById('mode-label').textContent = modeNames[state.mode] || 'Duel';
       document.getElementById('level-label').textContent = 'Lvl ' + state.currentLevel;
       document.getElementById('winrule-label').textContent = state.winCondition === 'race' ? ('🎯 ' + state.targetScore) : '🪤 Survival';
     }
@@ -1742,10 +1735,11 @@
 
     function setMode(newMode) {
       state.mode = newMode;
-      document.querySelectorAll('.mode-btn').forEach(function(btn) { btn.classList.remove('active-opt'); });
-      if (newMode === 'pass') document.getElementById('opt-pass').classList.add('active-opt');
-      if (newMode === 'bot') document.getElementById('opt-bot').classList.add('active-opt');
-      if (newMode === 'pvp') document.getElementById('opt-pvp').classList.add('active-opt');
+
+      // Update settings modal button visual highlights
+      document.getElementById('opt-pass').classList.toggle('active-opt', newMode === 'pass');
+      document.getElementById('opt-bot').classList.toggle('active-opt', newMode === 'bot');
+      document.getElementById('opt-pvp').classList.toggle('active-opt', newMode === 'pvp');
 
       var pvpPanel = document.getElementById('pvp-panel');
       if (newMode === 'pvp') {
@@ -1759,7 +1753,9 @@
           state.peer = null;
         }
       }
+
       resetGame();
+      updateUI();
     }
 
     function shareRoomInvite(code) {
@@ -2161,6 +2157,5 @@
 </body>
 </html>
 
- 
 
- 
+  
