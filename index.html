@@ -8,6 +8,9 @@
   <meta name="theme-color" content="#0b0f17">
   <title>Clash of Lorna</title>
   
+  <!-- PeerJS Preloaded for Instant Reliable P2P Connectivity -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
   <!-- Inline SVG Favicon (Zero Network Request) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%230f172a' stroke='%2306b6d4' stroke-width='2'/><path d='M16 48 C16 34 22 26 32 26 C42 26 48 34 48 48 Z' fill='%23334155'/><circle cx='32' cy='24' r='11' fill='%23fed7aa'/><path d='M20 18 C22 8 42 8 44 18 C46 26 45 32 45 38 C41 33 39 30 32 30 C25 30 23 33 19 38 C19 32 18 26 20 18 Z' fill='%23d97706'/><path d='M22 21 L32 15 L42 21 L37 23 L32 19 L27 23 Z' fill='%23f59e0b'/><path d='M12 50 L24 38 M52 50 L40 38' stroke='%2338bdf8' stroke-width='3' stroke-linecap='round'/></svg>">
 
@@ -739,7 +742,7 @@
       <div class="setting-row" style="background: rgba(6,182,212,0.08); padding: 8px; border-radius: 8px; border: 1px solid rgba(6,182,212,0.25);">
         <span class="setting-label" style="color: #06b6d4;">Direct Room Code Join</span>
         <div style="display: flex; gap: 6px;">
-          <input type="text" id="modal-room-input" class="input-field" placeholder="ROOM CODE" maxlength="12" style="flex:1; text-transform:uppercase; font-size:12px;" />
+          <input type="text" id="modal-room-input" class="input-field" placeholder="ROOM CODE" maxlength="24" style="flex:1; text-transform:uppercase; font-size:12px;" />
           <button id="modal-join-btn" style="background:#0284c7; border-color:#0ea5e9; color:#fff; padding: 0 14px;">Join</button>
         </div>
       </div>
@@ -949,7 +952,9 @@
         Play Next Match
       </button>
     </div>
-  </div><script>
+  </div>
+
+  <script>
     // Self-Contained Celebration Particle Engine (Runs 100% Offline with Zero Network Dependencies)
     function triggerCelebration() {
       var canvas = document.getElementById('celebration-canvas');
@@ -1130,7 +1135,9 @@
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' }
         ]
       }
     };
@@ -1788,12 +1795,12 @@
       if (state.currentPlayer === 1) {
         p1Card.className = 'panel-box score-card active-p1';
         p2Card.className = 'panel-box score-card waiting';
-        p1Status.textContent = 'YOUR TURN';
+        p1Status.textContent = (state.mode === 'pvp' && state.myPlayerNum !== 1) ? 'OPPONENT TURN' : 'YOUR TURN';
         p2Status.textContent = 'WAITING';
       } else {
         p2Card.className = 'panel-box score-card active-p2';
         p1Card.className = 'panel-box score-card waiting';
-        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : 'YOUR TURN';
+        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : ((state.mode === 'pvp' && state.myPlayerNum !== 2) ? 'OPPONENT TURN' : 'YOUR TURN');
         p1Status.textContent = 'WAITING';
       }
 
@@ -1902,6 +1909,10 @@
         pvpPanel.style.display = 'none';
         state.isConnected = false;
         state.activeRoomCode = null;
+        if (state.conn) {
+          try { state.conn.close(); } catch(e) {}
+          state.conn = null;
+        }
         if (state.peer) {
           try { state.peer.destroy(); } catch(e) {}
           state.peer = null;
@@ -1913,7 +1924,7 @@
     }
 
     function shareRoomInvite(code) {
-      var joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
+      var joinUrl = window.location.origin + window.location.pathname + '?room=' + encodeURIComponent(code);
       if (navigator.share) {
         navigator.share({
           title: 'Clash of Lorna',
@@ -1928,139 +1939,124 @@
       }
     }
 
-    // Helper: Dynamically load PeerJS when online multiplayer is triggered
-function loadPeerScript(callback) {
-  if (typeof Peer !== 'undefined') {
-    callback(true);
-    return;
-  }
+    function loadPeerScript(callback) {
+      if (typeof Peer !== 'undefined') {
+        callback(true);
+        return;
+      }
 
-  var bannerText = document.getElementById('banner-text');
-  var banner = document.getElementById('banner');
-  banner.className = 'panel-box banner-waiting';
-  bannerText.textContent = 'Connecting to multiplayer network...';
+      var bannerText = document.getElementById('banner-text');
+      var banner = document.getElementById('banner');
+      banner.className = 'panel-box banner-waiting';
+      bannerText.textContent = 'Connecting to multiplayer network...';
 
-  var primaryScript = document.createElement('script');
-  primaryScript.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
-  primaryScript.onload = function() { callback(true); };
-  primaryScript.onerror = function() {
-    // CDN Fallback mirror in case unpkg is blocked on cellular
-    var fallbackScript = document.createElement('script');
-    fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
-    fallbackScript.onload = function() { callback(true); };
-    fallbackScript.onerror = function() {
-      alert('Unable to reach multiplayer servers. Check your internet connection.');
-      callback(false);
-    };
-    document.head.appendChild(fallbackScript);
-  };
-  document.head.appendChild(primaryScript);
-}
-
-function createPvPRoom() {
-  loadPeerScript(function(loaded) {
-    if (!loaded) return;
-
-    if (state.peer) {
-      try { state.peer.destroy(); } catch (e) {}
+      var primaryScript = document.createElement('script');
+      primaryScript.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+      primaryScript.onload = function() { callback(true); };
+      primaryScript.onerror = function() {
+        var fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
+        fallbackScript.onload = function() { callback(true); };
+        fallbackScript.onerror = function() {
+          alert('Unable to reach multiplayer servers. Check your internet connection.');
+          callback(false);
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(primaryScript);
     }
 
-    var bannerText = document.getElementById('banner-text');
-    var banner = document.getElementById('banner');
-    banner.className = 'panel-box banner-waiting';
-    bannerText.textContent = 'Generating room code...';
+    function createPvPRoom() {
+      loadPeerScript(function(loaded) {
+        if (!loaded) return;
 
-    // Generates a short 5-character readable code (e.g., LRN-84)
-    var shortCode = 'LORNA-' + Math.floor(1000 + Math.random() * 9000);
+        if (state.conn) {
+          try { state.conn.close(); } catch (e) {}
+          state.conn = null;
+        }
+        if (state.peer) {
+          try { state.peer.destroy(); } catch (e) {}
+          state.peer = null;
+        }
 
-    state.peer = new Peer(shortCode, {
-      debug: 1,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
-        ]
-      }
-    });
+        var bannerText = document.getElementById('banner-text');
+        var banner = document.getElementById('banner');
+        banner.className = 'panel-box banner-waiting';
+        bannerText.textContent = 'Generating room code...';
 
-    state.peer.on('open', function(id) {
-      state.mode = 'pvp';
-      state.myPlayerNum = 1;
-      state.isConnected = false;
-      state.activeRoomCode = id;
+        state.mode = 'pvp';
+        state.myPlayerNum = 1;
+        state.isConnected = false;
 
-      document.getElementById('settings-modal').classList.remove('open');
-      updateUI();
-      shareRoomInvite(id);
-
-      state.peer.on('connection', function(conn) {
-        state.conn = conn;
-        setupConnListeners(conn);
-      });
-    });
-
-    state.peer.on('error', function(err) {
-      if (err.type === 'unavailable-id') {
-        // Retry with an auto-assigned ID if collision occurs
+        // Auto-assign random UUID on official server to prevent room collisions
         state.peer = new Peer(peerIceConfig);
-      } else {
-        alert('Multiplayer notice: ' + (err.type || 'Connection failed'));
-        updateUI();
-      }
-    });
-  });
-}
 
-function joinPvPRoom(codeOrId) {
-  if (!codeOrId) return;
-  var targetId = codeOrId.trim().toUpperCase();
+        state.peer.on('open', function(id) {
+          state.activeRoomCode = id;
+          document.getElementById('settings-modal').classList.remove('open');
+          updateUI();
+          shareRoomInvite(id);
 
-  loadPeerScript(function(loaded) {
-    if (!loaded) return;
+          state.peer.on('connection', function(incomingConn) {
+            state.conn = incomingConn;
+            setupConnListeners(incomingConn);
+          });
+        });
 
-    var bannerText = document.getElementById('banner-text');
-    var banner = document.getElementById('banner');
-    banner.className = 'panel-box banner-waiting';
-    bannerText.textContent = 'Connecting to room ' + targetId + '...';
-
-    if (state.peer) {
-      try { state.peer.destroy(); } catch (e) {}
+        state.peer.on('error', function(err) {
+          console.error('PeerJS Host Error:', err);
+          alert('Multiplayer notice: ' + (err.type || 'Connection failed'));
+          updateUI();
+        });
+      });
     }
 
-    state.peer = new Peer({
-      debug: 1,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
-        ]
-      }
-    });
+    function joinPvPRoom(codeOrId) {
+      if (!codeOrId) return;
+      var targetId = codeOrId.trim();
 
-    state.peer.on('open', function() {
-      state.mode = 'pvp';
-      state.myPlayerNum = 2;
-      state.activeRoomCode = targetId;
+      loadPeerScript(function(loaded) {
+        if (!loaded) return;
 
-      var conn = state.peer.connect(targetId, {
-        reliable: true
+        var bannerText = document.getElementById('banner-text');
+        var banner = document.getElementById('banner');
+        banner.className = 'panel-box banner-waiting';
+        bannerText.textContent = 'Connecting to room...';
+
+        if (state.conn) {
+          try { state.conn.close(); } catch (e) {}
+          state.conn = null;
+        }
+        if (state.peer) {
+          try { state.peer.destroy(); } catch (e) {}
+          state.peer = null;
+        }
+
+        state.peer = new Peer(peerIceConfig);
+
+        state.peer.on('open', function() {
+          state.mode = 'pvp';
+          state.myPlayerNum = 2;
+          state.activeRoomCode = targetId;
+
+          var outgoingConn = state.peer.connect(targetId, {
+            reliable: true
+          });
+          state.conn = outgoingConn;
+          setupConnListeners(outgoingConn);
+
+          document.getElementById('join-invite-modal').classList.remove('open');
+          document.getElementById('settings-modal').classList.remove('open');
+          updateUI();
+        });
+
+        state.peer.on('error', function(err) {
+          console.error('PeerJS Client Error:', err);
+          alert('Could not connect to room "' + targetId + '". Confirm host is active.');
+          updateUI();
+        });
       });
-      state.conn = conn;
-      setupConnListeners(conn);
-
-      document.getElementById('join-invite-modal').classList.remove('open');
-      document.getElementById('settings-modal').classList.remove('open');
-      updateUI();
-    });
-
-    state.peer.on('error', function(err) {
-      alert('Could not find room "' + targetId + '". Double-check the code.');
-      updateUI();
-    });
-  });
-}
+    }
 
     function setupConnListeners(conn) {
       conn.on('open', function() {
@@ -2103,6 +2099,15 @@ function joinPvPRoom(codeOrId) {
             state.pieceTheme = data.pieceTheme;
             initBoard();
             renderBoardDOM();
+          } else if (state.myPlayerNum === 1) {
+            // Reply back to guest with confirmation handshake
+            conn.send({
+              type: 'nameSync',
+              playerNum: 1,
+              name: state.playerNames[1],
+              avatar: state.playerAvatars[1]
+            });
+            conn.send({ type: 'syncTray', tray: state.trayPieces });
           }
           updateUI();
         } else if (data.type === 'nameSync') {
@@ -2116,6 +2121,10 @@ function joinPvPRoom(codeOrId) {
         state.isConnected = false;
         alert('Opponent has left the arena.');
         updateUI();
+      });
+
+      conn.on('error', function(e) {
+        console.error('Connection channel error:', e);
       });
     }
 
@@ -2198,7 +2207,7 @@ function joinPvPRoom(codeOrId) {
     // Self-register Cache-First Service Worker for Complete Offline App Availability
     function setupOfflineServiceWorker() {
       if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-        var swCode = "const CACHE_NAME='lorna-duel-v3';" +
+        var swCode = "const CACHE_NAME='lorna-duel-v4';" +
           "self.addEventListener('install', e => {" +
           "  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll([self.location.href])));" +
           "  self.skipWaiting();" +
@@ -2449,7 +2458,6 @@ function joinPvPRoom(codeOrId) {
           joinPvPRoom(roomParam);
         };
       } else {
-        // Always display onboarding/mode selection on launch
         triggerWelcomeModal(hasInitialized ? true : false);
       }
 
@@ -2460,5 +2468,3 @@ function joinPvPRoom(codeOrId) {
   </script>
 </body>
 </html>
-  
-  
