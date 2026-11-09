@@ -500,7 +500,6 @@
       font-size: 11px;
     }
 
-    /* Current Setup Live Pill Grid */
     .setup-summary-bar {
       display: flex;
       gap: 6px;
@@ -555,7 +554,7 @@
   <canvas id="celebration-canvas"></canvas>
   <div id="drag-ghost"></div>
 
-  <!-- Top Bar (Cleaned: Sub-icons and TV/Theme toggle removed) -->
+  <!-- Top Bar -->
   <header>
     <div class="brand-wrap">
       <svg class="warrior-logo-svg" viewBox="0 0 64 64">
@@ -600,7 +599,7 @@
     <div class="scoreboard">
       <div id="p1-card" class="panel-box score-card active-p1">
         <div>
-          <div class="player-tag" style="color: #0891b2;" id="p1-title"><span id="p1-display-avatar">🧝‍♀️</span> <span id="p1-name-display">Lorna</span> ✏️</div>
+          <div class="player-tag" style="color: #0891b2;" id="p1-title"><span id="p1-display-avatar">🧝‍♀️</span> <span id="p1-name-display">Player 1</span> ✏️</div>
           <div class="turn-status" id="p1-status">YOUR TURN</div>
         </div>
         <div class="score-val" id="p1-score" style="color: #0891b2;">0</div>
@@ -615,10 +614,10 @@
       </div>
     </div>
 
-    <!-- Status Banner for PvP Notifications -->
+    <!-- Status Banner for PvP Notifications with Direct Share Button -->
     <div id="banner" class="panel-box">
       <span id="banner-text">Connecting...</span>
-      <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:2px 7px; font-size:10px;">📲 Share Link</button>
+      <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:4px 9px; font-size:11px;">📲 Share Link</button>
     </div>
 
     <!-- Board Frame -->
@@ -636,20 +635,20 @@
     </div>
   </main>
 
-  <!-- ONBOARDING & WELCOME MODAL -->
+  <!-- RESTRUCTURED ONBOARDING & WELCOME MODAL -->
   <div id="welcome-modal" class="modal">
     <div class="modal-box panel-box" style="border: 2px solid #06b6d4; text-align: center;">
       <div style="font-size: 38px;">🧝‍♀️</div>
       <h2 style="font-size: 18px; font-weight: 900; color: #22d3ee; margin-top: 2px;">Welcome to Clash of Lorna!</h2>
-      <p style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Choose your game mode to begin.</p>
+      <p style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Choose how you want to play.</p>
 
       <div id="returning-user-notice" style="display:none; background:rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); border-radius:8px; padding:6px; font-size:11px; color:#22d3ee; margin-top:4px;">
-        Welcome back, <b id="welcome-returning-name">Lorna</b>!
+        Welcome back, <b id="welcome-returning-name">Player</b>!
       </div>
 
       <div class="setting-row" style="margin-top: 6px; text-align: left;">
         <span class="setting-label">Your Warrior Name</span>
-        <input type="text" id="welcome-name-input" class="input-field" placeholder="Enter your name" maxlength="14" value="Lorna" />
+        <input type="text" id="welcome-name-input" class="input-field" placeholder="Enter your name" maxlength="14" value="Player" />
       </div>
 
       <div class="setting-row" style="text-align: left;">
@@ -670,18 +669,21 @@
         </div>
       </div>
 
-      <div class="setting-row" style="text-align: left;">
-        <span class="setting-label">Select Game Mode To Play</span>
-        <div class="btn-group-3">
-          <button class="welcome-mode-btn opt-btn active-opt" data-mode="bot">🤖 vs Bot</button>
-          <button class="welcome-mode-btn opt-btn" data-mode="pass">👥 Pass &amp; Play</button>
-          <button class="welcome-mode-btn opt-btn" data-mode="pvp">⚔️ Online 2P</button>
+      <!-- Clear Choice Actions -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+        <button id="welcome-play-bot-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px; font-weight: 800;">
+          🤖 Play vs Bot (Solo)
+        </button>
+
+        <button id="welcome-create-pvp-btn" style="width: 100%; background: #065f46; border-color: #059669; color: #fff; padding: 10px; font-size: 13px; font-weight: 800;">
+          🔗 Create Online Duel (Host)
+        </button>
+
+        <div style="background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; padding: 8px; display: flex; gap: 6px;">
+          <input type="text" id="welcome-join-code-input" class="input-field" placeholder="ENTER ROOM CODE" maxlength="10" style="flex:1; text-transform:uppercase; font-size:12px;" />
+          <button id="welcome-join-btn" style="background: #4f46e5; border-color: #6366f1; color: #fff; padding: 0 14px; font-weight: 800;">Join</button>
         </div>
       </div>
-
-      <button id="welcome-start-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 11px; font-size: 13px; font-weight: 800; border-radius: 8px; margin-top: 4px;">
-        ⚔️ Enter Arena
-      </button>
     </div>
   </div>
 
@@ -702,7 +704,7 @@
         <div id="invite-room-code-display" style="font-size: 18px; font-weight: 900; color: #22d3ee; letter-spacing: 1px;">------</div>
       </div>
 
-      <button id="accept-join-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px;">
+      <button id="accept-join-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px; font-weight: 800;">
         ⚔️ Enter Arena
       </button>
     </div>
@@ -716,7 +718,7 @@
         <button id="close-modal-x">✕</button>
       </div>
 
-      <!-- 1. HOW TO PLAY (AT THE VERY TOP) -->
+      <!-- 1. HOW TO PLAY (AT THE TOP) -->
       <div>
         <button id="open-rules-btn" style="width: 100%; background:#1d2535; border-color:#2f3b52; color:#38bdf8; padding:8px; font-weight:800;">
           📖 How to Play &amp; Controls
@@ -743,7 +745,7 @@
           <button id="randomize-code-btn" title="Generate readable random code" style="padding: 0 10px; background:#1e293b;">🎲 New</button>
         </div>
         <button id="pvp-create-btn" style="background:#065f46; border-color:#059669; color:#fff; padding:8px; font-size:11px; margin-top:2px;">
-          🔗 Create &amp; Share Room
+          🔑 Create Room Code
         </button>
       </div>
 
@@ -763,7 +765,6 @@
         <span id="setup-rule-pill" class="setup-pill">Survival</span>
       </div>
 
-      <!-- Game Mode Selection -->
       <div class="setting-row">
         <span class="setting-label">Game Mode</span>
         <div class="btn-group-3">
@@ -773,7 +774,6 @@
         </div>
       </div>
 
-      <!-- Win Condition -->
       <div class="setting-row">
         <span class="setting-label">Win Condition</span>
         <div class="btn-group-2">
@@ -805,7 +805,6 @@
         </div>
       </div>
 
-      <!-- Board Scenario / Levels -->
       <div class="setting-row">
         <span class="setting-label">Board Scenario / Level</span>
         <div class="btn-group-3" style="grid-template-columns: repeat(3, 1fr);">
@@ -818,7 +817,6 @@
         </div>
       </div>
 
-      <!-- Piece Appearance Theme -->
       <div class="setting-row">
         <span class="setting-label">Piece Appearance / Icons</span>
         <div class="btn-group-3" style="grid-template-columns: repeat(3, 1fr);">
@@ -830,12 +828,12 @@
         </div>
       </div>
 
-      <!-- 4. PLAYER PROFILE (NAME & AVATAR TOGETHER) -->
+      <!-- 4. PLAYER PROFILE -->
       <div class="section-title">👤 Player Profile</div>
 
       <div class="setting-row">
         <span class="setting-label">Your Player Name</span>
-        <input type="text" id="host-name-input" class="input-field" placeholder="Player 1" maxlength="14" />
+        <input type="text" id="host-name-input" class="input-field" placeholder="Your Name" maxlength="14" />
       </div>
 
       <div class="setting-row">
@@ -856,7 +854,7 @@
         </div>
       </div>
 
-      <!-- 5. PREFERENCES & DISPLAY (THEME, SOUND, TV TOGETHER) -->
+      <!-- 5. PREFERENCES & DISPLAY -->
       <div class="section-title">🎨 Display &amp; Audio</div>
 
       <div class="setting-row">
@@ -960,7 +958,6 @@
   </div>
 
   <script>
-    // Self-Contained Celebration Particle Engine
     function triggerCelebration() {
       var canvas = document.getElementById('celebration-canvas');
       if (!canvas) return;
@@ -1019,7 +1016,6 @@
       requestAnimationFrame(render);
     }
 
-    // Audio Synthesizer
     var soundEnabled = true;
     var audioCtx = null;
     function playSfx(type) {
@@ -1097,14 +1093,17 @@
       minimal: { 1: '', 2: '' }
     };
 
-    // Dictionary of clean, readable words (under 6 chars) for short room codes
     var CODE_WORDS = ['WOLF', 'LORNA', 'SWORD', 'CLAN', 'RUNE', 'CASTLE', 'HAWK', 'VALOR', 'FIRE', 'STAR', 'BLADE', 'GUARD', 'SHIELD', 'FROST', 'EAGLE', 'LION'];
 
     function generateShortCode() {
       var word = CODE_WORDS[Math.floor(Math.random() * CODE_WORDS.length)];
-      var num = Math.floor(10 + Math.random() * 89); // 2 digits
-      return (word + num).toUpperCase(); // e.g. WOLF42 (6 characters, max 10)
+      var num = Math.floor(10 + Math.random() * 89);
+      return (word + num).toUpperCase();
     }
+
+    // Retrieve local user identity for this specific device
+    var localMyName = localStorage.getItem('lorna_my_name') || 'Lorna';
+    var localMyAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
 
     var state = {
       grid: [
@@ -1136,11 +1135,11 @@
       activeRoomCode: null,
       isConnected: false,
       playerNames: {
-        1: localStorage.getItem('lorna_name_1') || 'Lorna',
+        1: localMyName,
         2: 'Bot'
       },
       playerAvatars: {
-        1: localStorage.getItem('lorna_avatar_1') || '🧝‍♀️',
+        1: localMyAvatar,
         2: '🤖'
       }
     };
@@ -1243,6 +1242,9 @@
       if (!tray) return;
       tray.innerHTML = '';
 
+      // Only allow interaction if it's currently this client's turn
+      var isMyTurn = (state.mode !== 'pvp') || (state.isConnected && state.currentPlayer === state.myPlayerNum);
+
       state.trayPieces.forEach(function(piece, idx) {
         var slot = document.createElement('div');
         slot.className = 'slot inner-box' + (state.selectedPieceIdx === idx ? ' selected' : '');
@@ -1272,13 +1274,19 @@
           });
           slot.appendChild(container);
 
-          slot.addEventListener('touchstart', function(e) {
-            handleDragStart(e.touches[0].clientX, e.touches[0].clientY, piece, idx, slot);
-          }, { passive: false });
+          if (!isMyTurn) {
+            slot.style.opacity = '0.4';
+            slot.style.cursor = 'not-allowed';
+          } else {
+            slot.style.cursor = 'grab';
+            slot.addEventListener('touchstart', function(e) {
+              handleDragStart(e.touches[0].clientX, e.touches[0].clientY, piece, idx, slot);
+            }, { passive: false });
 
-          slot.addEventListener('mousedown', function(e) {
-            handleDragStart(e.clientX, e.clientY, piece, idx, slot);
-          });
+            slot.addEventListener('mousedown', function(e) {
+              handleDragStart(e.clientX, e.clientY, piece, idx, slot);
+            });
+          }
         }
         tray.appendChild(slot);
       });
@@ -1516,6 +1524,7 @@
     function onCellClick(r, c) {
       if (state.gameOver || state.botThinking) return;
       if (state.mode === 'bot' && state.currentPlayer === 2) return;
+      // Strict device lock: you can only place on your own turn in online mode
       if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
       if (state.selectedPieceIdx === null) return;
       
@@ -1563,6 +1572,7 @@
           });
         }
         renderBoardDOM();
+        renderTrayDOM();
         updateUI();
         triggerWin(state.currentPlayer, 'Reached target goal of ' + state.targetScore + ' points!');
         return;
@@ -1594,6 +1604,7 @@
       if (state.isTV) renderTVBoard();
 
       state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+      renderTrayDOM();
       updateUI();
 
       var isEnded = checkEnd();
@@ -1806,21 +1817,18 @@
       if (state.currentPlayer === 1) {
         p1Card.className = 'panel-box score-card active-p1';
         p2Card.className = 'panel-box score-card waiting';
-        p1Status.textContent = (state.mode === 'pvp' && state.myPlayerNum !== 1) ? 'OPPONENT TURN' : 'YOUR TURN';
+        p1Status.textContent = (state.mode === 'pvp' && state.myPlayerNum !== 1) ? 'WAITING' : 'YOUR TURN';
         p2Status.textContent = 'WAITING';
       } else {
         p2Card.className = 'panel-box score-card active-p2';
         p1Card.className = 'panel-box score-card waiting';
-        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : ((state.mode === 'pvp' && state.myPlayerNum !== 2) ? 'OPPONENT TURN' : 'YOUR TURN');
+        p2Status.textContent = state.mode === 'bot' ? 'THINKING...' : ((state.mode === 'pvp' && state.myPlayerNum !== 2) ? 'WAITING' : 'YOUR TURN');
         p1Status.textContent = 'WAITING';
       }
 
       if (state.mode === 'bot') {
         state.playerNames[2] = 'Bot';
         state.playerAvatars[2] = '🤖';
-      } else if (state.playerNames[2] === 'Bot') {
-        state.playerNames[2] = localStorage.getItem('lorna_name_2') || 'Player 2';
-        state.playerAvatars[2] = localStorage.getItem('lorna_avatar_2') || '⚔️';
       }
 
       document.getElementById('p1-display-avatar').textContent = state.playerAvatars[1];
@@ -1855,7 +1863,6 @@
         settingsRoomBox.style.display = 'none';
       }
 
-      // Update Setup Pills inside settings
       var modeDisplayNames = { 'bot': '🤖 vs Bot', 'pass': '👥 Pass & Play', 'pvp': '⚔️ Online 2P' };
       document.getElementById('setup-mode-pill').textContent = modeDisplayNames[state.mode] || 'vs Bot';
       document.getElementById('setup-lvl-pill').textContent = 'Lvl ' + state.currentLevel;
@@ -1874,6 +1881,7 @@
       initBoard();
       replenishTray();
       renderBoardDOM();
+      renderTrayDOM();
       updateUI();
       if (state.isTV) renderTVBoard();
     }
@@ -1958,7 +1966,6 @@
         state.peer = null;
       }
 
-      // Check if user entered a custom code or use/generate a short clean code (max 10 chars)
       var customInput = document.getElementById('custom-room-code-input').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (customInput.length > 10) customInput = customInput.slice(0, 10);
       var roomCode = customInput || generateShortCode();
@@ -1972,15 +1979,24 @@
       state.myPlayerNum = 1;
       state.isConnected = false;
 
-      // Register short, clean code directly as Peer ID
+      // Host establishes identity from stored local profile
+      var myName = localStorage.getItem('lorna_my_name') || 'Lorna';
+      var myAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
+      state.playerNames[1] = myName;
+      state.playerAvatars[1] = myAvatar;
+      state.playerNames[2] = 'Waiting...';
+      state.playerAvatars[2] = '⏳';
+
       state.peer = new Peer(roomCode, peerIceConfig);
 
       state.peer.on('open', function(id) {
         state.activeRoomCode = id;
         document.getElementById('custom-room-code-input').value = id;
+        // Direct transition back to main screen
         document.getElementById('settings-modal').classList.remove('open');
+        document.getElementById('welcome-modal').classList.remove('open');
+        resetGame();
         updateUI();
-        shareRoomInvite(id);
 
         state.peer.on('connection', function(incomingConn) {
           state.conn = incomingConn;
@@ -1991,9 +2007,8 @@
       state.peer.on('error', function(err) {
         console.error('PeerJS Host Error:', err);
         if (err.type === 'unavailable-id') {
-          // If custom code is taken, suggest a fresh one
           var alt = generateShortCode();
-          alert('Room code "' + roomCode + '" is currently in use. Generated new code: ' + alt);
+          alert('Room code "' + roomCode + '" is taken. Generated new code: ' + alt);
           document.getElementById('custom-room-code-input').value = alt;
           createPvPRoom();
         } else {
@@ -2026,23 +2041,28 @@
 
       state.peer.on('open', function() {
         state.mode = 'pvp';
-        state.myPlayerNum = 2;
+        state.myPlayerNum = 2; // Joining player is ALWAYS Player 2
         state.activeRoomCode = targetId;
 
-        var outgoingConn = state.peer.connect(targetId, {
-          reliable: true
-        });
+        // Ensure joining player registers their local saved identity as Player 2
+        var myName = localStorage.getItem('lorna_my_name') || 'Player 2';
+        var myAvatar = localStorage.getItem('lorna_my_avatar') || '⚔️';
+        state.playerNames[2] = myName;
+        state.playerAvatars[2] = myAvatar;
+
+        var outgoingConn = state.peer.connect(targetId, { reliable: true });
         state.conn = outgoingConn;
         setupConnListeners(outgoingConn);
 
         document.getElementById('join-invite-modal').classList.remove('open');
         document.getElementById('settings-modal').classList.remove('open');
+        document.getElementById('welcome-modal').classList.remove('open');
         updateUI();
       });
 
       state.peer.on('error', function(err) {
         console.error('PeerJS Client Error:', err);
-        alert('Could not connect to room "' + targetId + '". Double-check the code with host.');
+        alert('Could not connect to room "' + targetId + '". Double-check the code.');
         updateUI();
       });
     }
@@ -2052,6 +2072,7 @@
         state.isConnected = true;
         playSfx('connect');
 
+        // Send local player profile over handshake
         conn.send({
           type: 'handshake',
           playerNum: state.myPlayerNum,
@@ -2067,6 +2088,7 @@
           conn.send({ type: 'syncTray', tray: state.trayPieces });
         }
 
+        renderTrayDOM();
         updateUI();
       });
 
@@ -2081,6 +2103,7 @@
         } else if (data.type === 'handshake') {
           state.playerNames[data.playerNum] = data.name;
           state.playerAvatars[data.playerNum] = data.avatar;
+
           if (state.myPlayerNum === 2) {
             state.currentLevel = data.level;
             state.winCondition = data.winCondition;
@@ -2097,6 +2120,7 @@
             });
             conn.send({ type: 'syncTray', tray: state.trayPieces });
           }
+          renderTrayDOM();
           updateUI();
         } else if (data.type === 'nameSync') {
           state.playerNames[data.playerNum] = data.name;
@@ -2108,6 +2132,7 @@
       conn.on('close', function() {
         state.isConnected = false;
         alert('Opponent has left the arena.');
+        renderTrayDOM();
         updateUI();
       });
     }
@@ -2119,8 +2144,9 @@
       if (next && next.trim()) {
         var cleanName = next.trim().slice(0, 14);
         state.playerNames[playerNum] = cleanName;
-        localStorage.setItem('lorna_name_' + playerNum, cleanName);
-        if (playerNum === 1) document.getElementById('host-name-input').value = cleanName;
+        if (state.myPlayerNum === playerNum) {
+          localStorage.setItem('lorna_my_name', cleanName);
+        }
         updateUI();
 
         if (state.conn && state.conn.open) {
@@ -2139,9 +2165,8 @@
       var returningNotice = document.getElementById('returning-user-notice');
       var nameInput = document.getElementById('welcome-name-input');
       
-      var savedName = localStorage.getItem('lorna_name_1') || 'Lorna';
-      var savedAvatar = localStorage.getItem('lorna_avatar_1') || '🧝‍♀️';
-      var currentMode = state.mode || 'bot';
+      var savedName = localStorage.getItem('lorna_my_name') || 'Player';
+      var savedAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
 
       nameInput.value = savedName;
 
@@ -2161,25 +2186,40 @@
         };
       });
 
-      document.querySelectorAll('.welcome-mode-btn').forEach(function(btn) {
-        btn.classList.toggle('active-opt', btn.dataset.mode === currentMode);
-        btn.onclick = function() {
-          currentMode = btn.dataset.mode;
-          document.querySelectorAll('.welcome-mode-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-        };
-      });
-
-      document.getElementById('welcome-start-btn').onclick = function() {
-        var chosenName = nameInput.value.trim() || 'Lorna';
-        state.playerNames[1] = chosenName;
-        state.playerAvatars[1] = savedAvatar;
-        localStorage.setItem('lorna_name_1', chosenName);
-        localStorage.setItem('lorna_avatar_1', savedAvatar);
+      function saveProfile() {
+        var chosenName = nameInput.value.trim() || 'Player';
+        localStorage.setItem('lorna_my_name', chosenName);
+        localStorage.setItem('lorna_my_avatar', savedAvatar);
         localStorage.setItem('lorna_profile_initialized', 'true');
+        document.getElementById('host-name-input').value = chosenName;
+        return { name: chosenName, avatar: savedAvatar };
+      }
 
+      document.getElementById('welcome-play-bot-btn').onclick = function() {
+        var prof = saveProfile();
+        state.playerNames[1] = prof.name;
+        state.playerAvatars[1] = prof.avatar;
         welcomeModal.classList.remove('open');
-        setMode(currentMode);
+        setMode('bot');
+      };
+
+      document.getElementById('welcome-create-pvp-btn').onclick = function() {
+        var prof = saveProfile();
+        state.playerNames[1] = prof.name;
+        state.playerAvatars[1] = prof.avatar;
+        createPvPRoom();
+      };
+
+      document.getElementById('welcome-join-btn').onclick = function() {
+        var code = document.getElementById('welcome-join-code-input').value.trim();
+        if (!code) {
+          alert('Please enter a room code');
+          return;
+        }
+        var prof = saveProfile();
+        state.playerNames[2] = prof.name;
+        state.playerAvatars[2] = prof.avatar;
+        joinPvPRoom(code);
       };
 
       welcomeModal.classList.add('open');
@@ -2187,7 +2227,7 @@
 
     function setupOfflineServiceWorker() {
       if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-        var swCode = "const CACHE_NAME='lorna-duel-v5';" +
+        var swCode = "const CACHE_NAME='lorna-duel-v6';" +
           "self.addEventListener('install', e => {" +
           "  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll([self.location.href])));" +
           "  self.skipWaiting();" +
@@ -2217,9 +2257,12 @@
       applyTheme(state.theme);
 
       var hasInitialized = localStorage.getItem('lorna_profile_initialized');
-      var savedName1 = localStorage.getItem('lorna_name_1') || 'Lorna';
-      state.playerNames[1] = savedName1;
-      document.getElementById('host-name-input').value = savedName1;
+      var savedName = localStorage.getItem('lorna_my_name') || 'Lorna';
+      var savedAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
+      
+      state.playerNames[1] = savedName;
+      state.playerAvatars[1] = savedAvatar;
+      document.getElementById('host-name-input').value = savedName;
       document.getElementById('custom-room-code-input').value = generateShortCode();
 
       document.querySelectorAll('.piece-theme-btn').forEach(function(b) {
@@ -2227,7 +2270,7 @@
       });
 
       document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) {
-        b.classList.toggle('active-opt', b.dataset.avatar === state.playerAvatars[1]);
+        b.classList.toggle('active-opt', b.dataset.avatar === savedAvatar);
       });
 
       initBoard();
@@ -2252,16 +2295,16 @@
       document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(btn) {
         btn.onclick = function() {
           var avatar = btn.dataset.avatar;
-          state.playerAvatars[1] = avatar;
-          localStorage.setItem('lorna_avatar_1', avatar);
+          localStorage.setItem('lorna_my_avatar', avatar);
+          state.playerAvatars[state.myPlayerNum] = avatar;
           document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
           btn.classList.add('active-opt');
           updateUI();
           if (state.conn && state.conn.open) {
             state.conn.send({
               type: 'nameSync',
-              playerNum: 1,
-              name: state.playerNames[1],
+              playerNum: state.myPlayerNum,
+              name: state.playerNames[state.myPlayerNum],
               avatar: avatar
             });
           }
@@ -2282,7 +2325,6 @@
       document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
       document.getElementById('p2-card').onclick = function() { promptPlayerName(2); };
 
-      // Multiplayer Quick Join & Generate
       document.getElementById('modal-join-btn').onclick = function() {
         var code = document.getElementById('modal-room-input').value.trim();
         if (code) joinPvPRoom(code);
@@ -2299,16 +2341,16 @@
       };
 
       document.getElementById('host-name-input').onchange = function(e) {
-        var val = e.target.value.trim() || 'Player 1';
-        state.playerNames[1] = val;
-        localStorage.setItem('lorna_name_1', val);
+        var val = e.target.value.trim() || 'Player';
+        localStorage.setItem('lorna_my_name', val);
+        state.playerNames[state.myPlayerNum] = val;
         updateUI();
         if (state.conn && state.conn.open) {
           state.conn.send({
             type: 'nameSync',
-            playerNum: 1,
+            playerNum: state.myPlayerNum,
             name: val,
-            avatar: state.playerAvatars[1]
+            avatar: state.playerAvatars[state.myPlayerNum]
           });
         }
       };
@@ -2430,13 +2472,13 @@
         document.getElementById('invite-room-code-display').textContent = roomParam;
 
         var guestInput = document.getElementById('guest-name-input');
-        guestInput.value = localStorage.getItem('lorna_name_2') || 'Player 2';
+        guestInput.value = localStorage.getItem('lorna_my_name') || 'Player 2';
         inviteModal.classList.add('open');
 
         document.getElementById('accept-join-btn').onclick = function() {
           var chosenName = guestInput.value.trim() || 'Player 2';
+          localStorage.setItem('lorna_my_name', chosenName);
           state.playerNames[2] = chosenName;
-          localStorage.setItem('lorna_name_2', chosenName);
           playSfx('place');
           joinPvPRoom(roomParam);
         };
