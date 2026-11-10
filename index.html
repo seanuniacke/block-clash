@@ -8,10 +8,8 @@
   <meta name="theme-color" content="#0b0f17">
   <title>Clash of Lorna</title>
   
-  <!-- PeerJS Preloaded for Fast P2P Duels -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
-  <!-- Inline SVG Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%230f172a' stroke='%2306b6d4' stroke-width='2'/><path d='M16 48 C16 34 22 26 32 26 C42 26 48 34 48 48 Z' fill='%23334155'/><circle cx='32' cy='24' r='11' fill='%23fed7aa'/><path d='M20 18 C22 8 42 8 44 18 C46 26 45 32 45 38 C41 33 39 30 32 30 C25 30 23 33 19 38 C19 32 18 26 20 18 Z' fill='%23d97706'/><path d='M22 21 L32 15 L42 21 L37 23 L32 19 L27 23 Z' fill='%23f59e0b'/><path d='M12 50 L24 38 M52 50 L40 38' stroke='%2338bdf8' stroke-width='3' stroke-linecap='round'/></svg>">
 
   <style>
@@ -205,7 +203,7 @@
       font-size: 11px;
       font-weight: 700;
       text-align: center;
-      padding: 4px 8px;
+      padding: 5px 8px;
       border-radius: 6px;
       flex-shrink: 0;
       width: 100%;
@@ -380,8 +378,8 @@
       z-index: 200;
       align-items: center;
       justify-content: center;
-      padding: 12px;
-      overflow: hidden;
+      padding: 8px;
+      overflow-y: auto;
     }
 
     .modal.open {
@@ -390,13 +388,13 @@
 
     .modal-box {
       width: 100%;
-      max-width: 440px;
-      max-height: 88dvh;
+      max-width: 420px;
+      max-height: 94dvh;
       border-radius: 16px;
-      padding: 16px;
+      padding: clamp(12px, 3.5vw, 18px);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -464,11 +462,11 @@
     .btn-group-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .btn-group-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
     .btn-group-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-    .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+    .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
 
     .avatar-opt-btn {
       font-size: 18px;
-      padding: 5px 0;
+      padding: 4px 0;
       text-align: center;
       border-radius: 6px;
       cursor: pointer;
@@ -519,7 +517,6 @@
       color: #22d3ee;
     }
 
-    /* TV Spectator View */
     #tv-view {
       display: none;
       flex: 1;
@@ -614,7 +611,7 @@
       </div>
     </div>
 
-    <!-- Status Banner for PvP Notifications with Direct Share Button -->
+    <!-- Status Banner for PvP Notifications -->
     <div id="banner" class="panel-box">
       <span id="banner-text">Connecting...</span>
       <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:4px 9px; font-size:11px;">📲 Share Link</button>
@@ -635,53 +632,53 @@
     </div>
   </main>
 
-  <!-- RESTRUCTURED ONBOARDING & WELCOME MODAL -->
+  <!-- STREAMLINED WELCOME / ENTER ARENA MODAL -->
   <div id="welcome-modal" class="modal">
     <div class="modal-box panel-box" style="border: 2px solid #06b6d4; text-align: center;">
-      <div style="font-size: 38px;">🧝‍♀️</div>
-      <h2 style="font-size: 18px; font-weight: 900; color: #22d3ee; margin-top: 2px;">Welcome to Clash of Lorna!</h2>
-      <p style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Choose how you want to play.</p>
+      <div id="welcome-avatar-display" style="font-size: 38px; line-height: 1;">🧝‍♀️</div>
+      <h2 id="welcome-main-title" style="font-size: 17px; font-weight: 900; color: #22d3ee; margin-top: 2px;">Welcome to Clash of Lorna!</h2>
+      <p style="font-size: 11px; color: #94a3b8;">Choose how you want to play.</p>
 
-      <div id="returning-user-notice" style="display:none; background:rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); border-radius:8px; padding:6px; font-size:11px; color:#22d3ee; margin-top:4px;">
-        Welcome back, <b id="welcome-returning-name">Player</b>!
+      <div id="returning-user-notice" style="display:none; background:rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.35); border-radius:8px; padding:6px; font-size:11.5px; color:#22d3ee;">
+        Logged in as <b id="welcome-returning-name">Player</b>
       </div>
 
-      <div class="setting-row" style="margin-top: 6px; text-align: left;">
-        <span class="setting-label">Your Warrior Name</span>
-        <input type="text" id="welcome-name-input" class="input-field" placeholder="Enter your name" maxlength="14" value="Player" />
-      </div>
-
-      <div class="setting-row" style="text-align: left;">
-        <span class="setting-label">Choose Your Avatar</span>
-        <div class="avatar-grid" id="welcome-avatar-grid">
-          <button class="avatar-opt-btn active-opt" data-avatar="🧝‍♀️">🧝‍♀️</button>
-          <button class="avatar-opt-btn" data-avatar="⚔️">⚔️</button>
-          <button class="avatar-opt-btn" data-avatar="🧙‍♀️">🧙‍♀️</button>
-          <button class="avatar-opt-btn" data-avatar="🛡️">🛡️</button>
-          <button class="avatar-opt-btn" data-avatar="🐉">🐉</button>
-          <button class="avatar-opt-btn" data-avatar="🦅">🦅</button>
-          <button class="avatar-opt-btn" data-avatar="🦁">🦁</button>
-          <button class="avatar-opt-btn" data-avatar="🐺">🐺</button>
-          <button class="avatar-opt-btn" data-avatar="🐯">🐯</button>
-          <button class="avatar-opt-btn" data-avatar="🦊">🦊</button>
-          <button class="avatar-opt-btn" data-avatar="👑">👑</button>
-          <button class="avatar-opt-btn" data-avatar="💎">💎</button>
+      <div id="new-user-fields" style="display:none; flex-direction:column; gap:6px; text-align:left;">
+        <div class="setting-row">
+          <span class="setting-label">Your Warrior Name</span>
+          <input type="text" id="welcome-name-input" class="input-field" placeholder="Enter name" maxlength="14" value="Player" />
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Choose Avatar</span>
+          <div class="avatar-grid" id="welcome-avatar-grid">
+            <button class="avatar-opt-btn active-opt" data-avatar="🧝‍♀️">🧝‍♀️</button>
+            <button class="avatar-opt-btn" data-avatar="⚔️">⚔️</button>
+            <button class="avatar-opt-btn" data-avatar="🧙‍♀️">🧙‍♀️</button>
+            <button class="avatar-opt-btn" data-avatar="🛡️">🛡️</button>
+            <button class="avatar-opt-btn" data-avatar="🐉">🐉</button>
+            <button class="avatar-opt-btn" data-avatar="🦅">🦅</button>
+            <button class="avatar-opt-btn" data-avatar="🦁">🦁</button>
+            <button class="avatar-opt-btn" data-avatar="🐺">🐺</button>
+            <button class="avatar-opt-btn" data-avatar="🐯">🐯</button>
+            <button class="avatar-opt-btn" data-avatar="🦊">🦊</button>
+            <button class="avatar-opt-btn" data-avatar="👑">👑</button>
+            <button class="avatar-opt-btn" data-avatar="💎">💎</button>
+          </div>
         </div>
       </div>
 
-      <!-- Clear Choice Actions -->
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-        <button id="welcome-play-bot-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 10px; font-size: 13px; font-weight: 800;">
+      <div style="display: flex; flex-direction: column; gap: 7px; margin-top: 4px;">
+        <button id="welcome-play-bot-btn" style="width: 100%; background: #0284c7; border-color: #0ea5e9; color: #fff; padding: 9px; font-size: 12.5px; font-weight: 800;">
           🤖 Play vs Bot (Solo)
         </button>
 
-        <button id="welcome-create-pvp-btn" style="width: 100%; background: #065f46; border-color: #059669; color: #fff; padding: 10px; font-size: 13px; font-weight: 800;">
-          🔗 Create Online Duel (Host)
+        <button id="welcome-create-pvp-btn" style="width: 100%; background: #065f46; border-color: #059669; color: #fff; padding: 9px; font-size: 12.5px; font-weight: 800;">
+          🔑 Create Room (New Game)
         </button>
 
-        <div style="background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; padding: 8px; display: flex; gap: 6px;">
-          <input type="text" id="welcome-join-code-input" class="input-field" placeholder="ENTER ROOM CODE" maxlength="10" style="flex:1; text-transform:uppercase; font-size:12px;" />
-          <button id="welcome-join-btn" style="background: #4f46e5; border-color: #6366f1; color: #fff; padding: 0 14px; font-weight: 800;">Join</button>
+        <div style="background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 8px; padding: 6px; display: flex; gap: 5px; align-items:center;">
+          <input type="text" id="welcome-join-code-input" class="input-field" placeholder="ENTER ROOM CODE" maxlength="10" style="flex:1; text-transform:uppercase; font-size:11.5px; padding: 6px 8px; letter-spacing:0.5px;" />
+          <button id="welcome-join-btn" style="background: #4f46e5; border-color: #6366f1; color: #fff; padding: 0 12px; height: 32px; font-size:11.5px; font-weight: 800; white-space:nowrap;">⚔️ Join Game</button>
         </div>
       </div>
     </div>
@@ -710,7 +707,7 @@
     </div>
   </div>
 
-  <!-- Structured Settings Modal -->
+  <!-- Settings Modal -->
   <div id="settings-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
@@ -718,17 +715,14 @@
         <button id="close-modal-x">✕</button>
       </div>
 
-      <!-- 1. HOW TO PLAY (AT THE TOP) -->
       <div>
         <button id="open-rules-btn" style="width: 100%; background:#1d2535; border-color:#2f3b52; color:#38bdf8; padding:8px; font-weight:800;">
           📖 How to Play &amp; Controls
         </button>
       </div>
 
-      <!-- 2. MULTIPLAYER ROOM & CODES -->
       <div class="section-title">⚔️ Online Multiplayer</div>
       
-      <!-- Direct Code Join -->
       <div class="setting-row">
         <span class="setting-label">Join Game via Room Code</span>
         <div style="display: flex; gap: 6px;">
@@ -737,7 +731,6 @@
         </div>
       </div>
 
-      <!-- Create Room Code (Custom or Auto) -->
       <div class="setting-row" style="background: rgba(6,182,212,0.06); padding: 8px; border-radius: 8px; border: 1px solid rgba(6,182,212,0.2);">
         <span class="setting-label" style="color:#22d3ee;">Host a Room</span>
         <div style="display:flex; gap:6px;">
@@ -749,13 +742,11 @@
         </button>
       </div>
 
-      <!-- Active Room Status Pill -->
       <div id="settings-room-status" class="active-room-display" style="display:none;">
         <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">Active Room: <b id="settings-active-code" style="color:#22d3ee;">NONE</b></span>
         <button id="settings-re-share" style="padding:2px 7px; font-size:10px; background:#065f46; color:#fff;">Copy Link</button>
       </div>
 
-      <!-- 3. CURRENT GAME SETUP & RULES -->
       <div class="section-title">🎮 Current Game Setup</div>
 
       <div class="setup-summary-bar">
@@ -828,7 +819,6 @@
         </div>
       </div>
 
-      <!-- 4. PLAYER PROFILE -->
       <div class="section-title">👤 Player Profile</div>
 
       <div class="setting-row">
@@ -854,7 +844,6 @@
         </div>
       </div>
 
-      <!-- 5. PREFERENCES & DISPLAY -->
       <div class="section-title">🎨 Display &amp; Audio</div>
 
       <div class="setting-row">
@@ -873,7 +862,6 @@
         </div>
       </div>
 
-      <!-- 6. MATCH HISTORY -->
       <div class="section-title">📜 Match Archive</div>
       <div>
         <button id="open-history-btn" style="width: 100%; background: #1e1b4b; border-color: #4338ca; color: #a5b4fc; padding: 7px;">
@@ -1101,7 +1089,6 @@
       return (word + num).toUpperCase();
     }
 
-    // Retrieve local user identity for this specific device
     var localMyName = localStorage.getItem('lorna_my_name') || 'Lorna';
     var localMyAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
 
@@ -1242,7 +1229,6 @@
       if (!tray) return;
       tray.innerHTML = '';
 
-      // Only allow interaction if it's currently this client's turn
       var isMyTurn = (state.mode !== 'pvp') || (state.isConnected && state.currentPlayer === state.myPlayerNum);
 
       state.trayPieces.forEach(function(piece, idx) {
@@ -1275,7 +1261,7 @@
           slot.appendChild(container);
 
           if (!isMyTurn) {
-            slot.style.opacity = '0.4';
+            slot.style.opacity = '0.35';
             slot.style.cursor = 'not-allowed';
           } else {
             slot.style.cursor = 'grab';
@@ -1524,7 +1510,6 @@
     function onCellClick(r, c) {
       if (state.gameOver || state.botThinking) return;
       if (state.mode === 'bot' && state.currentPlayer === 2) return;
-      // Strict device lock: you can only place on your own turn in online mode
       if (state.mode === 'pvp' && (!state.isConnected || state.currentPlayer !== state.myPlayerNum)) return;
       if (state.selectedPieceIdx === null) return;
       
@@ -1538,7 +1523,7 @@
       commitDrop(piece, fit.r, fit.c, slotIdx);
     }
 
-    function commitDrop(piece, r, c, slotIdx, isRemote) {
+    function commitDrop(piece, r, c, slotIdx, isRemote, overrideScores) {
       var placedBlocks = 0;
       var m = piece.matrix;
       for (var pr = 0; pr < m.length; pr++) {
@@ -1551,13 +1536,19 @@
       }
       playSfx('place');
 
-      state.scores[state.currentPlayer] += placedBlocks * 10;
+      // Local player calculates score; Remote player takes the sender's exact score snapshot
+      if (isRemote && overrideScores) {
+        state.scores = JSON.parse(JSON.stringify(overrideScores));
+      } else {
+        state.scores[state.currentPlayer] += placedBlocks * 10;
+      }
+
       state.trayPieces[slotIdx] = null;
       state.selectedPieceIdx = null;
       drag.piece = null;
       drag.slotIdx = null;
 
-      checkLines();
+      checkLines(!isRemote);
 
       if (state.winCondition === 'race' && state.scores[state.currentPlayer] >= state.targetScore) {
         if (!isRemote && state.conn && state.conn.open) {
@@ -1616,7 +1607,7 @@
       }
     }
 
-    function checkLines() {
+    function checkLines(awardPoints) {
       var rowsToClear = [];
       var colsToClear = [];
 
@@ -1645,7 +1636,9 @@
       var totalLines = rowsToClear.length + colsToClear.length;
       if (totalLines > 0) {
         playSfx('clear');
-        state.scores[state.currentPlayer] += totalLines * 100;
+        if (awardPoints) {
+          state.scores[state.currentPlayer] += totalLines * 100;
+        }
 
         rowsToClear.forEach(function(r) {
           for (var col = 0; col < 8; col++) {
@@ -1847,7 +1840,7 @@
 
         if (!state.isConnected) {
           banner.className = 'panel-box banner-waiting';
-          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for player)';
+          bannerText.textContent = '⏳ Room: ' + (state.activeRoomCode || 'CONNECTING') + ' (Waiting for opponent)';
           shareAgainBtn.style.display = 'inline-block';
         } else {
           banner.className = 'panel-box banner-connected';
@@ -1897,599 +1890,4 @@
           var val = state.grid[r][c];
           var cell = document.createElement('div');
           cell.style.background = '#161b22';
-          cell.style.borderRadius = '6px';
-          cell.style.display = 'flex';
-          cell.style.alignItems = 'center';
-          cell.style.justifyContent = 'center';
-          cell.style.fontSize = '22px';
-          if (val === 1) cell.textContent = iconMap[1];
-          else if (val === 2) cell.textContent = iconMap[2];
-          else if (val === 99) cell.textContent = '🗿';
-          tvGrid.appendChild(cell);
-        }
-      }
-    }
-
-    function setMode(newMode) {
-      state.mode = newMode;
-      localStorage.setItem('lorna_mode', newMode);
-
-      document.getElementById('opt-pass').classList.toggle('active-opt', newMode === 'pass');
-      document.getElementById('opt-bot').classList.toggle('active-opt', newMode === 'bot');
-      document.getElementById('opt-pvp').classList.toggle('active-opt', newMode === 'pvp');
-
-      if (newMode !== 'pvp') {
-        state.isConnected = false;
-        state.activeRoomCode = null;
-        if (state.conn) {
-          try { state.conn.close(); } catch(e) {}
-          state.conn = null;
-        }
-        if (state.peer) {
-          try { state.peer.destroy(); } catch(e) {}
-          state.peer = null;
-        }
-      }
-
-      resetGame();
-      updateUI();
-    }
-
-    function shareRoomInvite(code) {
-      var joinUrl = window.location.origin + window.location.pathname + '?room=' + encodeURIComponent(code);
-      if (navigator.share) {
-        navigator.share({
-          title: 'Clash of Lorna',
-          text: 'Challenge me in Clash of Lorna! Room Code: ' + code,
-          url: joinUrl
-        }).catch(function() {});
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(joinUrl);
-        alert('Arena Link Copied!\n\nRoom Code: ' + code + '\n' + joinUrl);
-      } else {
-        prompt('Copy arena link:', joinUrl);
-      }
-    }
-
-    function createPvPRoom() {
-      if (typeof Peer === 'undefined') {
-        alert('Multiplayer service loading. Please retry in a moment.');
-        return;
-      }
-
-      if (state.conn) {
-        try { state.conn.close(); } catch (e) {}
-        state.conn = null;
-      }
-      if (state.peer) {
-        try { state.peer.destroy(); } catch (e) {}
-        state.peer = null;
-      }
-
-      var customInput = document.getElementById('custom-room-code-input').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (customInput.length > 10) customInput = customInput.slice(0, 10);
-      var roomCode = customInput || generateShortCode();
-
-      var bannerText = document.getElementById('banner-text');
-      var banner = document.getElementById('banner');
-      banner.className = 'panel-box banner-waiting';
-      bannerText.textContent = 'Creating room ' + roomCode + '...';
-
-      state.mode = 'pvp';
-      state.myPlayerNum = 1;
-      state.isConnected = false;
-
-      // Host establishes identity from stored local profile
-      var myName = localStorage.getItem('lorna_my_name') || 'Lorna';
-      var myAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
-      state.playerNames[1] = myName;
-      state.playerAvatars[1] = myAvatar;
-      state.playerNames[2] = 'Waiting...';
-      state.playerAvatars[2] = '⏳';
-
-      state.peer = new Peer(roomCode, peerIceConfig);
-
-      state.peer.on('open', function(id) {
-        state.activeRoomCode = id;
-        document.getElementById('custom-room-code-input').value = id;
-        // Direct transition back to main screen
-        document.getElementById('settings-modal').classList.remove('open');
-        document.getElementById('welcome-modal').classList.remove('open');
-        resetGame();
-        updateUI();
-
-        state.peer.on('connection', function(incomingConn) {
-          state.conn = incomingConn;
-          setupConnListeners(incomingConn);
-        });
-      });
-
-      state.peer.on('error', function(err) {
-        console.error('PeerJS Host Error:', err);
-        if (err.type === 'unavailable-id') {
-          var alt = generateShortCode();
-          alert('Room code "' + roomCode + '" is taken. Generated new code: ' + alt);
-          document.getElementById('custom-room-code-input').value = alt;
-          createPvPRoom();
-        } else {
-          alert('Notice: ' + (err.type || 'Connection issue'));
-          updateUI();
-        }
-      });
-    }
-
-    function joinPvPRoom(codeOrId) {
-      if (!codeOrId) return;
-      var targetId = codeOrId.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (targetId.length > 10) targetId = targetId.slice(0, 10);
-
-      var bannerText = document.getElementById('banner-text');
-      var banner = document.getElementById('banner');
-      banner.className = 'panel-box banner-waiting';
-      bannerText.textContent = 'Connecting to room ' + targetId + '...';
-
-      if (state.conn) {
-        try { state.conn.close(); } catch (e) {}
-        state.conn = null;
-      }
-      if (state.peer) {
-        try { state.peer.destroy(); } catch (e) {}
-        state.peer = null;
-      }
-
-      state.peer = new Peer(peerIceConfig);
-
-      state.peer.on('open', function() {
-        state.mode = 'pvp';
-        state.myPlayerNum = 2; // Joining player is ALWAYS Player 2
-        state.activeRoomCode = targetId;
-
-        // Ensure joining player registers their local saved identity as Player 2
-        var myName = localStorage.getItem('lorna_my_name') || 'Player 2';
-        var myAvatar = localStorage.getItem('lorna_my_avatar') || '⚔️';
-        state.playerNames[2] = myName;
-        state.playerAvatars[2] = myAvatar;
-
-        var outgoingConn = state.peer.connect(targetId, { reliable: true });
-        state.conn = outgoingConn;
-        setupConnListeners(outgoingConn);
-
-        document.getElementById('join-invite-modal').classList.remove('open');
-        document.getElementById('settings-modal').classList.remove('open');
-        document.getElementById('welcome-modal').classList.remove('open');
-        updateUI();
-      });
-
-      state.peer.on('error', function(err) {
-        console.error('PeerJS Client Error:', err);
-        alert('Could not connect to room "' + targetId + '". Double-check the code.');
-        updateUI();
-      });
-    }
-
-    function setupConnListeners(conn) {
-      conn.on('open', function() {
-        state.isConnected = true;
-        playSfx('connect');
-
-        // Send local player profile over handshake
-        conn.send({
-          type: 'handshake',
-          playerNum: state.myPlayerNum,
-          name: state.playerNames[state.myPlayerNum],
-          avatar: state.playerAvatars[state.myPlayerNum],
-          pieceTheme: state.pieceTheme,
-          level: state.currentLevel,
-          winCondition: state.winCondition,
-          targetScore: state.targetScore
-        });
-
-        if (state.myPlayerNum === 1) {
-          conn.send({ type: 'syncTray', tray: state.trayPieces });
-        }
-
-        renderTrayDOM();
-        updateUI();
-      });
-
-      conn.on('data', function(data) {
-        if (data.type === 'move') {
-          if (data.grid) state.grid = data.grid;
-          if (data.scores) state.scores = data.scores;
-          commitDrop(data.piece, data.r, data.c, data.slotIdx, true);
-        } else if (data.type === 'syncTray') {
-          state.trayPieces = data.tray;
-          renderTrayDOM();
-        } else if (data.type === 'handshake') {
-          state.playerNames[data.playerNum] = data.name;
-          state.playerAvatars[data.playerNum] = data.avatar;
-
-          if (state.myPlayerNum === 2) {
-            state.currentLevel = data.level;
-            state.winCondition = data.winCondition;
-            state.targetScore = data.targetScore;
-            state.pieceTheme = data.pieceTheme;
-            initBoard();
-            renderBoardDOM();
-          } else if (state.myPlayerNum === 1) {
-            conn.send({
-              type: 'nameSync',
-              playerNum: 1,
-              name: state.playerNames[1],
-              avatar: state.playerAvatars[1]
-            });
-            conn.send({ type: 'syncTray', tray: state.trayPieces });
-          }
-          renderTrayDOM();
-          updateUI();
-        } else if (data.type === 'nameSync') {
-          state.playerNames[data.playerNum] = data.name;
-          state.playerAvatars[data.playerNum] = data.avatar;
-          updateUI();
-        }
-      });
-
-      conn.on('close', function() {
-        state.isConnected = false;
-        alert('Opponent has left the arena.');
-        renderTrayDOM();
-        updateUI();
-      });
-    }
-
-    function promptPlayerName(playerNum) {
-      if (state.mode === 'bot' && playerNum === 2) return;
-      var current = state.playerNames[playerNum];
-      var next = prompt('Enter name for ' + (playerNum === 1 ? 'Player 1' : 'Player 2'), current);
-      if (next && next.trim()) {
-        var cleanName = next.trim().slice(0, 14);
-        state.playerNames[playerNum] = cleanName;
-        if (state.myPlayerNum === playerNum) {
-          localStorage.setItem('lorna_my_name', cleanName);
-        }
-        updateUI();
-
-        if (state.conn && state.conn.open) {
-          state.conn.send({
-            type: 'nameSync',
-            playerNum: playerNum,
-            name: cleanName,
-            avatar: state.playerAvatars[playerNum]
-          });
-        }
-      }
-    }
-
-    function triggerWelcomeModal(isReturning) {
-      var welcomeModal = document.getElementById('welcome-modal');
-      var returningNotice = document.getElementById('returning-user-notice');
-      var nameInput = document.getElementById('welcome-name-input');
-      
-      var savedName = localStorage.getItem('lorna_my_name') || 'Player';
-      var savedAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
-
-      nameInput.value = savedName;
-
-      if (isReturning) {
-        returningNotice.style.display = 'block';
-        document.getElementById('welcome-returning-name').textContent = savedName;
-      } else {
-        returningNotice.style.display = 'none';
-      }
-
-      document.querySelectorAll('#welcome-avatar-grid .avatar-opt-btn').forEach(function(btn) {
-        btn.classList.toggle('active-opt', btn.dataset.avatar === savedAvatar);
-        btn.onclick = function() {
-          savedAvatar = btn.dataset.avatar;
-          document.querySelectorAll('#welcome-avatar-grid .avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-        };
-      });
-
-      function saveProfile() {
-        var chosenName = nameInput.value.trim() || 'Player';
-        localStorage.setItem('lorna_my_name', chosenName);
-        localStorage.setItem('lorna_my_avatar', savedAvatar);
-        localStorage.setItem('lorna_profile_initialized', 'true');
-        document.getElementById('host-name-input').value = chosenName;
-        return { name: chosenName, avatar: savedAvatar };
-      }
-
-      document.getElementById('welcome-play-bot-btn').onclick = function() {
-        var prof = saveProfile();
-        state.playerNames[1] = prof.name;
-        state.playerAvatars[1] = prof.avatar;
-        welcomeModal.classList.remove('open');
-        setMode('bot');
-      };
-
-      document.getElementById('welcome-create-pvp-btn').onclick = function() {
-        var prof = saveProfile();
-        state.playerNames[1] = prof.name;
-        state.playerAvatars[1] = prof.avatar;
-        createPvPRoom();
-      };
-
-      document.getElementById('welcome-join-btn').onclick = function() {
-        var code = document.getElementById('welcome-join-code-input').value.trim();
-        if (!code) {
-          alert('Please enter a room code');
-          return;
-        }
-        var prof = saveProfile();
-        state.playerNames[2] = prof.name;
-        state.playerAvatars[2] = prof.avatar;
-        joinPvPRoom(code);
-      };
-
-      welcomeModal.classList.add('open');
-    }
-
-    function setupOfflineServiceWorker() {
-      if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-        var swCode = "const CACHE_NAME='lorna-duel-v6';" +
-          "self.addEventListener('install', e => {" +
-          "  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll([self.location.href])));" +
-          "  self.skipWaiting();" +
-          "});" +
-          "self.addEventListener('activate', e => {" +
-          "  e.waitUntil(clients.claim());" +
-          "});" +
-          "self.addEventListener('fetch', e => {" +
-          "  e.respondWith(" +
-          "    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {" +
-          "      if(res && res.status === 200) {" +
-          "        const clone = res.clone();" +
-          "        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));" +
-          "      }" +
-          "      return res;" +
-          "    }).catch(() => caches.match(e.request)))" +
-          "  );" +
-          "});";
-
-        var blob = new Blob([swCode], { type: 'application/javascript' });
-        var swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).catch(function() {});
-      }
-    }
-
-    function bootGame() {
-      applyTheme(state.theme);
-
-      var hasInitialized = localStorage.getItem('lorna_profile_initialized');
-      var savedName = localStorage.getItem('lorna_my_name') || 'Lorna';
-      var savedAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
-      
-      state.playerNames[1] = savedName;
-      state.playerAvatars[1] = savedAvatar;
-      document.getElementById('host-name-input').value = savedName;
-      document.getElementById('custom-room-code-input').value = generateShortCode();
-
-      document.querySelectorAll('.piece-theme-btn').forEach(function(b) {
-        b.classList.toggle('active-opt', b.dataset.theme === state.pieceTheme);
-      });
-
-      document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) {
-        b.classList.toggle('active-opt', b.dataset.avatar === savedAvatar);
-      });
-
-      initBoard();
-      replenishTray();
-      renderBoardDOM();
-      setMode(state.mode);
-
-      window.addEventListener('resize', updateCellSize);
-
-      var settingsModal = document.getElementById('settings-modal');
-      var inviteModal = document.getElementById('join-invite-modal');
-      var historyModal = document.getElementById('history-modal');
-      var rulesModal = document.getElementById('rules-modal');
-
-      document.getElementById('settings-btn').onclick = function() { settingsModal.classList.add('open'); };
-      document.getElementById('close-modal-x').onclick = function() { settingsModal.classList.remove('open'); };
-      document.getElementById('close-modal-bottom').onclick = function() { settingsModal.classList.remove('open'); };
-
-      document.getElementById('theme-dark-opt').onclick = function() { applyTheme('dark'); };
-      document.getElementById('theme-light-opt').onclick = function() { applyTheme('light'); };
-
-      document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          var avatar = btn.dataset.avatar;
-          localStorage.setItem('lorna_my_avatar', avatar);
-          state.playerAvatars[state.myPlayerNum] = avatar;
-          document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-          updateUI();
-          if (state.conn && state.conn.open) {
-            state.conn.send({
-              type: 'nameSync',
-              playerNum: state.myPlayerNum,
-              name: state.playerNames[state.myPlayerNum],
-              avatar: avatar
-            });
-          }
-        };
-      });
-
-      document.querySelectorAll('.piece-theme-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          state.pieceTheme = btn.dataset.theme;
-          localStorage.setItem('lorna_piece_theme', state.pieceTheme);
-          document.querySelectorAll('.piece-theme-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-          renderBoardDOM();
-          if (state.isTV) renderTVBoard();
-        };
-      });
-
-      document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
-      document.getElementById('p2-card').onclick = function() { promptPlayerName(2); };
-
-      document.getElementById('modal-join-btn').onclick = function() {
-        var code = document.getElementById('modal-room-input').value.trim();
-        if (code) joinPvPRoom(code);
-      };
-
-      document.getElementById('randomize-code-btn').onclick = function() {
-        document.getElementById('custom-room-code-input').value = generateShortCode();
-      };
-
-      document.getElementById('pvp-create-btn').onclick = createPvPRoom;
-
-      document.getElementById('settings-re-share').onclick = function() {
-        if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
-      };
-
-      document.getElementById('host-name-input').onchange = function(e) {
-        var val = e.target.value.trim() || 'Player';
-        localStorage.setItem('lorna_my_name', val);
-        state.playerNames[state.myPlayerNum] = val;
-        updateUI();
-        if (state.conn && state.conn.open) {
-          state.conn.send({
-            type: 'nameSync',
-            playerNum: state.myPlayerNum,
-            name: val,
-            avatar: state.playerAvatars[state.myPlayerNum]
-          });
-        }
-      };
-
-      document.getElementById('restart-btn').onclick = function() {
-        triggerWelcomeModal(true);
-      };
-      document.getElementById('gameover-restart-btn').onclick = resetGame;
-
-      document.getElementById('opt-pass').onclick = function() { setMode('pass'); };
-      document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
-      document.getElementById('opt-pvp').onclick = function() { setMode('pvp'); };
-
-      var trapOpt = document.getElementById('winrule-trap-opt');
-      var ptsOpt = document.getElementById('winrule-points-opt');
-      var ptsBox = document.getElementById('points-target-box');
-
-      trapOpt.onclick = function() {
-        state.winCondition = 'trap';
-        trapOpt.classList.add('active-opt');
-        ptsOpt.classList.remove('active-opt');
-        ptsBox.style.display = 'none';
-        updateUI();
-      };
-
-      ptsOpt.onclick = function() {
-        state.winCondition = 'race';
-        ptsOpt.classList.add('active-opt');
-        trapOpt.classList.remove('active-opt');
-        ptsBox.style.display = 'flex';
-        updateUI();
-      };
-
-      document.querySelectorAll('.target-chip-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          state.targetScore = parseInt(btn.dataset.pts, 10);
-          document.getElementById('target-pts-display').textContent = state.targetScore + ' pts';
-          document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-          updateUI();
-        };
-      });
-
-      document.getElementById('apply-custom-target').onclick = function() {
-        var val = parseInt(document.getElementById('custom-target-input').value, 10);
-        if (val && val >= 500) {
-          state.targetScore = val;
-          document.getElementById('target-pts-display').textContent = val + ' pts';
-          document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          updateUI();
-        }
-      };
-
-      document.querySelectorAll('.lvl-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          state.currentLevel = parseInt(btn.dataset.lvl, 10);
-          document.querySelectorAll('.lvl-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-          resetGame();
-        };
-      });
-
-      document.getElementById('share-again-btn').onclick = function() {
-        if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
-      };
-
-      document.getElementById('open-rules-btn').onclick = function() {
-        settingsModal.classList.remove('open');
-        rulesModal.classList.add('open');
-      };
-      document.getElementById('close-rules-x').onclick = function() {
-        rulesModal.classList.remove('open');
-        settingsModal.classList.add('open');
-      };
-      document.getElementById('close-rules-btn').onclick = function() {
-        rulesModal.classList.remove('open');
-        settingsModal.classList.add('open');
-      };
-
-      document.getElementById('open-history-btn').onclick = function() {
-        settingsModal.classList.remove('open');
-        renderHistoryList();
-        historyModal.classList.add('open');
-      };
-      document.getElementById('close-history-x').onclick = function() { historyModal.classList.remove('open'); };
-      document.getElementById('close-history-btn').onclick = function() { historyModal.classList.remove('open'); };
-      document.getElementById('clear-history-btn').onclick = function() {
-        localStorage.removeItem('lorna_history');
-        renderHistoryList();
-      };
-
-      var sBtn = document.getElementById('sound-btn');
-      sBtn.onclick = function() {
-        soundEnabled = !soundEnabled;
-        sBtn.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
-      };
-
-      var tvToggle = function() {
-        state.isTV = !state.isTV;
-        if (state.isTV) {
-          settingsModal.classList.remove('open');
-          document.getElementById('game-view').style.display = 'none';
-          document.getElementById('tv-view').classList.add('open');
-          renderTVBoard();
-        } else {
-          document.getElementById('tv-view').classList.remove('open');
-          document.getElementById('game-view').style.display = 'flex';
-        }
-      };
-
-      document.getElementById('settings-tv-btn').onclick = tvToggle;
-      document.getElementById('exit-tv-btn').onclick = tvToggle;
-
-      var params = new URLSearchParams(window.location.search);
-      var roomParam = params.get('room');
-      if (roomParam) {
-        setMode('pvp');
-        settingsModal.classList.remove('open');
-        document.getElementById('invite-room-code-display').textContent = roomParam;
-
-        var guestInput = document.getElementById('guest-name-input');
-        guestInput.value = localStorage.getItem('lorna_my_name') || 'Player 2';
-        inviteModal.classList.add('open');
-
-        document.getElementById('accept-join-btn').onclick = function() {
-          var chosenName = guestInput.value.trim() || 'Player 2';
-          localStorage.setItem('lorna_my_name', chosenName);
-          state.playerNames[2] = chosenName;
-          playSfx('place');
-          joinPvPRoom(roomParam);
-        };
-      } else {
-        triggerWelcomeModal(hasInitialized ? true : false);
-      }
-
-      setupOfflineServiceWorker();
-    }
-
-    bootGame();
-  </script>
-</body>
-</html>
+          cell.style.borderRadius
