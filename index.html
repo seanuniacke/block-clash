@@ -578,7 +578,6 @@
   <canvas id="celebration-canvas"></canvas>
   <div id="drag-ghost"></div>
 
-  <!-- Top Bar -->
   <header>
     <div class="brand-wrap">
       <svg class="warrior-logo-svg" viewBox="0 0 64 64">
@@ -610,16 +609,13 @@
     </div>
   </header>
 
-  <!-- TV Spectator Arena -->
   <div id="tv-view">
     <div id="tv-board-grid"></div>
     <div style="font-size: 16px; font-weight: 800; color: #22d3ee;" id="tv-status">TV Spectator Mode Active</div>
     <button id="exit-tv-btn" style="background:#4f46e5; color:#fff; padding:8px 16px; font-size:12px;">Back to Game</button>
   </div>
 
-  <!-- Main Game Arena -->
   <main id="game-view">
-    <!-- Dynamic Scoreboard (2 cards for 2P/Teams, 4 cards for 4P FFA) -->
     <div id="scoreboard" class="scoreboard">
       <div id="p1-card" class="panel-box score-card active-p1">
         <div>
@@ -654,18 +650,15 @@
       </div>
     </div>
 
-    <!-- Status Banner for PvP Notifications -->
     <div id="banner" class="panel-box">
       <span id="banner-text">Connecting...</span>
       <button id="share-again-btn" style="display:none; background:#065f46; border-color:#059669; color:#fff; padding:4px 9px; font-size:11px;">📲 Share Link</button>
     </div>
 
-    <!-- Board Frame (Auto-scales 8x8 or 10x10) -->
     <div class="arena-container">
       <div id="board" class="inner-box"></div>
     </div>
 
-    <!-- Piece Tray -->
     <div class="tray-wrap">
       <div class="tray-bar">
         <span id="tray-turn-label">Piece Tray:</span>
@@ -675,7 +668,6 @@
     </div>
   </main>
 
-  <!-- WELCOME / ENTER ARENA MODAL -->
   <div id="welcome-modal" class="modal">
     <div class="modal-box panel-box" style="border: 2px solid #06b6d4; text-align: center;">
       <div id="welcome-avatar-display" style="font-size: 38px; line-height: 1;">🧝‍♀️</div>
@@ -720,7 +712,7 @@
             👥 Local 2P (8x8)
           </button>
           <button id="welcome-pass4-btn" style="background: #1e293b; border-color: #334155; color: #e2e8f0; padding: 8px; font-size: 11px; font-weight: 800;">
-            👥 Local 4P / 2v2 (10x10)
+            🤝 Local 2v2 (10x10)
           </button>
         </div>
 
@@ -747,7 +739,6 @@
     </div>
   </div>
 
-  <!-- Guest Match Invite Prompt -->
   <div id="join-invite-modal" class="modal">
     <div class="modal-box panel-box" style="text-align: center; align-items: center; border: 2px solid #06b6d4;">
       <div style="font-size: 34px;">⚔️</div>
@@ -770,7 +761,6 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
   <div id="settings-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
@@ -948,7 +938,6 @@
     </div>
   </div>
 
-  <!-- How to Play Modal -->
   <div id="rules-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
@@ -975,7 +964,6 @@
     </div>
   </div>
 
-  <!-- Match History Modal -->
   <div id="history-modal" class="modal">
     <div class="modal-box panel-box">
       <div class="modal-header">
@@ -990,7 +978,6 @@
     </div>
   </div>
 
-  <!-- Game Over Modal -->
   <div id="gameover-modal" class="modal">
     <div class="modal-box panel-box" style="text-align: center; align-items: center; border: 2px solid #06b6d4;">
       <div style="font-size: 40px;">🏆</div>
@@ -1006,6 +993,13 @@
   </div>
 
   <script>
+    // Clear any stale Service Workers from previous versions that might serve cached/blank pages
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(reg) { reg.unregister(); });
+      }).catch(function() {});
+    }
+
     function triggerCelebration() {
       var canvas = document.getElementById('celebration-canvas');
       if (!canvas) return;
@@ -1151,10 +1145,10 @@
     };
 
     var PLAYER_COLORS = {
-      1: '#06b6d4', // Cyan
-      2: '#f43f5e', // Rose
-      3: '#f59e0b', // Amber
-      4: '#10b981'  // Emerald
+      1: '#06b6d4',
+      2: '#f43f5e',
+      3: '#f59e0b',
+      4: '#10b981'
     };
 
     var CODE_WORDS = ['WOLF', 'LORNA', 'SWORD', 'CLAN', 'RUNE', 'CASTLE', 'HAWK', 'VALOR', 'FIRE', 'STAR', 'BLADE', 'GUARD', 'SHIELD', 'FROST', 'EAGLE', 'LION'];
@@ -1168,15 +1162,20 @@
     var localMyName = localStorage.getItem('lorna_my_name') || 'Lorna';
     var localMyAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
 
+    var savedMode = localStorage.getItem('lorna_mode') || 'bot';
+    if (savedMode === 'pvp' || savedMode === 'pvp4' || savedMode === 'teams-online') {
+      savedMode = 'bot';
+    }
+
     var state = {
       gridSize: 8,
       grid: [],
       playerCount: 2,
-      isTeamMode: false, // 2v2: Team 1 (P1 & P3) vs Team 2 (P2 & P4)
+      isTeamMode: false,
       currentPlayer: 1,
       eliminatedPlayers: {},
       scores: { 1: 0, 2: 0, 3: 0, 4: 0 },
-      mode: localStorage.getItem('lorna_mode') || 'bot', // 'bot', 'pass', 'pass4', 'teams-local', 'pvp', 'pvp4', 'teams-online'
+      mode: savedMode,
       theme: localStorage.getItem('lorna_theme') || 'dark',
       pieceTheme: localStorage.getItem('lorna_piece_theme') || 'gems',
       winCondition: 'trap',
@@ -1188,8 +1187,8 @@
       isTV: false,
       botThinking: false,
       peer: null,
-      conn: null,       // Guest's connection to host
-      conns: [],        // Host's connections to guests (P2, P3, P4)
+      conn: null,
+      conns: [],
       myPlayerNum: 1,
       activeRoomCode: null,
       isConnected: false,
@@ -1227,7 +1226,7 @@
       hasMoved: false,
       slotEl: null,
       cellSize: 42,
-      ghostEl: document.getElementById('drag-ghost')
+      ghostEl: null
     };
 
     function isOnlineMode() {
@@ -1236,7 +1235,6 @@
 
     function getVisualOwner(playerNum) {
       if (!state.isTeamMode) return playerNum;
-      // Team 1 (P1 & P3) -> 1 (Cyan); Team 2 (P2 & P4) -> 2 (Rose)
       return (playerNum === 1 || playerNum === 3) ? 1 : 2;
     }
 
@@ -1248,8 +1246,10 @@
       state.theme = theme;
       localStorage.setItem('lorna_theme', theme);
       document.body.className = 'theme-' + theme;
-      document.getElementById('theme-dark-opt').classList.toggle('active-opt', theme === 'dark');
-      document.getElementById('theme-light-opt').classList.toggle('active-opt', theme === 'light');
+      var darkOpt = document.getElementById('theme-dark-opt');
+      var lightOpt = document.getElementById('theme-light-opt');
+      if (darkOpt) darkOpt.classList.toggle('active-opt', theme === 'dark');
+      if (lightOpt) lightOpt.classList.toggle('active-opt', theme === 'light');
     }
 
     function initBoard() {
@@ -1410,6 +1410,7 @@
 
     function buildScaledGhost(piece) {
       var ghost = drag.ghostEl;
+      if (!ghost) return;
       ghost.innerHTML = '';
       var rows = piece.matrix.length;
       var cols = piece.matrix[0].length;
@@ -1460,13 +1461,15 @@
       if (dist > 8) {
         if (!drag.hasMoved) {
           drag.hasMoved = true;
-          drag.ghostEl.style.display = 'block';
+          if (drag.ghostEl) drag.ghostEl.style.display = 'block';
           if (drag.slotEl) drag.slotEl.classList.add('dragging-source');
         }
 
         var offsetY = isTouch ? -68 : 0;
-        drag.ghostEl.style.left = x + 'px';
-        drag.ghostEl.style.top = (y + offsetY) + 'px';
+        if (drag.ghostEl) {
+          drag.ghostEl.style.left = x + 'px';
+          drag.ghostEl.style.top = (y + offsetY) + 'px';
+        }
 
         var cell = getCellAt(x, y + offsetY);
         if (cell) {
@@ -1479,7 +1482,7 @@
 
     function processDragEnd(x, y, isTouch) {
       if (!drag.active) return;
-      drag.ghostEl.style.display = 'none';
+      if (drag.ghostEl) drag.ghostEl.style.display = 'none';
       if (drag.slotEl) drag.slotEl.classList.remove('dragging-source');
       clearHover();
 
@@ -1687,7 +1690,6 @@
 
       checkLines(!isRemote);
 
-      // Check Points Race Win Condition
       if (state.winCondition === 'race') {
         if (state.isTeamMode) {
           var team1Score = state.scores[1] + state.scores[3];
@@ -1719,7 +1721,6 @@
       renderBoardDOM();
       if (state.isTV) renderTVBoard();
 
-      // Advance Turn & Evaluate Survival Elimination
       advanceTurnAndCheckSurvival(isRemote);
     }
 
@@ -1739,34 +1740,24 @@
         return;
       }
 
-      // 4-Player FFA or 2v2 Teams turn resolution
       if (state.isTeamMode) {
-        // Check if next player is trapped; in 2v2, a trapped teammate is skipped while their partner can still rescue them.
-        // If BOTH teammates on a team have no moves on their turns, that team loses!
         var nextP = getNextPlayer(state.currentPlayer);
         if (!playerHasLegalMove(state.trayPieces)) {
           var trappedTeam = getTeamNumber(nextP);
           var partner = nextP === 1 ? 3 : (nextP === 3 ? 1 : (nextP === 2 ? 4 : 2));
-          // Test if partner also has no moves right now
-          if (!playerHasLegalMove(state.trayPieces)) {
-            var winningTeam = trappedTeam === 1 ? 2 : 1;
-            state.currentPlayer = nextP;
-            renderTrayDOM();
-            updateUI();
-            broadcastFullStateIfOnline(isRemote);
-            triggerWin(winningTeam, 'Team ' + trappedTeam + ' (' + state.playerNames[nextP] + ' & ' + state.playerNames[partner] + ') has no legal moves left!');
-            return;
-          } else {
-            // Skip trapped player to opponent
-            nextP = getNextPlayer(nextP);
-          }
+          var winningTeam = trappedTeam === 1 ? 2 : 1;
+          state.currentPlayer = nextP;
+          renderTrayDOM();
+          updateUI();
+          broadcastFullStateIfOnline(isRemote);
+          triggerWin(winningTeam, 'Team ' + trappedTeam + ' (' + state.playerNames[nextP] + ' & ' + state.playerNames[partner] + ') has no legal moves left!');
+          return;
         }
         state.currentPlayer = nextP;
         renderTrayDOM();
         updateUI();
         broadcastFullStateIfOnline(isRemote);
       } else {
-        // 4P Free-For-All: eliminate any player whose turn arrives with no legal moves
         var attempts = 0;
         var nextCandidate = getNextPlayer(state.currentPlayer);
         while (attempts < 4 && !playerHasLegalMove(state.trayPieces)) {
@@ -1808,12 +1799,10 @@
       };
 
       if (state.myPlayerNum === 1) {
-        // Host broadcasts to all connected guests
         state.conns.forEach(function(c) {
           if (c && c.open) c.send(payload);
         });
       } else if (!isRemote && state.conn && state.conn.open) {
-        // Guest sends updated state to host for relay
         state.conn.send(payload);
       }
     }
@@ -2045,7 +2034,6 @@
       }
 
       if (state.isTeamMode) {
-        // 2v2 Team Scoreboard: 2 combined team cards
         sb.className = 'scoreboard';
         p3Card.style.display = 'none';
         p4Card.style.display = 'none';
@@ -2066,7 +2054,6 @@
         document.getElementById('p1-status').textContent = activeTeam === 1 ? (activeName.toUpperCase() + "'S TURN") : 'TEAM CYAN';
         document.getElementById('p2-status').textContent = activeTeam === 2 ? (activeName.toUpperCase() + "'S TURN") : 'TEAM ROSE';
       } else if (state.playerCount === 4) {
-        // 4P Free-For-All: 4 individual cards
         sb.className = 'scoreboard four-player';
         p3Card.style.display = 'flex';
         p4Card.style.display = 'flex';
@@ -2090,7 +2077,6 @@
           }
         }
       } else {
-        // Standard 2P Duel
         sb.className = 'scoreboard';
         p3Card.style.display = 'none';
         p4Card.style.display = 'none';
@@ -2336,7 +2322,7 @@
             return;
           }
 
-          var assignedSeat = openConns.length + 2; // P2, P3, or P4
+          var assignedSeat = openConns.length + 2;
           incomingConn.assignedSeat = assignedSeat;
           state.conns.push(incomingConn);
           setupHostGuestListeners(incomingConn, assignedSeat);
@@ -2363,7 +2349,6 @@
         var openCount = state.conns.filter(function(c) { return c && c.open; }).length;
         state.isConnected = (openCount >= state.playerCount - 1);
 
-        // Assign seat and send full room config to the new guest
         guestConn.send({
           type: 'welcomeSeat',
           assignedSeat: seatNum,
@@ -2393,7 +2378,6 @@
           state.playerNames[seatNum] = data.name;
           state.playerAvatars[seatNum] = data.avatar;
           updateUI();
-          // Broadcast updated roster to all guests
           state.conns.forEach(function(c) {
             if (c && c.open) {
               c.send({
@@ -2415,7 +2399,6 @@
           updateUI();
           if (state.isTV) renderTVBoard();
 
-          // Relay state to all OTHER connected guests
           state.conns.forEach(function(c) {
             if (c && c.open && c !== guestConn) {
               c.send(data);
@@ -2685,6 +2668,7 @@
     }
 
     function bootGame() {
+      drag.ghostEl = document.getElementById('drag-ghost');
       applyTheme(state.theme);
 
       var savedName = localStorage.getItem('lorna_my_name') || 'Lorna';
@@ -2927,7 +2911,11 @@
       }
     }
 
-    bootGame();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootGame);
+    } else {
+      bootGame();
+    }
   </script>
 </body>
 </html>
