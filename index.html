@@ -38,30 +38,30 @@
     }
     body.theme-dark header { background: #131924; border-bottom: 1px solid #242d3d; }
     body.theme-dark .panel-box { background: #131924; border: 1px solid #242d3d; }
-    body.theme-dark .inner-box { background: #111827; border: 1px solid #2a364d; }
-    body.theme-dark #board { background: #1b2538; border: 1px solid #364766; }
-    body.theme-dark .cell { background: #26344d; border: 1px solid #354666; }
-    body.theme-dark .cell:hover { background: #314261; }
-    body.theme-dark .cell.obstacle { background: #475569; border: 1px solid #64748b; color: #f1f5f9; }
+    body.theme-dark .inner-box { background: #161f30; border: 1px solid #2d3b54; }
+    body.theme-dark #board { background: #1e293b; border: 2px solid #475569; }
+    body.theme-dark .cell { background: #334155; border: 1px solid #475569; }
+    body.theme-dark .cell:hover { background: #3e4f66; }
+    body.theme-dark .cell.obstacle { background: #64748b; border: 1px solid #94a3b8; color: #f8fafc; }
     body.theme-dark button { background: #1d2535; color: #f1f5f9; border: 1px solid #2f3b52; }
     body.theme-dark button:hover { background: #28344a; }
     body.theme-dark .input-field { background: #070a0f; border: 1px solid #242d3d; color: #f0f6fc; }
 
     body.theme-light {
-      background-color: #e2e8f0;
+      background-color: #cbd5e1;
       color: #1e293b;
     }
     body.theme-light header { background: #ffffff; border-bottom: 1px solid #cbd5e1; }
     body.theme-light .panel-box { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
     body.theme-light .inner-box { background: #e2e8f0; border: 1px solid #cbd5e1; }
-    body.theme-light #board { background: #f1f5f9; border: 1.5px solid #cbd5e1; }
-    body.theme-light .cell { background: #ffffff; border: 1.5px solid #dbe4f0; }
+    body.theme-light #board { background: #e2e8f0; border: 2px solid #94a3b8; }
+    body.theme-light .cell { background: #ffffff; border: 1.5px solid #cbd5e1; }
     body.theme-light .cell:hover { background: #f8fafc; }
     body.theme-light .cell.obstacle { background: #94a3b8; border: 1.5px solid #64748b; color: #0f172a; }
     body.theme-light button { background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; }
     body.theme-light button:hover { background: #e2e8f0; }
     body.theme-light .input-field { background: #ffffff; border: 1.5px solid #cbd5e1; color: #0f172a; }
-    body.theme-light .turn-status, body.theme-light .tray-bar, body.theme-light .setting-label { color: #64748b; }
+    body.theme-light .turn-status, body.theme-light .tray-bar, body.theme-light .setting-label { color: #475569; }
 
     body {
       display: flex;
@@ -261,13 +261,12 @@
     #board {
       width: min(92vw, calc(100dvh - 220px), 520px);
       height: min(92vw, calc(100dvh - 220px), 520px);
-      aspect-ratio: 1 / 1;
       border-radius: 14px;
-      padding: 5px;
+      padding: 6px;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: 3px;
+      gap: 4px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       cursor: pointer;
       flex-shrink: 0;
@@ -277,46 +276,47 @@
     .cell {
       width: 100%;
       height: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 4px;
+      min-width: 0;
+      min-height: 0;
+      border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(12px, 2.5vmin, 22px);
+      font-size: clamp(13px, 2.6vmin, 22px);
       line-height: 1;
       overflow: hidden;
       transition: background-color 0.1s ease;
     }
 
     .cell.p1 {
-      background: rgba(6, 182, 212, 0.38) !important;
-      border-color: #06b6d4 !important;
+      background: rgba(6, 182, 212, 0.45) !important;
+      border-color: #22d3ee !important;
     }
 
     .cell.p2 {
-      background: rgba(244, 63, 94, 0.38) !important;
-      border-color: #f43f5e !important;
+      background: rgba(244, 63, 94, 0.45) !important;
+      border-color: #fb7185 !important;
     }
 
     .cell.p3 {
-      background: rgba(245, 158, 11, 0.38) !important;
-      border-color: #f59e0b !important;
+      background: rgba(245, 158, 11, 0.45) !important;
+      border-color: #fbbf24 !important;
     }
 
     .cell.p4 {
-      background: rgba(16, 185, 129, 0.38) !important;
-      border-color: #10b981 !important;
+      background: rgba(16, 185, 129, 0.45) !important;
+      border-color: #34d399 !important;
     }
 
     .cell.preview-valid {
-      background: rgba(34, 211, 238, 0.6) !important;
+      background: rgba(34, 211, 238, 0.65) !important;
       outline: 2px solid #22d3ee;
       outline-offset: -2px;
       transform: scale(0.96);
     }
 
     .cell.preview-invalid {
-      background: rgba(244, 63, 94, 0.5) !important;
+      background: rgba(244, 63, 94, 0.55) !important;
       outline: 2px solid #f43f5e;
       outline-offset: -2px;
     }
@@ -562,7 +562,7 @@
     #tv-board-grid {
       width: min(84vmin, 600px);
       height: min(84vmin, 600px);
-      background: #1b2538;
+      background: #1e293b;
       border: 4px solid #4f46e5;
       border-radius: 20px;
       padding: 8px;
@@ -602,6 +602,7 @@
         <path d="M10 52 L26 36 M54 52 L38 36" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/>
       </svg>
       <div class="brand-title">CLASH OF LORNA</div>
+      <span style="font-size:10px; color:#64748b; font-weight:700;">v2.1</span>
     </div>
 
     <div class="header-btns">
@@ -656,13 +657,13 @@
     </div>
 
     <div class="arena-container">
-      <div id="board" class="inner-box"></div>
+      <div id="board"></div>
     </div>
 
     <div class="tray-wrap">
       <div class="tray-bar">
         <span id="tray-turn-label">Piece Tray:</span>
-        <button id="restart-btn" style="background:#881337; border-color:#be123c; color:#fecdd3; padding:2px 8px;">🔄 Restart</button>
+        <button id="restart-btn" style="background:#881337; border-color:#be123c; color:#fecdd3; padding:2px 8px;">🔄 New Game</button>
       </div>
       <div id="tray" class="panel-box"></div>
     </div>
@@ -993,7 +994,6 @@
   </div>
 
   <script>
-    // Clear any stale Service Workers from previous versions that might serve cached/blank pages
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs) {
         regs.forEach(function(reg) { reg.unregister(); });
@@ -1162,10 +1162,9 @@
     var localMyName = localStorage.getItem('lorna_my_name') || 'Lorna';
     var localMyAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
 
+    var validLocalModes = { 'bot': true, 'pass': true, 'pass4': true, 'teams-local': true };
     var savedMode = localStorage.getItem('lorna_mode') || 'bot';
-    if (savedMode === 'pvp' || savedMode === 'pvp4' || savedMode === 'teams-online') {
-      savedMode = 'bot';
-    }
+    if (!validLocalModes[savedMode]) savedMode = 'bot';
 
     var state = {
       gridSize: 8,
@@ -1243,13 +1242,14 @@
     }
 
     function applyTheme(theme) {
-      state.theme = theme;
-      localStorage.setItem('lorna_theme', theme);
-      document.body.className = 'theme-' + theme;
+      state.theme = (theme === 'light') ? 'light' : 'dark';
+      localStorage.setItem('lorna_theme', state.theme);
+      document.body.className = 'theme-' + state.theme;
       var darkOpt = document.getElementById('theme-dark-opt');
       var lightOpt = document.getElementById('theme-light-opt');
-      if (darkOpt) darkOpt.classList.toggle('active-opt', theme === 'dark');
-      if (lightOpt) lightOpt.classList.toggle('active-opt', theme === 'light');
+      if (darkOpt) darkOpt.classList.toggle('active-opt', state.theme === 'dark');
+      if (lightOpt) lightOpt.classList.toggle('active-opt', state.theme === 'light');
+      renderBoardDOM();
     }
 
     function initBoard() {
@@ -1275,24 +1275,34 @@
     function renderBoardDOM() {
       var board = document.getElementById('board');
       if (!board) return;
-      var N = state.gridSize;
-      board.style.gridTemplateColumns = 'repeat(' + N + ', 1fr)';
-      board.style.gridTemplateRows = 'repeat(' + N + ', 1fr)';
+      var N = state.gridSize || 8;
+      board.style.display = 'grid';
+      board.style.gridTemplateColumns = 'repeat(' + N + ', minmax(0, 1fr))';
+      board.style.gridTemplateRows = 'repeat(' + N + ', minmax(0, 1fr))';
+      board.style.backgroundColor = state.theme === 'light' ? '#e2e8f0' : '#1e293b';
+      board.style.border = state.theme === 'light' ? '2px solid #94a3b8' : '2px solid #475569';
       board.innerHTML = '';
       var iconMap = PIECE_THEMES[state.pieceTheme] || PIECE_THEMES.gems;
 
+      var emptyBg = state.theme === 'light' ? '#ffffff' : '#334155';
+      var emptyBorder = state.theme === 'light' ? '1.5px solid #cbd5e1' : '1px solid #475569';
+
       for (var r = 0; r < N; r++) {
         for (var c = 0; c < N; c++) {
-          var val = state.grid[r][c];
+          var val = (state.grid[r] && state.grid[r][c]) ? state.grid[r][c] : 0;
           var cell = document.createElement('div');
           cell.className = 'cell';
           cell.dataset.r = r;
           cell.dataset.c = c;
+          cell.style.backgroundColor = emptyBg;
+          cell.style.border = emptyBorder;
+
           if (val >= 1 && val <= 4) {
             cell.className += ' p' + val;
             cell.textContent = iconMap[val] || '';
           } else if (val === 99) {
             cell.className += ' obstacle';
+            cell.style.backgroundColor = state.theme === 'light' ? '#94a3b8' : '#64748b';
             cell.textContent = '🗿';
           }
 
@@ -2185,7 +2195,7 @@
         for (var c = 0; c < N; c++) {
           var val = state.grid[r][c];
           var cell = document.createElement('div');
-          cell.style.background = '#26344d';
+          cell.style.background = '#334155';
           cell.style.borderRadius = '6px';
           cell.style.display = 'flex';
           cell.style.alignItems = 'center';
@@ -2568,6 +2578,7 @@
 
     function triggerWelcomeModal() {
       var welcomeModal = document.getElementById('welcome-modal');
+      if (!welcomeModal) return;
       var returningNotice = document.getElementById('returning-user-notice');
       var newFields = document.getElementById('new-user-fields');
       var mainTitle = document.getElementById('welcome-main-title');
@@ -2664,62 +2675,112 @@
         joinPvPRoom(code);
       };
 
+      welcomeModal.style.display = 'flex';
       welcomeModal.classList.add('open');
     }
 
     function bootGame() {
-      drag.ghostEl = document.getElementById('drag-ghost');
-      applyTheme(state.theme);
+      try {
+        drag.ghostEl = document.getElementById('drag-ghost');
+        applyTheme(state.theme);
 
-      var savedName = localStorage.getItem('lorna_my_name') || 'Lorna';
-      var savedAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
-      
-      state.playerNames[1] = savedName;
-      state.playerAvatars[1] = savedAvatar;
-      document.getElementById('host-name-input').value = savedName;
-      document.getElementById('custom-room-code-input').value = generateShortCode();
+        var savedName = localStorage.getItem('lorna_my_name') || 'Lorna';
+        var savedAvatar = localStorage.getItem('lorna_my_avatar') || '🧝‍♀️';
+        
+        state.playerNames[1] = savedName;
+        state.playerAvatars[1] = savedAvatar;
+        document.getElementById('host-name-input').value = savedName;
+        document.getElementById('custom-room-code-input').value = generateShortCode();
 
-      document.querySelectorAll('.piece-theme-btn').forEach(function(b) {
-        b.classList.toggle('active-opt', b.dataset.theme === state.pieceTheme);
-      });
+        document.querySelectorAll('.piece-theme-btn').forEach(function(b) {
+          b.classList.toggle('active-opt', b.dataset.theme === state.pieceTheme);
+        });
 
-      document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) {
-        b.classList.toggle('active-opt', b.dataset.avatar === savedAvatar);
-      });
+        document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) {
+          b.classList.toggle('active-opt', b.dataset.avatar === savedAvatar);
+        });
 
-      initBoard();
-      replenishTray();
-      renderBoardDOM();
-      renderTrayDOM();
-      setMode(state.mode);
+        setMode(state.mode);
 
-      window.addEventListener('resize', updateCellSize);
+        window.addEventListener('resize', updateCellSize);
 
-      var settingsModal = document.getElementById('settings-modal');
-      var inviteModal = document.getElementById('join-invite-modal');
-      var historyModal = document.getElementById('history-modal');
-      var rulesModal = document.getElementById('rules-modal');
+        var settingsModal = document.getElementById('settings-modal');
+        var inviteModal = document.getElementById('join-invite-modal');
+        var historyModal = document.getElementById('history-modal');
+        var rulesModal = document.getElementById('rules-modal');
 
-      document.getElementById('settings-btn').onclick = function() { settingsModal.classList.add('open'); };
-      document.getElementById('close-modal-x').onclick = function() { settingsModal.classList.remove('open'); };
-      document.getElementById('close-modal-bottom').onclick = function() { settingsModal.classList.remove('open'); };
+        document.getElementById('settings-btn').onclick = function() { settingsModal.classList.add('open'); };
+        document.getElementById('close-modal-x').onclick = function() { settingsModal.classList.remove('open'); };
+        document.getElementById('close-modal-bottom').onclick = function() { settingsModal.classList.remove('open'); };
 
-      document.getElementById('theme-dark-opt').onclick = function() { applyTheme('dark'); };
-      document.getElementById('theme-light-opt').onclick = function() { applyTheme('light'); };
+        document.getElementById('theme-dark-opt').onclick = function() { applyTheme('dark'); };
+        document.getElementById('theme-light-opt').onclick = function() { applyTheme('light'); };
 
-      document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          var avatar = btn.dataset.avatar;
-          localStorage.setItem('lorna_my_avatar', avatar);
-          state.playerAvatars[state.myPlayerNum] = avatar;
-          document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
+        document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(btn) {
+          btn.onclick = function() {
+            var avatar = btn.dataset.avatar;
+            localStorage.setItem('lorna_my_avatar', avatar);
+            state.playerAvatars[state.myPlayerNum] = avatar;
+            document.querySelectorAll('#avatar-picker-grid .avatar-opt-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+            btn.classList.add('active-opt');
+            updateUI();
+            var msg = {
+              type: 'nameSync',
+              playerNum: state.myPlayerNum,
+              name: state.playerNames[state.myPlayerNum],
+              avatar: avatar
+            };
+            if (state.myPlayerNum === 1) {
+              state.conns.forEach(function(c) { if (c && c.open) c.send(msg); });
+            } else if (state.conn && state.conn.open) {
+              state.conn.send(msg);
+            }
+          };
+        });
+
+        document.querySelectorAll('.piece-theme-btn').forEach(function(btn) {
+          btn.onclick = function() {
+            state.pieceTheme = btn.dataset.theme;
+            localStorage.setItem('lorna_piece_theme', state.pieceTheme);
+            document.querySelectorAll('.piece-theme-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+            btn.classList.add('active-opt');
+            renderBoardDOM();
+            if (state.isTV) renderTVBoard();
+          };
+        });
+
+        document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
+        document.getElementById('p2-card').onclick = function() { promptPlayerName(2); };
+        document.getElementById('p3-card').onclick = function() { promptPlayerName(3); };
+        document.getElementById('p4-card').onclick = function() { promptPlayerName(4); };
+
+        document.getElementById('modal-join-btn').onclick = function() {
+          var code = document.getElementById('modal-room-input').value.trim();
+          if (code) joinPvPRoom(code);
+        };
+
+        document.getElementById('randomize-code-btn').onclick = function() {
+          document.getElementById('custom-room-code-input').value = generateShortCode();
+        };
+
+        document.getElementById('pvp-create-btn').onclick = function() { createPvPRoom('pvp'); };
+        document.getElementById('pvp4-create-btn').onclick = function() { createPvPRoom('pvp4'); };
+        document.getElementById('teams-create-btn').onclick = function() { createPvPRoom('teams-online'); };
+
+        document.getElementById('settings-re-share').onclick = function() {
+          if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
+        };
+
+        document.getElementById('host-name-input').onchange = function(e) {
+          var val = e.target.value.trim() || 'Player';
+          localStorage.setItem('lorna_my_name', val);
+          state.playerNames[state.myPlayerNum] = val;
           updateUI();
           var msg = {
             type: 'nameSync',
             playerNum: state.myPlayerNum,
-            name: state.playerNames[state.myPlayerNum],
-            avatar: avatar
+            name: val,
+            avatar: state.playerAvatars[state.myPlayerNum]
           };
           if (state.myPlayerNum === 1) {
             state.conns.forEach(function(c) { if (c && c.open) c.send(msg); });
@@ -2727,195 +2788,147 @@
             state.conn.send(msg);
           }
         };
-      });
 
-      document.querySelectorAll('.piece-theme-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          state.pieceTheme = btn.dataset.theme;
-          localStorage.setItem('lorna_piece_theme', state.pieceTheme);
-          document.querySelectorAll('.piece-theme-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-          renderBoardDOM();
-          if (state.isTV) renderTVBoard();
+        document.getElementById('restart-btn').onclick = function() {
+          triggerWelcomeModal();
         };
-      });
+        document.getElementById('gameover-restart-btn').onclick = resetGame;
 
-      document.getElementById('p1-card').onclick = function() { promptPlayerName(1); };
-      document.getElementById('p2-card').onclick = function() { promptPlayerName(2); };
-      document.getElementById('p3-card').onclick = function() { promptPlayerName(3); };
-      document.getElementById('p4-card').onclick = function() { promptPlayerName(4); };
+        document.getElementById('opt-pass').onclick = function() { setMode('pass'); };
+        document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
+        document.getElementById('opt-pass4').onclick = function() { setMode('pass4'); };
+        document.getElementById('opt-teams-local').onclick = function() { setMode('teams-local'); };
 
-      document.getElementById('modal-join-btn').onclick = function() {
-        var code = document.getElementById('modal-room-input').value.trim();
-        if (code) joinPvPRoom(code);
-      };
+        var trapOpt = document.getElementById('winrule-trap-opt');
+        var ptsOpt = document.getElementById('winrule-points-opt');
+        var ptsBox = document.getElementById('points-target-box');
 
-      document.getElementById('randomize-code-btn').onclick = function() {
-        document.getElementById('custom-room-code-input').value = generateShortCode();
-      };
-
-      document.getElementById('pvp-create-btn').onclick = function() { createPvPRoom('pvp'); };
-      document.getElementById('pvp4-create-btn').onclick = function() { createPvPRoom('pvp4'); };
-      document.getElementById('teams-create-btn').onclick = function() { createPvPRoom('teams-online'); };
-
-      document.getElementById('settings-re-share').onclick = function() {
-        if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
-      };
-
-      document.getElementById('host-name-input').onchange = function(e) {
-        var val = e.target.value.trim() || 'Player';
-        localStorage.setItem('lorna_my_name', val);
-        state.playerNames[state.myPlayerNum] = val;
-        updateUI();
-        var msg = {
-          type: 'nameSync',
-          playerNum: state.myPlayerNum,
-          name: val,
-          avatar: state.playerAvatars[state.myPlayerNum]
-        };
-        if (state.myPlayerNum === 1) {
-          state.conns.forEach(function(c) { if (c && c.open) c.send(msg); });
-        } else if (state.conn && state.conn.open) {
-          state.conn.send(msg);
-        }
-      };
-
-      document.getElementById('restart-btn').onclick = function() {
-        triggerWelcomeModal();
-      };
-      document.getElementById('gameover-restart-btn').onclick = resetGame;
-
-      document.getElementById('opt-pass').onclick = function() { setMode('pass'); };
-      document.getElementById('opt-bot').onclick = function() { setMode('bot'); };
-      document.getElementById('opt-pass4').onclick = function() { setMode('pass4'); };
-      document.getElementById('opt-teams-local').onclick = function() { setMode('teams-local'); };
-
-      var trapOpt = document.getElementById('winrule-trap-opt');
-      var ptsOpt = document.getElementById('winrule-points-opt');
-      var ptsBox = document.getElementById('points-target-box');
-
-      trapOpt.onclick = function() {
-        state.winCondition = 'trap';
-        trapOpt.classList.add('active-opt');
-        ptsOpt.classList.remove('active-opt');
-        ptsBox.style.display = 'none';
-        updateUI();
-      };
-
-      ptsOpt.onclick = function() {
-        state.winCondition = 'race';
-        ptsOpt.classList.add('active-opt');
-        trapOpt.classList.remove('active-opt');
-        ptsBox.style.display = 'flex';
-        updateUI();
-      };
-
-      document.querySelectorAll('.target-chip-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          state.targetScore = parseInt(btn.dataset.pts, 10);
-          document.getElementById('target-pts-display').textContent = state.targetScore + ' pts';
-          document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
+        trapOpt.onclick = function() {
+          state.winCondition = 'trap';
+          trapOpt.classList.add('active-opt');
+          ptsOpt.classList.remove('active-opt');
+          ptsBox.style.display = 'none';
           updateUI();
         };
-      });
 
-      document.getElementById('apply-custom-target').onclick = function() {
-        var val = parseInt(document.getElementById('custom-target-input').value, 10);
-        if (val && val >= 500) {
-          state.targetScore = val;
-          document.getElementById('target-pts-display').textContent = val + ' pts';
-          document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+        ptsOpt.onclick = function() {
+          state.winCondition = 'race';
+          ptsOpt.classList.add('active-opt');
+          trapOpt.classList.remove('active-opt');
+          ptsBox.style.display = 'flex';
           updateUI();
-        }
-      };
-
-      document.querySelectorAll('.lvl-btn').forEach(function(btn) {
-        btn.onclick = function() {
-          state.currentLevel = parseInt(btn.dataset.lvl, 10);
-          document.querySelectorAll('.lvl-btn').forEach(function(b) { b.classList.remove('active-opt'); });
-          btn.classList.add('active-opt');
-          resetGame();
         };
-      });
 
-      document.getElementById('share-again-btn').onclick = function() {
-        if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
-      };
+        document.querySelectorAll('.target-chip-btn').forEach(function(btn) {
+          btn.onclick = function() {
+            state.targetScore = parseInt(btn.dataset.pts, 10);
+            document.getElementById('target-pts-display').textContent = state.targetScore + ' pts';
+            document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+            btn.classList.add('active-opt');
+            updateUI();
+          };
+        });
 
-      document.getElementById('open-rules-btn').onclick = function() {
-        settingsModal.classList.remove('open');
-        rulesModal.classList.add('open');
-      };
-      document.getElementById('close-rules-x').onclick = function() {
-        rulesModal.classList.remove('open');
-        settingsModal.classList.add('open');
-      };
-      document.getElementById('close-rules-btn').onclick = function() {
-        rulesModal.classList.remove('open');
-        settingsModal.classList.add('open');
-      };
+        document.getElementById('apply-custom-target').onclick = function() {
+          var val = parseInt(document.getElementById('custom-target-input').value, 10);
+          if (val && val >= 500) {
+            state.targetScore = val;
+            document.getElementById('target-pts-display').textContent = val + ' pts';
+            document.querySelectorAll('.target-chip-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+            updateUI();
+          }
+        };
 
-      document.getElementById('open-history-btn').onclick = function() {
-        settingsModal.classList.remove('open');
-        renderHistoryList();
-        historyModal.classList.add('open');
-      };
-      document.getElementById('close-history-x').onclick = function() { historyModal.classList.remove('open'); };
-      document.getElementById('close-history-btn').onclick = function() { historyModal.classList.remove('open'); };
-      document.getElementById('clear-history-btn').onclick = function() {
-        localStorage.removeItem('lorna_history');
-        renderHistoryList();
-      };
+        document.querySelectorAll('.lvl-btn').forEach(function(btn) {
+          btn.onclick = function() {
+            state.currentLevel = parseInt(btn.dataset.lvl, 10);
+            document.querySelectorAll('.lvl-btn').forEach(function(b) { b.classList.remove('active-opt'); });
+            btn.classList.add('active-opt');
+            resetGame();
+          };
+        });
 
-      var sBtn = document.getElementById('sound-btn');
-      sBtn.onclick = function() {
-        soundEnabled = !soundEnabled;
-        sBtn.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
-      };
+        document.getElementById('share-again-btn').onclick = function() {
+          if (state.activeRoomCode) shareRoomInvite(state.activeRoomCode);
+        };
 
-      var tvToggle = function() {
-        state.isTV = !state.isTV;
-        if (state.isTV) {
+        document.getElementById('open-rules-btn').onclick = function() {
           settingsModal.classList.remove('open');
-          document.getElementById('game-view').style.display = 'none';
-          document.getElementById('tv-view').classList.add('open');
-          renderTVBoard();
-        } else {
-          document.getElementById('tv-view').classList.remove('open');
-          document.getElementById('game-view').style.display = 'flex';
-        }
-      };
-
-      document.getElementById('settings-tv-btn').onclick = tvToggle;
-      document.getElementById('exit-tv-btn').onclick = tvToggle;
-
-      var params = new URLSearchParams(window.location.search);
-      var roomParam = params.get('room');
-      if (roomParam) {
-        settingsModal.classList.remove('open');
-        document.getElementById('invite-room-code-display').textContent = roomParam;
-
-        var guestInput = document.getElementById('guest-name-input');
-        guestInput.value = localStorage.getItem('lorna_my_name') || 'Warrior';
-        inviteModal.classList.add('open');
-
-        document.getElementById('accept-join-btn').onclick = function() {
-          var chosenName = guestInput.value.trim() || 'Warrior';
-          localStorage.setItem('lorna_my_name', chosenName);
-          playSfx('place');
-          joinPvPRoom(roomParam);
+          rulesModal.classList.add('open');
         };
-      } else {
+        document.getElementById('close-rules-x').onclick = function() {
+          rulesModal.classList.remove('open');
+          settingsModal.classList.add('open');
+        };
+        document.getElementById('close-rules-btn').onclick = function() {
+          rulesModal.classList.remove('open');
+          settingsModal.classList.add('open');
+        };
+
+        document.getElementById('open-history-btn').onclick = function() {
+          settingsModal.classList.remove('open');
+          renderHistoryList();
+          historyModal.classList.add('open');
+        };
+        document.getElementById('close-history-x').onclick = function() { historyModal.classList.remove('open'); };
+        document.getElementById('close-history-btn').onclick = function() { historyModal.classList.remove('open'); };
+        document.getElementById('clear-history-btn').onclick = function() {
+          localStorage.removeItem('lorna_history');
+          renderHistoryList();
+        };
+
+        var sBtn = document.getElementById('sound-btn');
+        sBtn.onclick = function() {
+          soundEnabled = !soundEnabled;
+          sBtn.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+        };
+
+        var tvToggle = function() {
+          state.isTV = !state.isTV;
+          if (state.isTV) {
+            settingsModal.classList.remove('open');
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('tv-view').classList.add('open');
+            renderTVBoard();
+          } else {
+            document.getElementById('tv-view').classList.remove('open');
+            document.getElementById('game-view').style.display = 'flex';
+          }
+        };
+
+        document.getElementById('settings-tv-btn').onclick = tvToggle;
+        document.getElementById('exit-tv-btn').onclick = tvToggle;
+
+        var params = new URLSearchParams(window.location.search);
+        var roomParam = params.get('room');
+        if (roomParam) {
+          settingsModal.classList.remove('open');
+          document.getElementById('invite-room-code-display').textContent = roomParam;
+
+          var guestInput = document.getElementById('guest-name-input');
+          guestInput.value = localStorage.getItem('lorna_my_name') || 'Warrior';
+          inviteModal.classList.add('open');
+
+          document.getElementById('accept-join-btn').onclick = function() {
+            var chosenName = guestInput.value.trim() || 'Warrior';
+            localStorage.setItem('lorna_my_name', chosenName);
+            playSfx('place');
+            joinPvPRoom(roomParam);
+          };
+        } else {
+          triggerWelcomeModal();
+        }
+      } catch (err) {
+        console.error('Boot error:', err);
+        initBoard();
+        replenishTray();
+        renderBoardDOM();
+        renderTrayDOM();
         triggerWelcomeModal();
       }
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bootGame);
-    } else {
-      bootGame();
-    }
+    bootGame();
   </script>
 </body>
 </html>
