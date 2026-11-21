@@ -679,8 +679,8 @@
   </main>
 
   <!-- Centered Welcome / Login Modal -->
-  <div id="welcome-modal" class="modal" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: rgba(7, 10, 15, 0.82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; padding: 12px;">
-    <div class="modal-box panel-box" style="width: 100%; max-width: 370px; max-height: 92dvh; overflow-y: auto; background: #131924; color: #e6edf3; border: 2px solid #06b6d4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75); margin: auto;">
+<div id="welcome-modal" class="modal" style="background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div class="modal-box panel-box" style="border: 2px solid #06b6d4; text-align: center; max-width: 420px;">
       
       <!-- Top & Center Game Title -->
       <div style="font-size: 20px; font-weight: 900; letter-spacing: 1px; background: linear-gradient(135deg, #22d3ee 0%, #fb7185 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -689,21 +689,21 @@
 
       <!-- Avatar & Greeting -->
       <div>
-        <div id="welcome-avatar-display" style="font-size: 34px; line-height: 1.1;">🧝‍♀️</div>
+        <div id="welcome-avatar-display" style="font-size: 36px; line-height: 1.1;">🧝‍♀️</div>
         <h2 id="welcome-main-title" style="font-size: 16px; font-weight: 800; color: #22d3ee; margin-top: 4px;">Welcome back!</h2>
-        <div id="returning-user-notice" style="display:none; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 8px; padding: 4px 10px; font-size: 11px; color: #cbd5e1; margin-top: 6px;">
-          Logged in as <b id="welcome-returning-name" style="color: #22d3ee;">Player</b>
+        <div id="returning-user-notice" style="display:none; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.35); border-radius: 8px; padding: 5px 10px; font-size: 11px; color: #22d3ee; margin-top: 6px;">
+          Logged in as <b id="welcome-returning-name">Player</b>
         </div>
       </div>
 
       <!-- New User Setup (Hidden for returning players) -->
-      <div id="new-user-fields" style="display:none; flex-direction:column; gap:6px; text-align:left; background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid #242d3d;">
+      <div id="new-user-fields" style="display:none; flex-direction:column; gap:6px; text-align:left; background: rgba(15, 23, 42, 0.65); padding: 10px; border-radius: 10px; border: 1px solid #242d3d;">
         <div class="setting-row">
-          <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Your Warrior Name</span>
-          <input type="text" id="welcome-name-input" class="input-field" placeholder="Enter name" maxlength="14" value="Player" style="background: #070a0f; border: 1px solid #2f3b52; color: #f8fafc; border-radius: 8px; padding: 7px 10px; font-size: 12px;" />
+          <span class="setting-label">Your Warrior Name</span>
+          <input type="text" id="welcome-name-input" class="input-field" placeholder="Enter name" maxlength="14" value="Player" />
         </div>
         <div class="setting-row">
-          <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Choose Avatar</span>
+          <span class="setting-label">Choose Avatar</span>
           <div class="avatar-grid" id="welcome-avatar-grid">
             <button class="avatar-opt-btn active-opt" data-avatar="🧝‍♀️">🧝‍♀️</button>
             <button class="avatar-opt-btn" data-avatar="⚔️">⚔️</button>
@@ -724,41 +724,41 @@
       <!-- LOCAL PLAY -->
       <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 2px;">
         <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px;">Local Play</span>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-          <button id="welcome-play-bot-btn" style="background: #0284c7; border: 1px solid #38bdf8; color: #ffffff; border-radius: 8px; padding: 8px 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+        <div class="btn-group-3">
+          <button id="welcome-play-bot-btn" style="background: #0284c7; border-color: #38bdf8; color: #ffffff; padding: 8px 4px; font-size: 11px; font-weight: 800;">
             🤖 vs Bot
           </button>
-          <button id="welcome-pass2-btn" style="background: #1e293b; border: 1px solid #334155; color: #f1f5f9; border-radius: 8px; padding: 8px 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          <button id="welcome-pass2-btn" style="background: #1e293b; border-color: #334155; color: #f1f5f9; padding: 8px 4px; font-size: 11px; font-weight: 800;">
             👥 2P Local
           </button>
-          <button id="welcome-pass4-btn" style="background: #1e293b; border: 1px solid #334155; color: #f1f5f9; border-radius: 8px; padding: 8px 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          <button id="welcome-pass4-btn" style="background: #1e293b; border-color: #334155; color: #f1f5f9; padding: 8px 4px; font-size: 11px; font-weight: 800;">
             🤝 2v2 Local
           </button>
         </div>
       </div>
 
       <!-- CREATE ONLINE GAME -->
-      <div style="border-top: 1px solid #242d3d; padding-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+      <div style="border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 10px; display: flex; flex-direction: column; gap: 6px;">
         <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px;">Create Online Game</span>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-          <button id="welcome-create-pvp-btn" style="background: #065f46; border: 1px solid #10b981; color: #ffffff; border-radius: 8px; padding: 8px 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+        <div class="btn-group-3">
+          <button id="welcome-create-pvp-btn" style="background: #065f46; border-color: #10b981; color: #ffffff; padding: 8px 4px; font-size: 11px; font-weight: 800;">
             ⚔️ 2P Duel
           </button>
-          <button id="welcome-create-4p-btn" style="background: #b45309; border: 1px solid #f59e0b; color: #ffffff; border-radius: 8px; padding: 8px 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          <button id="welcome-create-4p-btn" style="background: #b45309; border-color: #f59e0b; color: #ffffff; padding: 8px 4px; font-size: 11px; font-weight: 800;">
             🏟️ 4P FFA
           </button>
-          <button id="welcome-create-2v2-btn" style="background: #6d28d9; border: 1px solid #8b5cf6; color: #ffffff; border-radius: 8px; padding: 8px 4px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          <button id="welcome-create-2v2-btn" style="background: #6d28d9; border-color: #8b5cf6; color: #ffffff; padding: 8px 4px; font-size: 11px; font-weight: 800;">
             🤝 2v2 Teams
           </button>
         </div>
       </div>
 
       <!-- JOIN ONLINE GAME -->
-      <div style="border-top: 1px solid #242d3d; padding-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+      <div style="border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 10px; display: flex; flex-direction: column; gap: 6px;">
         <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px;">Join Online Game</span>
-        <div style="background: #0b0f17; border: 1px solid #242d3d; border-radius: 10px; padding: 6px; display: flex; gap: 6px; align-items: center;">
-          <input type="text" id="welcome-join-code-input" placeholder="ENTER ROOM CODE" maxlength="10" style="flex: 1; background: #131924; border: 1px solid #2f3b52; color: #f8fafc; border-radius: 7px; text-transform: uppercase; font-size: 11.5px; font-weight: 700; padding: 0 10px; height: 32px; outline: none; letter-spacing: 0.5px;" />
-          <button id="welcome-join-btn" style="background: #4f46e5; border: 1px solid #6366f1; color: #ffffff; border-radius: 7px; padding: 0 12px; height: 32px; font-size: 11px; font-weight: 800; white-space: nowrap; cursor: pointer;">⚔️ Join</button>
+        <div style="background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 8px; padding: 6px; display: flex; gap: 6px; align-items: center;">
+          <input type="text" id="welcome-join-code-input" class="input-field" placeholder="ENTER ROOM CODE" maxlength="10" style="flex: 1; text-transform: uppercase; font-size: 11.5px; padding: 6px 8px; letter-spacing: 0.5px;" />
+          <button id="welcome-join-btn" style="background: #4f46e5; border-color: #6366f1; color: #ffffff; padding: 0 12px; height: 32px; font-size: 11px; font-weight: 800; white-space: nowrap;">⚔️ Join</button>
         </div>
       </div>
 
