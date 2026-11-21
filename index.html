@@ -1,5 +1,5 @@
-<div id="welcome-modal" class="modal">
-    <div class="modal-box panel-box" style="background: #131924; color: #e6edf3; border: 2px solid #06b6d4; border-radius: 16px; max-width: 380px; padding: 18px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 20px 40px rgba(0,0,0,0.65);">
+<div id="welcome-modal" class="modal" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: rgba(7, 10, 15, 0.82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; padding: 12px;">
+    <div class="modal-box panel-box" style="width: 100%; max-width: 370px; max-height: 92dvh; overflow-y: auto; background: #131924; color: #e6edf3; border: 2px solid #06b6d4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75); margin: auto;">
       
       <!-- Top & Center Game Title -->
       <div style="font-size: 20px; font-weight: 900; letter-spacing: 1px; background: linear-gradient(135deg, #22d3ee 0%, #fb7185 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -7,10 +7,10 @@
       </div>
 
       <!-- Avatar & Greeting -->
-      <div style="margin-top: 2px;">
+      <div>
         <div id="welcome-avatar-display" style="font-size: 34px; line-height: 1.1;">🧝‍♀️</div>
         <h2 id="welcome-main-title" style="font-size: 16px; font-weight: 800; color: #22d3ee; margin-top: 4px;">Welcome back!</h2>
-        <div id="returning-user-notice" style="display:none; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 8px; padding: 5px 10px; font-size: 11.5px; color: #cbd5e1; margin-top: 6px;">
+        <div id="returning-user-notice" style="display:none; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 8px; padding: 4px 10px; font-size: 11px; color: #cbd5e1; margin-top: 6px;">
           Logged in as <b id="welcome-returning-name" style="color: #22d3ee;">Player</b>
         </div>
       </div>
